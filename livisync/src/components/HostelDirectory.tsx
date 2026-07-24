@@ -41,10 +41,9 @@ export const HostelDirectory = ({
         (r) => r.sharingType === selectedSharing && r.available > 0
       );
 
-    const matchesAmenity =
-      selectedAmenity === 'all' || hostel.amenities.includes(selectedAmenity);
+    const isVisible = hostel.isVerified || currentUser.role === 'admin' || hostel.ownerId === currentUser.id;
 
-    return matchesSearch && matchesPrice && matchesSharing && matchesAmenity;
+    return matchesSearch && matchesPrice && matchesSharing && matchesAmenity && isVisible;
   });
 
   const getOccupantDetails = (occupantId: string) => {

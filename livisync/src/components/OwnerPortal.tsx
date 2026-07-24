@@ -94,6 +94,7 @@ export const OwnerPortal = ({
       rooms,
       currentOccupants: editingHostel?.currentOccupants || [],
       ownerId: currentUser.id,
+      isVerified: editingHostel ? editingHostel.isVerified : false,
     };
 
     if (editingHostel) {
