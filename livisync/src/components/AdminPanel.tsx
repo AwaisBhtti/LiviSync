@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { User, Report, Hostel, MatchRequest } from '../types';
 import { Building, Users, ShieldAlert, CheckCircle, Ban, RefreshCw, Star } from 'lucide-react';
 
@@ -9,6 +10,7 @@ interface AdminPanelProps {
   onToggleUserStatus: (userId: string) => void;
   onResolveReport: (reportId: string) => void;
   onDeleteUser: (userId: string) => void;
+  onVerifyHostel: (hostelId: string) => void;
 }
 
 export const AdminPanel = ({
@@ -19,9 +21,44 @@ export const AdminPanel = ({
   onToggleUserStatus,
   onResolveReport,
   onDeleteUser,
+  onVerifyHostel,
 }: AdminPanelProps) => {
   const activeMatchesCount = matchRequests.filter((r) => r.status === 'accepted').length;
   const pendingReports = reports.filter((r) => r.status === 'pending');
+
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [inviteError, setInviteError] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+
+  const handleGenerateInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteError('');
+    setGeneratedLink('');
+    setInviteLoading(true);
+
+    try {
+      const token = localStorage.getItem('livisync_token');
+      const response = await fetch('http://127.0.0.1:8000/admin/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ email: inviteEmail }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to generate invite');
+      }
+      setGeneratedLink(data.invite_link);
+      setInviteEmail('');
+    } catch (err: any) {
+      setInviteError(err.message || 'Error occurred');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
 
   const getReporterName = (reporterId: string) => {
     return users.find((u) => u.id === reporterId)?.name || 'Unknown User';
@@ -217,7 +254,89 @@ export const AdminPanel = ({
               ))}
             </tbody>
           </table>
-        </div>
+      </div>
+
+      {/* Invite Section */}
+      <div className="card" style={{ padding: '1.5rem' }}>
+        <h3 style={sectionTitleStyle}>
+          <Users size={18} /> Invite Hostel Owners
+        </h3>
+        <form onSubmit={handleGenerateInvite} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div className="form-group" style={{ flex: 1, minWidth: '250px', marginBottom: 0 }}>
+            <label className="form-label">Owner Email Address</label>
+            <input
+              type="email"
+              className="form-input"
+              placeholder="owner@example.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={inviteLoading} style={{ height: '42px' }}>
+            {inviteLoading ? 'Generating...' : 'Generate Invite Link'}
+          </button>
+        </form>
+
+        {inviteError && <p style={{ color: 'var(--danger)', fontSize: '0.875rem', marginTop: '0.5rem' }}>{inviteError}</p>}
+        {generatedLink && (
+          <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', display: 'block', marginBottom: '0.25rem' }}>
+              Copy Invitation Link:
+            </span>
+            <input
+              type="text"
+              readOnly
+              value={generatedLink}
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+              className="form-input"
+              style={{ backgroundColor: 'var(--card)', cursor: 'pointer' }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Hostel Listings Moderation */}
+      <div className="card" style={{ padding: '1.5rem' }}>
+        <h3 style={sectionTitleStyle}>
+          <Building size={18} /> Hostel Listings Verification
+        </h3>
+        {hostels.filter(h => !h.isVerified).length === 0 ? (
+          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', padding: '1rem 0' }}>
+            No pending hostels for verification.
+          </p>
+        ) : (
+          <div style={tableContainerStyle}>
+            <table style={tableStyle}>
+              <thead>
+                <tr style={tableHeaderRowStyle}>
+                  <th style={thStyle}>Hostel Name</th>
+                  <th style={thStyle}>Location</th>
+                  <th style={thStyle}>Rent (PKR)</th>
+                  <th style={thStyle}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {hostels.filter(h => !h.isVerified).map((hostel) => (
+                  <tr key={hostel.id} style={tableRowStyle}>
+                    <td style={tdStyle}>{hostel.name}</td>
+                    <td style={tdStyle}>{hostel.location}</td>
+                    <td style={tdStyle}>{hostel.price.toLocaleString()}</td>
+                    <td style={tdStyle}>
+                      <button
+                        className="btn btn-primary"
+                        style={tableBtnStyle}
+                        onClick={() => onVerifyHostel(hostel.id)}
+                      >
+                        <CheckCircle size={12} /> Verify Listing
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
