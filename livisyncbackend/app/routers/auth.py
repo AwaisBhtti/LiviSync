@@ -82,3 +82,128 @@ def login(login_in: LoginRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserWithProfile)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+from ..models import InviteToken
+
+class OwnerRegisterRequest(BaseModel):
+    token: str
+    name: str
+    password: str
+
+@router.get("/verify-invite/{token}")
+def verify_invite(token: str, db: Session = Depends(get_db)):
+    invite = db.query(InviteToken).filter(InviteToken.token == token, InviteToken.is_used == False).first()
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired invite token"
+        )
+    return {"email": invite.email}
+
+@router.post("/register-owner")
+def register_owner(req: OwnerRegisterRequest, db: Session = Depends(get_db)):
+    # Verify token
+    invite = db.query(InviteToken).filter(InviteToken.token == req.token, InviteToken.is_used == False).first()
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired invite token"
+        )
+    
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.email == invite.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+
+    # Hash password and create User
+    hashed_pwd = get_password_hash(req.password)
+    db_user = User(
+        email=invite.email,
+        hashed_password=hashed_pwd
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+    # Create profile with owner role and status suspended
+    db_profile = Profile(
+        id=db_user.id,
+        name=req.name,
+        age=18,
+        gender="male",
+        photo="",
+        bio="",
+        budget=0,
+        location="Unknown",
+        role="owner",
+        status="suspended"  # Starts suspended pending admin activation
+    )
+    db.add(db_profile)
+
+    # Create preferences with defaults
+    db_prefs = Preferences(
+        user_id=db_user.id,
+        sleep_schedule="flexible",
+        cleanliness="moderate",
+        smoking="no",
+        pets="no",
+        guest_tolerance="weekends"
+    )
+    db.add(db_prefs)
+
+    # Mark invite token as used
+    invite.is_used = True
+    
+    db.commit()
+    return {"message": "Owner registered successfully. Profile is pending admin activation."}
+
+@router.post("/seed-admin")
+def seed_admin(db: Session = Depends(get_db)):
+    admin_email = "admin@livisync.com"
+    existing_admin = db.query(User).filter(User.email == admin_email).first()
+    if existing_admin:
+        return {"message": "Admin already seeded"}
+    
+    # Create admin User
+    hashed_pwd = get_password_hash("adminpassword")
+    db_user = User(
+        email=admin_email,
+        hashed_password=hashed_pwd
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+    # Create admin Profile
+    db_profile = Profile(
+        id=db_user.id,
+        name="System Admin",
+        age=30,
+        gender="male",
+        photo="",
+        bio="System Administrator",
+        budget=0,
+        location="Islamabad",
+        role="admin",
+        status="active"
+    )
+    db.add(db_profile)
+
+    # Create preferences with defaults
+    db_prefs = Preferences(
+        user_id=db_user.id,
+        sleep_schedule="flexible",
+        cleanliness="moderate",
+        smoking="no",
+        pets="no",
+        guest_tolerance="weekends"
+    )
+    db.add(db_prefs)
+    
+    db.commit()
+    return {"message": "Admin seeded successfully. Email: admin@livisync.com, Password: adminpassword"}
+
