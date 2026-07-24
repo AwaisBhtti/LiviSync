@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from . import models  # Ensure models are loaded so they are created in the database
+from .routers import auth
 
 # Create tables in database
 Base.metadata.create_all(bind=engine)
@@ -12,6 +13,10 @@ app = FastAPI(
     description="Backend API for LiviSync Roommate Finder and Hostel Directory",
     version="1.0.0"
 )
+
+# Register routers
+app.include_router(auth.router)
+
 
 # Configure CORS
 app.add_middleware(
