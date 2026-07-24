@@ -7,10 +7,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Frontend (livisync)
+livisync/node_modules
+livisync/dist
+livisync/dist-ssr
+livisync/*.local
+
+# Backend (livisyncbackend)
+livisyncbackend/__pycache__/
+livisyncbackend/*.pyc
+.venv/
 
 # Editor directories and files
 .vscode/*
