@@ -11,6 +11,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { AuthScreen } from './components/AuthScreen';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { OwnerPortal } from './components/OwnerPortal';
+import { RegisterOwner } from './components/RegisterOwner';
 
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
@@ -226,16 +227,55 @@ export default function App() {
   };
 
   // Handler Admin: Toggle User Status (Suspend/Activate)
-  const handleToggleUserStatus = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === userId) {
-          const nextStatus = u.status === 'active' ? 'suspended' as const : 'active' as const;
-          return { ...u, status: nextStatus };
+  const handleToggleUserStatus = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    
+    const nextStatus = user.status === 'active' ? 'suspended' : 'active';
+    try {
+      const token = localStorage.getItem('livisync_token');
+      const response = await fetch(`http://127.0.0.1:8000/admin/users/${userId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: nextStatus })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to update status on server');
+      }
+      
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, status: nextStatus } : u))
+      );
+    } catch (err: any) {
+      alert(err.message || 'Error occurred updating status.');
+    }
+  };
+
+  const handleVerifyHostel = async (hostelId: string) => {
+    try {
+      const token = localStorage.getItem('livisync_token');
+      const response = await fetch(`http://127.0.0.1:8000/admin/hostels/${hostelId}/verify`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-        return u;
-      })
-    );
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to verify listing on server');
+      }
+      
+      setHostels((prev) =>
+        prev.map((h) => (h.id === hostelId ? { ...h, isVerified: true } : h))
+      );
+      alert('Listing verified successfully!');
+    } catch (err: any) {
+      alert(err.message || 'Error verifying listing.');
+    }
   };
 
   // Handler Admin: Resolve Report
@@ -319,6 +359,16 @@ export default function App() {
             )
           }
         />
+        <Route
+          path="/register-owner/:token"
+          element={
+            token ? (
+              <Navigate to="/hostels" replace />
+            ) : (
+              <RegisterOwner />
+            )
+          }
+        />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
@@ -378,6 +428,7 @@ export default function App() {
                     onToggleUserStatus={handleToggleUserStatus}
                     onResolveReport={handleResolveReport}
                     onDeleteUser={handleDeleteUser}
+                    onVerifyHostel={handleVerifyHostel}
                   />
                 ) : (
                   <Navigate to="/hostels" replace />
