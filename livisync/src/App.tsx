@@ -10,6 +10,7 @@ import { ProfileSettings } from './components/ProfileSettings';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthScreen } from './components/AuthScreen';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { OwnerPortal } from './components/OwnerPortal';
 
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
@@ -253,6 +254,20 @@ export default function App() {
     );
   };
 
+  const handleAddHostel = (newHostel: Hostel) => {
+    setHostels((prev) => [...prev, newHostel]);
+  };
+
+  const handleEditHostel = (updatedHostel: Hostel) => {
+    setHostels((prev) =>
+      prev.map((h) => (h.id === updatedHostel.id ? updatedHostel : h))
+    );
+  };
+
+  const handleDeleteHostel = (hostelId: string) => {
+    setHostels((prev) => prev.filter((h) => h.id !== hostelId));
+  };
+
   // Layout for protected routes
   const AppLayout = () => {
     const unreadCount = matchRequests.filter(
@@ -363,6 +378,22 @@ export default function App() {
                     onToggleUserStatus={handleToggleUserStatus}
                     onResolveReport={handleResolveReport}
                     onDeleteUser={handleDeleteUser}
+                  />
+                ) : (
+                  <Navigate to="/hostels" replace />
+                )
+              }
+            />
+            <Route
+              path="/owner"
+              element={
+                currentUser?.role === 'owner' ? (
+                  <OwnerPortal
+                    currentUser={currentUser!}
+                    hostels={hostels}
+                    onAddHostel={handleAddHostel}
+                    onEditHostel={handleEditHostel}
+                    onDeleteHostel={handleDeleteHostel}
                   />
                 ) : (
                   <Navigate to="/hostels" replace />
