@@ -16,7 +16,7 @@ export interface User {
   bio: string;
   budget: number; // monthly max budget
   location: string; // e.g. Lahore, Islamabad
-  role: 'student' | 'admin';
+  role: 'student' | 'admin' | 'owner';
   status: 'active' | 'suspended';
   preferences: Preferences;
   blockedUsers: string[]; // user IDs blocked by this user
@@ -30,6 +30,7 @@ export interface Hostel {
   description: string;
   images: string[];
   amenities: string[];
+  ownerId?: string;
   rooms: {
     sharingType: 'single' | 'double' | 'triple';
     available: number;
