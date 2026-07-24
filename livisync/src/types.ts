@@ -9,6 +9,7 @@ export interface Preferences {
 export interface User {
   id: string;
   name: string;
+  email: string;
   age: number;
   gender: 'male' | 'female' | 'other';
   photo: string;

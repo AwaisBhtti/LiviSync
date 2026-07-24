@@ -7,6 +7,7 @@ import { RoommateFinder } from './components/RoommateFinder';
 import { ChatModule } from './components/ChatModule';
 import { ProfileSettings } from './components/ProfileSettings';
 import { AdminPanel } from './components/AdminPanel';
+import { AuthScreen } from './components/AuthScreen';
 
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
@@ -14,8 +15,60 @@ export default function App() {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   
+  const [token, setToken] = useState<string | null>(localStorage.getItem('livisync_token'));
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<string>('hostels');
+
+  // Fetch the currently authenticated user from backend
+  const fetchCurrentUser = async (authToken: string) => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Session expired or invalid token');
+      }
+      const data = await response.json();
+      const mappedUser: User = {
+        id: data.id,
+        email: data.email,
+        name: data.profile?.name || 'New User',
+        age: data.profile?.age || 18,
+        gender: data.profile?.gender === 'female' ? 'female' : data.profile?.gender === 'other' ? 'other' : 'male',
+        photo: data.profile?.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80',
+        bio: data.profile?.bio || '',
+        budget: data.profile?.budget || 0,
+        location: data.profile?.location || '',
+        role: data.profile?.role === 'admin' ? 'admin' : 'student',
+        status: data.profile?.status === 'suspended' ? 'suspended' : 'active',
+        preferences: {
+          sleepSchedule: 'flexible',
+          cleanliness: 'moderate',
+          smoking: 'no',
+          pets: 'no',
+          guestTolerance: 'weekends'
+        },
+        blockedUsers: []
+      };
+      setCurrentUser(mappedUser);
+    } catch (err) {
+      console.error(err);
+      handleLogout();
+    }
+  };
+
+  const handleAuthSuccess = (authToken: string) => {
+    localStorage.setItem('livisync_token', authToken);
+    setToken(authToken);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('livisync_token');
+    setToken(null);
+    setCurrentUser(null);
+  };
 
   // Load state from localStorage or initialize
   useEffect(() => {
@@ -23,23 +76,25 @@ export default function App() {
     const storedHostels = localStorage.getItem('livisync_hostels');
     const storedRequests = localStorage.getItem('livisync_requests');
     const storedReports = localStorage.getItem('livisync_reports');
-    const storedActiveUser = localStorage.getItem('livisync_active_user');
 
     const initializedUsers = storedUsers ? JSON.parse(storedUsers) : INITIAL_USERS;
     const initializedHostels = storedHostels ? JSON.parse(storedHostels) : INITIAL_HOSTELS;
     const initializedRequests = storedRequests ? JSON.parse(storedRequests) : INITIAL_MATCH_REQUESTS;
     const initializedReports = storedReports ? JSON.parse(storedReports) : [];
     
-    // Set Zayn (Student) as default active user if none set
-    const defaultUser = initializedUsers.find((u: User) => u.id === 'user_current') || initializedUsers[0];
-    const initializedActiveUser = storedActiveUser ? JSON.parse(storedActiveUser) : defaultUser;
-
     setUsers(initializedUsers);
     setHostels(initializedHostels);
     setMatchRequests(initializedRequests);
     setReports(initializedReports);
-    setCurrentUser(initializedActiveUser);
   }, []);
+
+  // Fetch current user details if token changes
+  useEffect(() => {
+    if (token) {
+      fetchCurrentUser(token);
+    }
+  }, [token]);
+
 
   // Sync state to localStorage whenever it changes
   useEffect(() => {
@@ -62,16 +117,7 @@ export default function App() {
     if (currentUser) localStorage.setItem('livisync_active_user', JSON.stringify(currentUser));
   }, [currentUser]);
 
-  // Handler: Toggle simulated user role for testing convenience
-  const handleToggleRole = () => {
-    if (!currentUser) return;
-    const nextRole = currentUser.role === 'admin' ? 'student' : 'admin';
-    const matchId = nextRole === 'admin' ? 'user_admin' : 'user_current';
-    const nextUser = users.find((u) => u.id === matchId);
-    if (nextUser) {
-      setCurrentUser(nextUser);
-    }
-  };
+
 
   // Handler: Save profile settings
   const handleSaveProfile = (updatedUser: User) => {
@@ -205,6 +251,10 @@ export default function App() {
     );
   };
 
+  if (!token) {
+    return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
+  }
+
   if (!currentUser) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
@@ -224,7 +274,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         currentUser={currentUser}
-        onToggleRole={handleToggleRole}
+        onLogout={handleLogout}
         unreadCount={unreadCount}
       />
 

@@ -5,7 +5,7 @@ interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   currentUser: UserType;
-  onToggleRole: () => void;
+  onLogout: () => void;
   unreadCount: number;
 }
 
@@ -13,7 +13,7 @@ export const Navbar = ({
   activeTab,
   setActiveTab,
   currentUser,
-  onToggleRole,
+  onLogout,
   unreadCount,
 }: NavbarProps) => {
   return (
@@ -69,13 +69,13 @@ export const Navbar = ({
 
           <div style={userControlStyle}>
             <div style={roleDisplayStyle}>
-              <span style={roleLabelStyle}>Simulated Role:</span>
+              <span style={roleLabelStyle}>Role:</span>
               <span style={roleBadgeStyle(currentUser.role)}>
                 {currentUser.role === 'admin' ? 'Admin' : 'Student'}
               </span>
             </div>
-            <button className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }} onClick={onToggleRole}>
-              Switch Role
+            <button className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }} onClick={onLogout}>
+              Sign Out
             </button>
           </div>
         </div>
