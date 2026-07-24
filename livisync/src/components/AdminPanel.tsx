@@ -13,6 +13,101 @@ interface AdminPanelProps {
   onVerifyHostel: (hostelId: string) => void;
 }
 
+// Styles
+const headerStyle: React.CSSProperties = {
+  backgroundColor: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  padding: '2rem',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.5rem',
+};
+
+const statsRowStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(4, 1fr)',
+  gap: '1.5rem',
+};
+
+const statCardStyle: React.CSSProperties = {
+  padding: '1.25rem',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '1rem',
+};
+
+const statLabelStyle: React.CSSProperties = {
+  fontSize: '0.75rem',
+  color: 'var(--muted)',
+  textTransform: 'uppercase',
+  fontWeight: 500,
+  letterSpacing: '0.05em',
+};
+
+const statValueStyle: React.CSSProperties = {
+  fontSize: '1.5rem',
+  fontWeight: 700,
+  marginTop: '0.25rem',
+};
+
+const sectionTitleStyle: React.CSSProperties = {
+  fontSize: '1.1rem',
+  fontWeight: 600,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  borderBottom: '1px solid var(--border)',
+  paddingBottom: '0.75rem',
+  marginBottom: '1rem',
+};
+
+const tableContainerStyle: React.CSSProperties = {
+  width: '100%',
+  overflowX: 'auto',
+};
+
+const tableStyle: React.CSSProperties = {
+  width: '100%',
+  borderCollapse: 'collapse',
+  textAlign: 'left',
+};
+
+const tableHeaderRowStyle: React.CSSProperties = {
+  borderBottom: '1px solid var(--border)',
+};
+
+const thStyle: React.CSSProperties = {
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  color: 'var(--muted)',
+  textTransform: 'uppercase',
+  padding: '0.75rem 1rem',
+};
+
+const tableRowStyle: React.CSSProperties = {
+  borderBottom: '1px solid var(--border)',
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: '0.75rem 1rem',
+  fontSize: '0.85rem',
+  verticalAlign: 'middle',
+};
+
+const smallAvatarStyle: React.CSSProperties = {
+  width: '28px',
+  height: '28px',
+  borderRadius: '50%',
+  objectFit: 'cover',
+};
+
+const tableBtnStyle: React.CSSProperties = {
+  padding: '0.25rem 0.5rem',
+  fontSize: '0.75rem',
+  gap: '0.25rem',
+};
+
 export const AdminPanel = ({
   users,
   reports,
@@ -254,6 +349,7 @@ export const AdminPanel = ({
               ))}
             </tbody>
           </table>
+        </div>
       </div>
 
       {/* Invite Section */}
@@ -340,99 +436,4 @@ export const AdminPanel = ({
       </div>
     </div>
   );
-};
-
-// Styles
-const headerStyle: React.CSSProperties = {
-  backgroundColor: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  padding: '2rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-};
-
-const statsRowStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(4, 1fr)',
-  gap: '1.5rem',
-};
-
-const statCardStyle: React.CSSProperties = {
-  padding: '1.25rem',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-};
-
-const statLabelStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  color: 'var(--muted)',
-  textTransform: 'uppercase',
-  fontWeight: 500,
-  letterSpacing: '0.05em',
-};
-
-const statValueStyle: React.CSSProperties = {
-  fontSize: '1.5rem',
-  fontWeight: 700,
-  marginTop: '0.25rem',
-};
-
-const sectionTitleStyle: React.CSSProperties = {
-  fontSize: '1.1rem',
-  fontWeight: 600,
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.5rem',
-  borderBottom: '1px solid var(--border)',
-  paddingBottom: '0.75rem',
-  marginBottom: '1rem',
-};
-
-const tableContainerStyle: React.CSSProperties = {
-  width: '100%',
-  overflowX: 'auto',
-};
-
-const tableStyle: React.CSSProperties = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  textAlign: 'left',
-};
-
-const tableHeaderRowStyle: React.CSSProperties = {
-  borderBottom: '1px solid var(--border)',
-};
-
-const thStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  color: 'var(--muted)',
-  textTransform: 'uppercase',
-  padding: '0.75rem 1rem',
-};
-
-const tableRowStyle: React.CSSProperties = {
-  borderBottom: '1px solid var(--border)',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.75rem 1rem',
-  fontSize: '0.85rem',
-  verticalAlign: 'middle',
-};
-
-const smallAvatarStyle: React.CSSProperties = {
-  width: '28px',
-  height: '28px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-};
-
-const tableBtnStyle: React.CSSProperties = {
-  padding: '0.25rem 0.5rem',
-  fontSize: '0.75rem',
-  gap: '0.25rem',
 };
