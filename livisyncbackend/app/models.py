@@ -16,6 +16,7 @@ class User(Base):
     profile = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     preferences = relationship("Preferences", back_populates="user", uselist=False, cascade="all, delete-orphan")
     bookings = relationship("HostelOccupancy", back_populates="user", cascade="all, delete-orphan")
+    owned_hostels = relationship("Hostel", back_populates="owner")
 
 
 class Profile(Base):
@@ -35,7 +36,7 @@ class Profile(Base):
     __table_args__ = (
         CheckConstraint("age >= 16 AND age <= 100", name="age_check"),
         CheckConstraint("gender IN ('male', 'female', 'other')", name="gender_check"),
-        CheckConstraint("role IN ('student', 'admin')", name="role_check"),
+        CheckConstraint("role IN ('student', 'admin', 'owner')", name="role_check"),
         CheckConstraint("status IN ('active', 'suspended')", name="status_check"),
     )
 
@@ -72,12 +73,14 @@ class Hostel(Base):
     price = Column(Integer, nullable=False)
     description = Column(Text)
     images = Column(ARRAY(Text))
+    owner_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
     __table_args__ = (
         CheckConstraint("price >= 0", name="price_check"),
     )
 
     # Relationships
+    owner = relationship("User", back_populates="owned_hostels")
     amenities = relationship("HostelAmenity", back_populates="hostel", cascade="all, delete-orphan")
     rooms = relationship("HostelRoom", back_populates="hostel", cascade="all, delete-orphan")
     occupants = relationship("HostelOccupancy", back_populates="hostel", cascade="all, delete-orphan")
