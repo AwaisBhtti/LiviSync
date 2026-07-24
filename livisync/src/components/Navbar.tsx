@@ -56,6 +56,15 @@ export const Navbar = ({
               <User size={16} />
               Profile
             </Link>
+            {currentUser.role === 'owner' && (
+              <Link
+                to="/owner"
+                style={tabButtonStyle(currentPath === '/owner')}
+              >
+                <Building size={16} />
+                Owner Portal
+              </Link>
+            )}
             {currentUser.role === 'admin' && (
               <Link
                 to="/admin"
@@ -71,7 +80,7 @@ export const Navbar = ({
             <div style={roleDisplayStyle}>
               <span style={roleLabelStyle}>Role:</span>
               <span style={roleBadgeStyle(currentUser.role)}>
-                {currentUser.role === 'admin' ? 'Admin' : 'Student'}
+                {currentUser.role === 'admin' ? 'Admin' : currentUser.role === 'owner' ? 'Owner' : 'Student'}
               </span>
             </div>
             <button className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }} onClick={onLogout}>
@@ -114,6 +123,15 @@ export const Navbar = ({
           <User size={20} />
           <span style={mobileTabTextStyle}>Profile</span>
         </Link>
+        {currentUser.role === 'owner' && (
+          <Link
+            to="/owner"
+            style={mobileTabButtonStyle(currentPath === '/owner')}
+          >
+            <Building size={20} />
+            <span style={mobileTabTextStyle}>Owner</span>
+          </Link>
+        )}
         {currentUser.role === 'admin' && (
           <Link
             to="/admin"
@@ -232,7 +250,7 @@ const roleLabelStyle: React.CSSProperties = {
 
 const roleBadgeStyle = (role: string): React.CSSProperties => ({
   fontWeight: 600,
-  color: role === 'admin' ? 'var(--danger)' : 'var(--primary)',
+  color: role === 'admin' ? 'var(--danger)' : role === 'owner' ? 'var(--success)' : 'var(--primary)',
 });
 
 const mobileTabButtonStyle = (isActive: boolean): React.CSSProperties => ({
