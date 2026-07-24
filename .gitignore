@@ -14,8 +14,8 @@ livisync/dist-ssr
 livisync/*.local
 
 # Backend (livisyncbackend)
-livisyncbackend/__pycache__/
-livisyncbackend/*.pyc
+**/__pycache__/
+**/*.pyc
 .venv/
 
 # Editor directories and files
@@ -28,3 +28,7 @@ livisyncbackend/*.pyc
 *.njsproj
 *.sln
 *.sw?
+
+
+#env
+livisyncbackend/.env
