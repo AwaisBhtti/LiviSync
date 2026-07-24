@@ -74,6 +74,7 @@ class Hostel(Base):
     description = Column(Text)
     images = Column(ARRAY(Text))
     owner_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    is_verified = Column(Boolean, nullable=False, default=False)
 
     __table_args__ = (
         CheckConstraint("price >= 0", name="price_check"),
@@ -174,3 +175,12 @@ class Report(Base):
         CheckConstraint("reason IN ('fake-profile', 'harassment', 'spam', 'other')", name="report_reason_check"),
         CheckConstraint("status IN ('pending', 'resolved')", name="report_status_check"),
     )
+
+
+class InviteToken(Base):
+    __tablename__ = 'invite_tokens'
+
+    token = Column(String(255), primary_key=True)
+    email = Column(String(255), nullable=False)
+    is_used = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
