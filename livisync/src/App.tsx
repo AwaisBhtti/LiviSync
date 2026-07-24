@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import type { User, Hostel, MatchRequest, Report } from './types';
 import { INITIAL_USERS, INITIAL_HOSTELS, INITIAL_MATCH_REQUESTS } from './mockData';
 import { Navbar } from './components/Navbar';
@@ -8,6 +9,7 @@ import { ChatModule } from './components/ChatModule';
 import { ProfileSettings } from './components/ProfileSettings';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthScreen } from './components/AuthScreen';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 export default function App() {
   const [users, setUsers] = useState<User[]>([]);
@@ -251,11 +253,27 @@ export default function App() {
     );
   };
 
-  if (!token) {
-    return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
-  }
+  // Layout for protected routes
+  const AppLayout = () => {
+    const unreadCount = matchRequests.filter(
+      (r) => r.receiverId === currentUser!.id && r.status === 'pending'
+    ).length;
 
-  if (!currentUser) {
+    return (
+      <div className="app-container">
+        <Navbar
+          currentUser={currentUser!}
+          onLogout={handleLogout}
+          unreadCount={unreadCount}
+        />
+        <main className="main-content">
+          <Outlet />
+        </main>
+      </div>
+    );
+  };
+
+  if (token && !currentUser) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
         <p style={{ color: 'var(--muted)' }}>Loading LiviSync Application State...</p>
@@ -263,69 +281,99 @@ export default function App() {
     );
   }
 
-  // Count incoming pending requests for the unread badge
-  const unreadCount = matchRequests.filter(
-    (r) => r.receiverId === currentUser.id && r.status === 'pending'
-  ).length;
-
   return (
-    <div className="app-container">
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-        unreadCount={unreadCount}
-      />
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            token ? (
+              <Navigate to="/hostels" replace />
+            ) : (
+              <AuthScreen onAuthSuccess={handleAuthSuccess} />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            token ? (
+              <Navigate to="/hostels" replace />
+            ) : (
+              <AuthScreen onAuthSuccess={handleAuthSuccess} />
+            )
+          }
+        />
 
-      <main className="main-content">
-        {activeTab === 'hostels' && (
-          <HostelDirectory
-            hostels={hostels}
-            users={users}
-            currentUser={currentUser}
-            onBookRoom={handleBookRoom}
-          />
-        )}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Navigate to="/hostels" replace />} />
+            <Route
+              path="/hostels"
+              element={
+                <HostelDirectory
+                  hostels={hostels}
+                  users={users}
+                  currentUser={currentUser!}
+                  onBookRoom={handleBookRoom}
+                />
+              }
+            />
+            <Route
+              path="/roommates"
+              element={
+                <RoommateFinder
+                  currentUser={currentUser!}
+                  users={users}
+                  matchRequests={matchRequests}
+                  onSendRequest={handleSendRequest}
+                  onBlockUser={handleBlockUser}
+                  onReportUser={handleReportUser}
+                />
+              }
+            />
+            <Route
+              path="/chats"
+              element={
+                <ChatModule
+                  currentUser={currentUser!}
+                  users={users}
+                  matchRequests={matchRequests}
+                  onAcceptRequest={handleAcceptRequest}
+                  onDeclineRequest={handleDeclineRequest}
+                  onBlockUser={handleBlockUser}
+                />
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProfileSettings currentUser={currentUser!} onSave={handleSaveProfile} />
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                currentUser?.role === 'admin' ? (
+                  <AdminPanel
+                    users={users}
+                    reports={reports}
+                    hostels={hostels}
+                    matchRequests={matchRequests}
+                    onToggleUserStatus={handleToggleUserStatus}
+                    onResolveReport={handleResolveReport}
+                    onDeleteUser={handleDeleteUser}
+                  />
+                ) : (
+                  <Navigate to="/hostels" replace />
+                )
+              }
+            />
+          </Route>
+        </Route>
 
-        {activeTab === 'roommates' && (
-          <RoommateFinder
-            currentUser={currentUser}
-            users={users}
-            matchRequests={matchRequests}
-            onSendRequest={handleSendRequest}
-            onBlockUser={handleBlockUser}
-            onReportUser={handleReportUser}
-          />
-        )}
-
-        {activeTab === 'chats' && (
-          <ChatModule
-            currentUser={currentUser}
-            users={users}
-            matchRequests={matchRequests}
-            onAcceptRequest={handleAcceptRequest}
-            onDeclineRequest={handleDeclineRequest}
-            onBlockUser={handleBlockUser}
-          />
-        )}
-
-        {activeTab === 'profile' && (
-          <ProfileSettings currentUser={currentUser} onSave={handleSaveProfile} />
-        )}
-
-        {activeTab === 'admin' && currentUser.role === 'admin' && (
-          <AdminPanel
-            users={users}
-            reports={reports}
-            hostels={hostels}
-            matchRequests={matchRequests}
-            onToggleUserStatus={handleToggleUserStatus}
-            onResolveReport={handleResolveReport}
-            onDeleteUser={handleDeleteUser}
-          />
-        )}
-      </main>
-    </div>
+        <Route path="*" element={<Navigate to="/hostels" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
