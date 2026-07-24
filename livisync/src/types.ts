@@ -31,6 +31,7 @@ export interface Hostel {
   images: string[];
   amenities: string[];
   ownerId?: string;
+  isVerified: boolean;
   rooms: {
     sharingType: 'single' | 'double' | 'triple';
     available: number;
