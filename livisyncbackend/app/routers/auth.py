@@ -161,49 +161,5 @@ def register_owner(req: OwnerRegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Owner registered successfully. Profile is pending admin activation."}
 
-@router.post("/seed-admin")
-def seed_admin(db: Session = Depends(get_db)):
-    admin_email = "admin@livisync.com"
-    existing_admin = db.query(User).filter(User.email == admin_email).first()
-    if existing_admin:
-        return {"message": "Admin already seeded"}
-    
-    # Create admin User
-    hashed_pwd = get_password_hash("adminpassword")
-    db_user = User(
-        email=admin_email,
-        hashed_password=hashed_pwd
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
 
-    # Create admin Profile
-    db_profile = Profile(
-        id=db_user.id,
-        name="System Admin",
-        age=30,
-        gender="male",
-        photo="",
-        bio="System Administrator",
-        budget=0,
-        location="Islamabad",
-        role="admin",
-        status="active"
-    )
-    db.add(db_profile)
-
-    # Create preferences with defaults
-    db_prefs = Preferences(
-        user_id=db_user.id,
-        sleep_schedule="flexible",
-        cleanliness="moderate",
-        smoking="no",
-        pets="no",
-        guest_tolerance="weekends"
-    )
-    db.add(db_prefs)
-    
-    db.commit()
-    return {"message": "Admin seeded successfully. Email: admin@livisync.com, Password: adminpassword"}
 
