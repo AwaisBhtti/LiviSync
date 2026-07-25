@@ -32,12 +32,18 @@ class Profile(Base):
     location = Column(String(100), nullable=False)
     role = Column(String(10), nullable=False, default='student')
     status = Column(String(10), nullable=False, default='active')
+    
+    # New student or job fields
+    occupation = Column(String(10), nullable=True)  # 'student' or 'job'
+    institution = Column(String(255), nullable=True)
+    company = Column(String(255), nullable=True)
 
     __table_args__ = (
         CheckConstraint("age >= 16 AND age <= 100", name="age_check"),
         CheckConstraint("gender IN ('male', 'female', 'other')", name="gender_check"),
         CheckConstraint("role IN ('student', 'admin', 'owner')", name="role_check"),
         CheckConstraint("status IN ('active', 'suspended')", name="status_check"),
+        CheckConstraint("occupation IN ('student', 'job')", name="occupation_check"),
     )
 
     user = relationship("User", back_populates="profile")

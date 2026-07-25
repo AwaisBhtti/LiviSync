@@ -40,6 +40,19 @@ class ProfileOut(BaseModel):
     location: str
     role: str
     status: str
+    occupation: Optional[str] = None
+    institution: Optional[str] = None
+    company: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class PreferencesOut(BaseModel):
+    sleep_schedule: str
+    cleanliness: str
+    smoking: str
+    pets: str
+    guest_tolerance: str
 
     class Config:
         from_attributes = True
@@ -48,6 +61,7 @@ class UserWithProfile(BaseModel):
     id: UUID
     email: EmailStr
     profile: Optional[ProfileOut] = None
+    preferences: Optional[PreferencesOut] = None
 
     class Config:
         from_attributes = True

@@ -14,6 +14,35 @@ interface AdminPanelProps {
 }
 
 // Styles
+const modalOverlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  backdropFilter: 'blur(8px)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 9999,
+  padding: '1rem',
+};
+
+const modalContentStyle: React.CSSProperties = {
+  backgroundColor: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  padding: '2rem',
+  width: '100%',
+  maxWidth: '480px',
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1.25rem',
+  position: 'relative',
+};
+
 const headerStyle: React.CSSProperties = {
   backgroundColor: 'var(--card)',
   border: '1px solid var(--border)',
@@ -123,14 +152,18 @@ export const AdminPanel = ({
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
+  const [invitedEmail, setInvitedEmail] = useState('');
+  const [showModal, setShowModal] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleGenerateInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setInviteError('');
     setGeneratedLink('');
     setInviteLoading(true);
+    setCopied(false);
 
     try {
       const token = localStorage.getItem('livisync_token');
@@ -146,12 +179,22 @@ export const AdminPanel = ({
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to generate invite');
       }
+      setInvitedEmail(inviteEmail);
       setGeneratedLink(data.invite_link);
       setInviteEmail('');
+      setShowModal(true);
     } catch (err: any) {
       setInviteError(err.message || 'Error occurred');
     } finally {
       setInviteLoading(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (generatedLink) {
+      navigator.clipboard.writeText(generatedLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -375,22 +418,47 @@ export const AdminPanel = ({
         </form>
 
         {inviteError && <p style={{ color: 'var(--danger)', fontSize: '0.875rem', marginTop: '0.5rem' }}>{inviteError}</p>}
-        {generatedLink && (
-          <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', display: 'block', marginBottom: '0.25rem' }}>
-              Copy Invitation Link:
-            </span>
-            <input
-              type="text"
-              readOnly
-              value={generatedLink}
-              onClick={(e) => (e.target as HTMLInputElement).select()}
-              className="form-input"
-              style={{ backgroundColor: 'var(--card)', cursor: 'pointer' }}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Invite Link Modal Popup */}
+      {showModal && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Invitation Link Generated</h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--muted)', margin: 0 }}>
+              An invitation email has been sent to <strong>{invitedEmail}</strong>.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>
+                Copy Registration Link
+              </label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  readOnly
+                  value={generatedLink}
+                  className="form-input"
+                  style={{ flex: 1, backgroundColor: 'var(--secondary)', cursor: 'default' }}
+                />
+                <button 
+                  onClick={handleCopyLink} 
+                  className={`btn ${copied ? 'btn-secondary' : 'btn-primary'}`} 
+                  style={{ whiteSpace: 'nowrap', minWidth: '80px' }}
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button onClick={() => setShowModal(false)} className="btn btn-secondary">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hostel Listings Moderation */}
       <div className="card" style={{ padding: '1.5rem' }}>

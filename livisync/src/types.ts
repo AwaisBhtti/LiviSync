@@ -20,6 +20,9 @@ export interface User {
   status: 'active' | 'suspended';
   preferences: Preferences;
   blockedUsers: string[]; // user IDs blocked by this user
+  occupation?: 'student' | 'job';
+  institution?: string;
+  company?: string;
 }
 
 export interface Hostel {

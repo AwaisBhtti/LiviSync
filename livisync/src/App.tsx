@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import type { User, Hostel, MatchRequest, Report } from './types';
-import { INITIAL_USERS, INITIAL_HOSTELS, INITIAL_MATCH_REQUESTS } from './mockData';
 import { Navbar } from './components/Navbar';
 import { HostelDirectory } from './components/HostelDirectory';
 import { RoommateFinder } from './components/RoommateFinder';
@@ -47,12 +46,15 @@ export default function App() {
         location: data.profile?.location || '',
         role: data.profile?.role === 'admin' ? 'admin' : 'student',
         status: data.profile?.status === 'suspended' ? 'suspended' : 'active',
+        occupation: data.profile?.occupation || 'student',
+        institution: data.profile?.institution || '',
+        company: data.profile?.company || '',
         preferences: {
-          sleepSchedule: 'flexible',
-          cleanliness: 'moderate',
-          smoking: 'no',
-          pets: 'no',
-          guestTolerance: 'weekends'
+          sleepSchedule: data.preferences?.sleep_schedule || 'flexible',
+          cleanliness: data.preferences?.cleanliness || 'moderate',
+          smoking: data.preferences?.smoking || 'no',
+          pets: data.preferences?.pets || 'no',
+          guestTolerance: data.preferences?.guest_tolerance || 'weekends'
         },
         blockedUsers: []
       };
@@ -74,48 +76,129 @@ export default function App() {
     setCurrentUser(null);
   };
 
-  // Load state from localStorage or initialize
-  useEffect(() => {
-    const storedUsers = localStorage.getItem('livisync_users');
-    const storedHostels = localStorage.getItem('livisync_hostels');
-    const storedRequests = localStorage.getItem('livisync_requests');
-    const storedReports = localStorage.getItem('livisync_reports');
+  const fetchAdminData = async (authToken: string) => {
+    try {
+      // 1. Fetch Users
+      const usersRes = await fetch('http://127.0.0.1:8000/admin/users', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        setUsers(usersData);
+      }
 
-    const initializedUsers = storedUsers ? JSON.parse(storedUsers) : INITIAL_USERS;
-    const initializedHostels = storedHostels ? JSON.parse(storedHostels) : INITIAL_HOSTELS;
-    const initializedRequests = storedRequests ? JSON.parse(storedRequests) : INITIAL_MATCH_REQUESTS;
-    const initializedReports = storedReports ? JSON.parse(storedReports) : [];
-    
-    setUsers(initializedUsers);
-    setHostels(initializedHostels);
-    setMatchRequests(initializedRequests);
-    setReports(initializedReports);
-  }, []);
+      // 2. Fetch Hostels
+      const hostelsRes = await fetch('http://127.0.0.1:8000/admin/hostels', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (hostelsRes.ok) {
+        const hostelsData = await hostelsRes.json();
+        setHostels(hostelsData);
+      }
 
-  // Fetch current user details if token changes
+      // 3. Fetch Reports
+      const reportsRes = await fetch('http://127.0.0.1:8000/admin/reports', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (reportsRes.ok) {
+        const reportsData = await reportsRes.json();
+        setReports(reportsData);
+      }
+
+      // 4. Fetch Match Requests
+      const matchesRes = await fetch('http://127.0.0.1:8000/admin/matches', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (matchesRes.ok) {
+        const matchesData = await matchesRes.json();
+        setMatchRequests(matchesData);
+      }
+    } catch (err) {
+      console.error('Error loading admin dashboard data:', err);
+    }
+  };
+
+  const fetchStudentData = async (authToken: string) => {
+    try {
+      // 1. Fetch Roommates (all other students)
+      const roommatesRes = await fetch('http://127.0.0.1:8000/auth/roommates', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (roommatesRes.ok) {
+        const roommatesData = await roommatesRes.json();
+        const mappedUsers = roommatesData.map((u: any) => ({
+          id: u.id,
+          email: u.email,
+          name: u.profile?.name || 'New User',
+          age: u.profile?.age || 18,
+          gender: u.profile?.gender || 'male',
+          photo: u.profile?.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80',
+          bio: u.profile?.bio || '',
+          budget: u.profile?.budget || 0,
+          location: u.profile?.location || '',
+          role: u.profile?.role || 'student',
+          status: u.profile?.status || 'active',
+          occupation: u.profile?.occupation || 'student',
+          institution: u.profile?.institution || '',
+          company: u.profile?.company || '',
+          preferences: {
+            sleepSchedule: u.preferences?.sleep_schedule || 'flexible',
+            cleanliness: u.preferences?.cleanliness || 'moderate',
+            smoking: u.preferences?.smoking || 'no',
+            pets: u.preferences?.pets || 'no',
+            guestTolerance: u.preferences?.guest_tolerance || 'weekends'
+          },
+          blockedUsers: []
+        }));
+        setUsers(mappedUsers);
+      }
+
+      // 2. Fetch Hostels
+      const hostelsRes = await fetch('http://127.0.0.1:8000/auth/hostels', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (hostelsRes.ok) {
+        const hostelsData = await hostelsRes.json();
+        setHostels(hostelsData);
+      }
+
+      // 3. Fetch Matches
+      const matchesRes = await fetch('http://127.0.0.1:8000/auth/matches', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (matchesRes.ok) {
+        const matchesData = await matchesRes.json();
+        const mappedMatches = matchesData.map((m: any) => ({
+          id: m.id,
+          senderId: m.sender_id,
+          receiverId: m.receiver_id,
+          status: m.status,
+          message: m.message || '',
+          timestamp: m.created_at
+        }));
+        setMatchRequests(mappedMatches);
+      }
+    } catch (err) {
+      console.error('Error loading roommate directory data:', err);
+    }
+  };
+
+  // Load state or sync active user session
   useEffect(() => {
     if (token) {
       fetchCurrentUser(token);
     }
   }, [token]);
 
-
-  // Sync state to localStorage whenever it changes
   useEffect(() => {
-    if (users.length > 0) localStorage.setItem('livisync_users', JSON.stringify(users));
-  }, [users]);
-
-  useEffect(() => {
-    if (hostels.length > 0) localStorage.setItem('livisync_hostels', JSON.stringify(hostels));
-  }, [hostels]);
-
-  useEffect(() => {
-    if (matchRequests.length > 0) localStorage.setItem('livisync_requests', JSON.stringify(matchRequests));
-  }, [matchRequests]);
-
-  useEffect(() => {
-    if (reports.length > 0) localStorage.setItem('livisync_reports', JSON.stringify(reports));
-  }, [reports]);
+    if (token && currentUser) {
+      if (currentUser.role === 'admin') {
+        fetchAdminData(token);
+      } else {
+        fetchStudentData(token);
+      }
+    }
+  }, [token, currentUser]);
 
   useEffect(() => {
     if (currentUser) localStorage.setItem('livisync_active_user', JSON.stringify(currentUser));
@@ -124,11 +207,44 @@ export default function App() {
 
 
   // Handler: Save profile settings
-  const handleSaveProfile = (updatedUser: User) => {
-    setCurrentUser(updatedUser);
-    setUsers((prev) =>
-      prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
-    );
+  const handleSaveProfile = async (updatedUser: User) => {
+    try {
+      const token = localStorage.getItem('livisync_token');
+      const response = await fetch('http://127.0.0.1:8000/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: updatedUser.name,
+          age: updatedUser.age,
+          gender: updatedUser.gender,
+          bio: updatedUser.bio,
+          budget: updatedUser.budget,
+          location: updatedUser.location,
+          occupation: updatedUser.occupation,
+          institution: updatedUser.institution,
+          company: updatedUser.company,
+          sleep_schedule: updatedUser.preferences.sleepSchedule,
+          cleanliness: updatedUser.preferences.cleanliness,
+          smoking: updatedUser.preferences.smoking,
+          pets: updatedUser.preferences.pets,
+          guest_tolerance: updatedUser.preferences.guestTolerance,
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to update profile on server');
+      }
+
+      setCurrentUser(updatedUser);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+      );
+    } catch (err: any) {
+      alert(err.message || 'Error occurred saving profile.');
+    }
   };
 
   // Handler: Book a Room
@@ -279,19 +395,53 @@ export default function App() {
   };
 
   // Handler Admin: Resolve Report
-  const handleResolveReport = (reportId: string) => {
-    setReports((prev) =>
-      prev.map((r) => (r.id === reportId ? { ...r, status: 'resolved' as const } : r))
-    );
+  const handleResolveReport = async (reportId: string) => {
+    try {
+      const token = localStorage.getItem('livisync_token');
+      const response = await fetch(`http://127.0.0.1:8000/admin/reports/${reportId}/resolve`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to resolve report on server');
+      }
+      
+      setReports((prev) =>
+        prev.map((r) => (r.id === reportId ? { ...r, status: 'resolved' as const } : r))
+      );
+      alert('Report marked as resolved!');
+    } catch (err: any) {
+      alert(err.message || 'Error resolving report.');
+    }
   };
 
   // Handler Admin: Delete User Profile
-  const handleDeleteUser = (userId: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== userId));
-    // Clear requests containing this user
-    setMatchRequests((prev) =>
-      prev.filter((r) => r.senderId !== userId && r.receiverId !== userId)
-    );
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const token = localStorage.getItem('livisync_token');
+      const response = await fetch(`http://127.0.0.1:8000/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to delete user on server');
+      }
+
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      // Clear requests containing this user
+      setMatchRequests((prev) =>
+        prev.filter((r) => r.senderId !== userId && r.receiverId !== userId)
+      );
+      alert('User deleted successfully.');
+    } catch (err: any) {
+      alert(err.message || 'Error deleting user.');
+    }
   };
 
   const handleAddHostel = (newHostel: Hostel) => {
