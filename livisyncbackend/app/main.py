@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from . import models  # Ensure models are loaded so they are created in the database
-from .routers import auth, admin
+from .routers import auth, admin, users, hostels, matches
 
 # Create tables in database
 Base.metadata.create_all(bind=engine)
@@ -16,6 +16,9 @@ app = FastAPI(
 
 # Register routers
 app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(hostels.router)
+app.include_router(matches.router)
 app.include_router(admin.router)
 
 
