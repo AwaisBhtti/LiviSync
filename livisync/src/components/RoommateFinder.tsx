@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { User, MatchRequest } from '../types';
 import { calculateCompatibility } from '../utils';
-import { SlidersHorizontal, MessageSquarePlus, ShieldAlert, X, Check, MapPin } from 'lucide-react';
+import { SlidersHorizontal, MessageSquarePlus, ShieldAlert, X, Check, MapPin, UserCheck } from 'lucide-react';
 
 interface RoommateFinderProps {
   currentUser: User;
@@ -24,11 +24,15 @@ export const RoommateFinder = ({
   const [filterSleep, setFilterSleep] = useState<string>('all');
   const [filterCleanliness, setFilterCleanliness] = useState<string>('all');
   const [filterGender, setFilterGender] = useState<string>('all');
-  const [maxBudget, setMaxBudget] = useState<number>(30000);
+  const [maxBudget, setMaxBudget] = useState<number>(200000);
+  
+  // Connection and Report states
+  const [showConnectModal, setShowConnectModal] = useState(false);
   const [reqMessage, setReqMessage] = useState('Hey! Let\'s match up and search for rooms together!');
+  
+  const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState<string>('fake-profile');
   const [reportDesc, setReportDesc] = useState('');
-  const [showReportModal, setShowReportModal] = useState(false);
 
   // Filter & sort candidates
   const candidates = users
@@ -37,10 +41,12 @@ export const RoommateFinder = ({
       if (u.id === currentUser.id) return false;
       // Don't show admins
       if (u.role === 'admin') return false;
+      // Don't show hostel owners
+      if (u.role === 'owner') return false;
       // Don't show suspended users
       if (u.status === 'suspended') return false;
       // Don't show blocked users
-      if (currentUser.blockedUsers.includes(u.id)) return false;
+      if (currentUser.blockedUsers?.includes(u.id)) return false;
 
       // Apply Filters
       const matchesSleep = filterSleep === 'all' || u.preferences.sleepSchedule === filterSleep;
@@ -66,9 +72,11 @@ export const RoommateFinder = ({
     return req ? req.status : null;
   };
 
-  const handleSendRequest = () => {
+  const handleSendRequestSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!selectedUser) return;
     onSendRequest(selectedUser.id, reqMessage);
+    setShowConnectModal(false);
     setSelectedUser(null);
     setReqMessage('Hey! Let\'s match up and search for rooms together!');
   };
@@ -76,6 +84,14 @@ export const RoommateFinder = ({
   const handleReport = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
+    
+    // Validate report description is at least 8 words
+    const wordCount = reportDesc.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount < 8) {
+      alert('Please provide a detailed description (at least 8 words).');
+      return;
+    }
+    
     onReportUser(selectedUser.id, reportReason, reportDesc);
     setShowReportModal(false);
     setSelectedUser(null);
@@ -84,7 +100,7 @@ export const RoommateFinder = ({
 
   const renderPrefLabel = (key: string, val: string) => {
     return (
-      <div style={prefTagStyle}>
+      <div style={prefTagStyle} key={key}>
         <span style={{ color: 'var(--muted)', textTransform: 'capitalize' }}>{key.replace(/([A-Z])/g, ' $1')}:</span>
         <span style={{ fontWeight: 500 }}>{val}</span>
       </div>
@@ -110,9 +126,9 @@ export const RoommateFinder = ({
             <label className="form-label" style={{ fontSize: '0.75rem' }}>Max Roommate Budget: {maxBudget.toLocaleString()}</label>
             <input
               type="range"
-              min="10000"
-              max="30000"
-              step="1000"
+              min="20000"
+              max="200000"
+              step="5000"
               value={maxBudget}
               onChange={(e) => setMaxBudget(Number(e.target.value))}
               style={{ width: '100%', accentColor: 'var(--primary)' }}
@@ -160,6 +176,9 @@ export const RoommateFinder = ({
             <div className="grid-2">
               {candidates.map((candidate) => {
                 const reqStatus = getRequestStatus(candidate.id);
+                // Display Student or Job status
+                const occupationDisplay = candidate.occupation === 'student' ? 'Student' : candidate.occupation === 'job' ? 'Job Holder' : 'Student';
+                
                 return (
                   <div
                     key={candidate.id}
@@ -168,13 +187,13 @@ export const RoommateFinder = ({
                     onClick={() => setSelectedUser(candidate)}
                   >
                     <div style={cardHeaderStyle}>
-                      <img src={candidate.photo} alt={candidate.name} style={avatarStyle} />
+                      <img src={candidate.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} alt={candidate.name} style={avatarStyle} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <h3 style={{ fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {candidate.name}
                         </h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                          {candidate.age} y/o • {candidate.gender}
+                          {candidate.age} y/o • {candidate.gender} • <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.7rem' }}>{occupationDisplay}</span>
                         </p>
                       </div>
                       <div style={scoreCircleStyle(candidate.score)}>
@@ -183,12 +202,12 @@ export const RoommateFinder = ({
                       </div>
                     </div>
 
-                    <p style={bioTextStyle}>{candidate.bio}</p>
+                    <p style={bioTextStyle}>{candidate.bio || "No biography provided."}</p>
 
                     <div style={cardFooterStyle}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
                         <MapPin size={12} />
-                        {candidate.location} • PKR {candidate.budget.toLocaleString()}/mo
+                        {candidate.location || "Islamabad"} • PKR {candidate.budget.toLocaleString()}/mo
                       </span>
 
                       {reqStatus === 'accepted' && (
@@ -217,11 +236,11 @@ export const RoommateFinder = ({
       </div>
 
       {/* Detail Modal Overlay */}
-      {selectedUser && (
+      {selectedUser && !showConnectModal && !showReportModal && (
         <div style={modalOverlayStyle}>
           <div className="card" style={modalContentStyle}>
             <div style={modalHeaderStyle}>
-              <h3>Roommate Compatibility Profile</h3>
+              <h3>Compatibility Profile</h3>
               <button style={closeBtnStyle} onClick={() => setSelectedUser(null)}>
                 <X size={18} />
               </button>
@@ -230,12 +249,28 @@ export const RoommateFinder = ({
             <div style={modalBodyStyle}>
               {/* Profile Card Summary */}
               <div style={profileSummaryCardStyle}>
-                <img src={selectedUser.photo} alt={selectedUser.name} style={modalAvatarStyle} />
+                <img src={selectedUser.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} alt={selectedUser.name} style={modalAvatarStyle} />
                 <div style={{ flex: 1 }}>
                   <h2>{selectedUser.name}</h2>
                   <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
-                    {selectedUser.age} years old • {selectedUser.gender} • {selectedUser.location}
+                    {selectedUser.age} years old • {selectedUser.gender} • {selectedUser.location || "Islamabad"}
                   </p>
+                  
+                  {/* Student vs Job specific details */}
+                  {selectedUser.occupation === 'job' ? (
+                    selectedUser.company && (
+                      <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', marginTop: '0.25rem' }}>
+                        💼 Working at: <strong>{selectedUser.company}</strong>
+                      </p>
+                    )
+                  ) : (
+                    selectedUser.institution && (
+                      <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', marginTop: '0.25rem' }}>
+                        🎓 Studying at: <strong>{selectedUser.institution}</strong>
+                      </p>
+                    )
+                  )}
+                  
                   <p style={{ fontWeight: 600, fontSize: '0.9rem', marginTop: '0.25rem' }}>
                     Max Budget: PKR {selectedUser.budget.toLocaleString()}/mo
                   </p>
@@ -252,7 +287,7 @@ export const RoommateFinder = ({
               <div style={{ marginTop: '1.5rem' }}>
                 <h4>About</h4>
                 <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginTop: '0.25rem', lineHeight: '1.5' }}>
-                  {selectedUser.bio}
+                  {selectedUser.bio || "No bio added."}
                 </p>
               </div>
 
@@ -267,7 +302,7 @@ export const RoommateFinder = ({
                 </div>
               </div>
 
-              {/* Request Messaging System */}
+              {/* Action Buttons */}
               <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
                 {getRequestStatus(selectedUser.id) === 'accepted' ? (
                   <div style={alertSuccessStyle}>
@@ -278,33 +313,60 @@ export const RoommateFinder = ({
                     Your match request is currently pending review by {selectedUser.name}.
                   </div>
                 ) : (
-                  <div>
-                    <h4 style={{ marginBottom: '0.5rem' }}>Send Match Request</h4>
-                    <textarea
-                      className="form-textarea"
-                      rows={2}
-                      value={reqMessage}
-                      onChange={(e) => setReqMessage(e.target.value)}
-                      placeholder="Add a friendly greeting..."
-                    />
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                      <button className="btn btn-primary" onClick={handleSendRequest}>
-                        <MessageSquarePlus size={16} />
-                        Request Match
-                      </button>
-                      <button className="btn btn-danger" onClick={() => setShowReportModal(true)}>
-                        <ShieldAlert size={16} />
-                        Report User
-                      </button>
-                      <button className="btn btn-secondary" onClick={() => { onBlockUser(selectedUser.id); setSelectedUser(null); }}>
-                        Block User
-                      </button>
-                    </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <button className="btn btn-primary" onClick={() => setShowConnectModal(true)}>
+                      <MessageSquarePlus size={16} />
+                      Connect
+                    </button>
+                    <button className="btn btn-danger" onClick={() => setShowReportModal(true)}>
+                      <ShieldAlert size={16} />
+                      Report
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => { onBlockUser(selectedUser.id); setSelectedUser(null); }}>
+                      Block
+                    </button>
                   </div>
                 )}
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Connect Popup Modal */}
+      {showConnectModal && selectedUser && (
+        <div style={modalOverlayStyle}>
+          <form className="card" style={connectModalContentStyle} onSubmit={handleSendRequestSubmit}>
+            <div style={modalHeaderStyle}>
+              <h3>Connect with {selectedUser.name}</h3>
+              <button type="button" style={closeBtnStyle} onClick={() => setShowConnectModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--muted)', margin: 0 }}>
+                You are sending a connection match request. You can add an optional friendly note below:
+              </p>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <textarea
+                  className="form-textarea"
+                  rows={4}
+                  value={reqMessage}
+                  onChange={(e) => setReqMessage(e.target.value)}
+                  placeholder="Tell them a bit about yourself or why you want to connect..."
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowConnectModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <UserCheck size={16} />
+                  Send Request
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       )}
 
@@ -336,7 +398,7 @@ export const RoommateFinder = ({
                   required
                   value={reportDesc}
                   onChange={(e) => setReportDesc(e.target.value)}
-                  placeholder="Provide details about why you are reporting this user..."
+                  placeholder="Provide details. Description must be at least 8 words long..."
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.5rem' }}>
@@ -421,7 +483,7 @@ const cardFooterStyle: React.CSSProperties = {
   marginTop: '0.5rem',
   borderTop: '1px solid var(--border)',
   paddingTop: '0.75rem',
-};
+ };
 
 // Modal styles
 const modalOverlayStyle: React.CSSProperties = {
@@ -430,11 +492,12 @@ const modalOverlayStyle: React.CSSProperties = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  backdropFilter: 'blur(8px)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 1000,
+  zIndex: 9999,
   padding: '1rem',
 };
 
@@ -443,6 +506,12 @@ const modalContentStyle: React.CSSProperties = {
   width: '100%',
   maxHeight: '90vh',
   overflowY: 'auto',
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+};
+
+const connectModalContentStyle: React.CSSProperties = {
+  maxWidth: '450px',
+  width: '100%',
   boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
 };
 

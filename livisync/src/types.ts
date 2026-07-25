@@ -9,16 +9,20 @@ export interface Preferences {
 export interface User {
   id: string;
   name: string;
+  email: string;
   age: number;
   gender: 'male' | 'female' | 'other';
   photo: string;
   bio: string;
   budget: number; // monthly max budget
   location: string; // e.g. Lahore, Islamabad
-  role: 'student' | 'admin';
+  role: 'student' | 'admin' | 'owner';
   status: 'active' | 'suspended';
   preferences: Preferences;
   blockedUsers: string[]; // user IDs blocked by this user
+  occupation?: 'student' | 'job';
+  institution?: string;
+  company?: string;
 }
 
 export interface Hostel {
@@ -29,6 +33,8 @@ export interface Hostel {
   description: string;
   images: string[];
   amenities: string[];
+  ownerId?: string;
+  isVerified: boolean;
   rooms: {
     sharingType: 'single' | 'double' | 'triple';
     available: number;

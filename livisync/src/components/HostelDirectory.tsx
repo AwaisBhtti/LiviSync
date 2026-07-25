@@ -42,9 +42,12 @@ export const HostelDirectory = ({
       );
 
     const matchesAmenity =
-      selectedAmenity === 'all' || hostel.amenities.includes(selectedAmenity);
+      selectedAmenity === 'all' ||
+      hostel.amenities.includes(selectedAmenity);
 
-    return matchesSearch && matchesPrice && matchesSharing && matchesAmenity;
+    const isVisible = hostel.isVerified || currentUser.role === 'admin' || hostel.ownerId === currentUser.id;
+
+    return matchesSearch && matchesPrice && matchesSharing && matchesAmenity && isVisible;
   });
 
   const getOccupantDetails = (occupantId: string) => {

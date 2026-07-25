@@ -14,6 +14,12 @@ export const ProfileSettings = ({ currentUser, onSave }: ProfileSettingsProps) =
   const [bio, setBio] = useState(currentUser.bio);
   const [budget, setBudget] = useState(currentUser.budget);
   const [location, setLocation] = useState(currentUser.location);
+  
+  // New occupation status, institution, and company fields
+  const [occupation, setOccupation] = useState<'student' | 'job'>(currentUser.occupation || 'student');
+  const [institution, setInstitution] = useState(currentUser.institution || '');
+  const [company, setCompany] = useState(currentUser.company || '');
+
   const [preferences, setPreferences] = useState<Preferences>({ ...currentUser.preferences });
   const [showSavedMsg, setShowSavedMsg] = useState(false);
 
@@ -27,6 +33,9 @@ export const ProfileSettings = ({ currentUser, onSave }: ProfileSettingsProps) =
       bio,
       budget: Number(budget),
       location,
+      occupation,
+      institution: occupation === 'student' ? institution : '',
+      company: occupation === 'job' ? company : '',
       preferences,
     });
     setShowSavedMsg(true);
@@ -110,6 +119,43 @@ export const ProfileSettings = ({ currentUser, onSave }: ProfileSettingsProps) =
                 required
               />
             </div>
+
+            <div className="form-group">
+              <label className="form-label">Occupation Status</label>
+              <select
+                className="form-select"
+                value={occupation}
+                onChange={(e) => setOccupation(e.target.value as any)}
+              >
+                <option value="student">Student</option>
+                <option value="job">Job Holder</option>
+              </select>
+            </div>
+
+            {/* Conditionally display university or company */}
+            {occupation === 'student' ? (
+              <div className="form-group">
+                <label className="form-label">University / Institute (Optional)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. NUST, FAST"
+                  value={institution}
+                  onChange={(e) => setInstitution(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="form-group">
+                <label className="form-label">Company Name (Optional)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Systems Ltd, Google"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                />
+              </div>
+            )}
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label className="form-label">Monthly Budget Limit (PKR)</label>
@@ -209,7 +255,7 @@ export const ProfileSettings = ({ currentUser, onSave }: ProfileSettingsProps) =
           <div style={footerStyle}>
             {showSavedMsg && (
               <span style={{ color: 'var(--success)', fontSize: '0.875rem', fontWeight: 500 }}>
-                Preferences saved and compatibility scores updated!
+                Profile and preferences saved successfully!
               </span>
             )}
             <button type="submit" className="btn btn-primary" style={{ marginLeft: 'auto' }}>

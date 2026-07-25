@@ -1,81 +1,90 @@
+import { Link, useLocation } from 'react-router-dom';
 import { Building, Users, MessageSquare, User, Shield } from 'lucide-react';
 import type { User as UserType } from '../types';
 
 interface NavbarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   currentUser: UserType;
-  onToggleRole: () => void;
+  onLogout: () => void;
   unreadCount: number;
 }
 
 export const Navbar = ({
-  activeTab,
-  setActiveTab,
   currentUser,
-  onToggleRole,
+  onLogout,
   unreadCount,
 }: NavbarProps) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
   return (
     <>
       {/* Desktop Top Navbar */}
       <header style={headerStyle}>
         <div style={navContainerStyle}>
-          <div style={logoSectionStyle} onClick={() => setActiveTab('hostels')}>
+          <Link style={logoSectionStyle} to="/hostels">
             <Building size={20} strokeWidth={2.2} />
             <span style={logoTextStyle}>LiviSync</span>
-          </div>
+          </Link>
 
           <nav style={desktopNavStyle}>
-            <button
-              onClick={() => setActiveTab('hostels')}
-              style={tabButtonStyle(activeTab === 'hostels')}
+            <Link
+              to="/hostels"
+              style={tabButtonStyle(currentPath === '/hostels' || currentPath === '/')}
             >
               <Building size={16} />
               Hostels
-            </button>
-            <button
-              onClick={() => setActiveTab('roommates')}
-              style={tabButtonStyle(activeTab === 'roommates')}
+            </Link>
+            <Link
+              to="/roommates"
+              style={tabButtonStyle(currentPath === '/roommates')}
             >
               <Users size={16} />
               Roommates
-            </button>
-            <button
-              onClick={() => setActiveTab('chats')}
-              style={tabButtonStyle(activeTab === 'chats')}
+            </Link>
+            <Link
+              to="/chats"
+              style={tabButtonStyle(currentPath === '/chats')}
             >
               <MessageSquare size={16} />
               Inbox
               {unreadCount > 0 && <span style={unreadBadgeStyle}>{unreadCount}</span>}
-            </button>
-            <button
-              onClick={() => setActiveTab('profile')}
-              style={tabButtonStyle(activeTab === 'profile')}
+            </Link>
+            <Link
+              to="/profile"
+              style={tabButtonStyle(currentPath === '/profile')}
             >
               <User size={16} />
               Profile
-            </button>
+            </Link>
+            {currentUser.role === 'owner' && (
+              <Link
+                to="/owner"
+                style={tabButtonStyle(currentPath === '/owner')}
+              >
+                <Building size={16} />
+                Owner Portal
+              </Link>
+            )}
             {currentUser.role === 'admin' && (
-              <button
-                onClick={() => setActiveTab('admin')}
-                style={tabButtonStyle(activeTab === 'admin')}
+              <Link
+                to="/admin"
+                style={tabButtonStyle(currentPath === '/admin')}
               >
                 <Shield size={16} />
                 Admin
-              </button>
+              </Link>
             )}
           </nav>
 
           <div style={userControlStyle}>
             <div style={roleDisplayStyle}>
-              <span style={roleLabelStyle}>Simulated Role:</span>
+              <span style={roleLabelStyle}>Role:</span>
               <span style={roleBadgeStyle(currentUser.role)}>
-                {currentUser.role === 'admin' ? 'Admin' : 'Student'}
+                {currentUser.role === 'admin' ? 'Admin' : currentUser.role === 'owner' ? 'Owner' : 'Student'}
               </span>
             </div>
-            <button className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }} onClick={onToggleRole}>
-              Switch Role
+            <button className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }} onClick={onLogout}>
+              Sign Out
             </button>
           </div>
         </div>
@@ -83,45 +92,54 @@ export const Navbar = ({
 
       {/* Mobile Bottom Navbar */}
       <div className="mobile-nav-bar">
-        <button
-          onClick={() => setActiveTab('hostels')}
-          style={mobileTabButtonStyle(activeTab === 'hostels')}
+        <Link
+          to="/hostels"
+          style={mobileTabButtonStyle(currentPath === '/hostels' || currentPath === '/')}
         >
           <Building size={20} />
           <span style={mobileTabTextStyle}>Hostels</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('roommates')}
-          style={mobileTabButtonStyle(activeTab === 'roommates')}
+        </Link>
+        <Link
+          to="/roommates"
+          style={mobileTabButtonStyle(currentPath === '/roommates')}
         >
           <Users size={20} />
           <span style={mobileTabTextStyle}>Roommates</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('chats')}
-          style={mobileTabButtonStyle(activeTab === 'chats')}
+        </Link>
+        <Link
+          to="/chats"
+          style={mobileTabButtonStyle(currentPath === '/chats')}
         >
           <div style={{ position: 'relative' }}>
             <MessageSquare size={20} />
             {unreadCount > 0 && <span style={mobileUnreadBadgeStyle}>{unreadCount}</span>}
           </div>
           <span style={mobileTabTextStyle}>Inbox</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('profile')}
-          style={mobileTabButtonStyle(activeTab === 'profile')}
+        </Link>
+        <Link
+          to="/profile"
+          style={mobileTabButtonStyle(currentPath === '/profile')}
         >
           <User size={20} />
           <span style={mobileTabTextStyle}>Profile</span>
-        </button>
+        </Link>
+        {currentUser.role === 'owner' && (
+          <Link
+            to="/owner"
+            style={mobileTabButtonStyle(currentPath === '/owner')}
+          >
+            <Building size={20} />
+            <span style={mobileTabTextStyle}>Owner</span>
+          </Link>
+        )}
         {currentUser.role === 'admin' && (
-          <button
-            onClick={() => setActiveTab('admin')}
-            style={mobileTabButtonStyle(activeTab === 'admin')}
+          <Link
+            to="/admin"
+            style={mobileTabButtonStyle(currentPath === '/admin')}
           >
             <Shield size={20} />
             <span style={mobileTabTextStyle}>Admin</span>
-          </button>
+          </Link>
         )}
       </div>
     </>
@@ -232,7 +250,7 @@ const roleLabelStyle: React.CSSProperties = {
 
 const roleBadgeStyle = (role: string): React.CSSProperties => ({
   fontWeight: 600,
-  color: role === 'admin' ? 'var(--danger)' : 'var(--primary)',
+  color: role === 'admin' ? 'var(--danger)' : role === 'owner' ? 'var(--success)' : 'var(--primary)',
 });
 
 const mobileTabButtonStyle = (isActive: boolean): React.CSSProperties => ({
