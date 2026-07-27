@@ -35,7 +35,7 @@ export const fetchHostels = createAsyncThunk(
         location: h.location,
         description: h.description || '',
         photo: h.photo || '',
-        amenities: h.amenities ? h.amenities.map((a: any) => a.amenity) : [],
+        amenities: h.amenities ? h.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: h.owner_id,
         isVerified: h.is_verified,
         rooms: h.rooms ? h.rooms.map((r: any) => ({
@@ -97,7 +97,7 @@ export const addHostel = createAsyncThunk(
         location: data.location,
         description: data.description || '',
         photo: data.photo || '',
-        amenities: data.amenities ? data.amenities.map((a: any) => a.amenity) : [],
+        amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
         rooms: []
@@ -130,7 +130,7 @@ export const editHostel = createAsyncThunk(
         location: data.location,
         description: data.description || '',
         photo: data.photo || '',
-        amenities: data.amenities ? data.amenities.map((a: any) => a.amenity) : [],
+        amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
         rooms: data.rooms ? data.rooms.map((r: any) => ({

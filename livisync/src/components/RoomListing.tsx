@@ -128,7 +128,10 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.detail || 'Failed to list room');
+        const errMsg = Array.isArray(data.detail)
+          ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+          : data.detail || 'Failed to list room';
+        throw new Error(errMsg);
       }
 
       setSuccessMsg('Room listed successfully!');

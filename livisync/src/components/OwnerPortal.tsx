@@ -151,7 +151,10 @@ export const OwnerPortal = ({
         
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data.detail || 'Failed to create hostel');
+          const errMsg = Array.isArray(data.detail)
+            ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+            : data.detail || 'Failed to create hostel';
+          throw new Error(errMsg);
         }
 
         const createdHostel: Hostel = {
@@ -160,7 +163,7 @@ export const OwnerPortal = ({
           location: data.location,
           description: data.description,
           photo: data.photo,
-          amenities: data.amenities ? data.amenities.map((a: any) => a.amenity) : [],
+          amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
           rooms: [],
           isVerified: data.is_verified,
           ownerId: data.owner_id
@@ -318,7 +321,21 @@ export const OwnerPortal = ({
               </div>
             </div>
 
-            <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+            <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              {editingHostel && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ marginRight: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                  onClick={() => {
+                    setSelectedHostelForRooms(editingHostel);
+                    setShowAddForm(false);
+                    resetForm();
+                  }}
+                >
+                  <ListPlus size={14} /> Edit Rooms
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -352,7 +369,7 @@ export const OwnerPortal = ({
             <div style={gridStyle}>
               {myHostels.map((hostel) => (
                 <div key={hostel.id} className="card" style={hostelCardStyle}>
-                  <img src={hostel.photo || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'} alt={hostel.name} style={imageStyle} />
+                  <img src={hostel.photo} alt={hostel.name} style={imageStyle} />
                   <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <h4 style={{ fontSize: '1.125rem' }}>{hostel.name}</h4>

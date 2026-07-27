@@ -64,13 +64,15 @@ export const HostelDirectory = ({
       hostel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       hostel.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesPrice = hostel.price <= maxPrice;
+    const matchesPrice = hostel.rooms && hostel.rooms.length > 0
+      ? hostel.rooms.some(r => r.price <= maxPrice)
+      : true;
 
     const matchesSharing =
       selectedSharing === 'all' ||
-      hostel.rooms.some(
-        (r) => r.sharingType === selectedSharing && r.available > 0
-      );
+      (hostel.rooms && hostel.rooms.some(
+        (r) => r.sharingType === selectedSharing && r.seatsAvailable > 0
+      ));
 
     const matchesAmenity =
       selectedAmenity === 'all' ||
@@ -106,7 +108,7 @@ export const HostelDirectory = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={mainImageContainerStyle}>
                 <img
-                  src={selectedHostel.images[0]}
+                  src={selectedHostel.photo}
                   alt={selectedHostel.name}
                   style={mainImageStyle}
                 />
@@ -144,7 +146,15 @@ export const HostelDirectory = ({
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '1.25rem', fontWeight: '700' }}>PKR {selectedHostel.price.toLocaleString()}</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>
+                      {(() => {
+                        if (!selectedHostel.rooms || selectedHostel.rooms.length === 0) return 'Rooms N/A';
+                        const prices = selectedHostel.rooms.map(r => r.price);
+                        const min = Math.min(...prices);
+                        const max = Math.max(...prices);
+                        return min === max ? `PKR ${min.toLocaleString()}` : `PKR ${min.toLocaleString()} - ${max.toLocaleString()}`;
+                      })()}
+                    </span>
                     <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--muted)' }}>/ month</span>
                   </div>
                 </div>
@@ -159,8 +169,8 @@ export const HostelDirectory = ({
                         {room.sharingType} Room Sharing
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: room.available > 0 ? 'var(--success)' : 'var(--danger)' }}>
-                          {room.available > 0 ? `${room.available} left` : 'Full'}
+                        <span style={{ fontSize: '0.8rem', color: room.seatsAvailable > 0 ? 'var(--success)' : 'var(--danger)' }}>
+                          {room.seatsAvailable > 0 ? `${room.seatsAvailable} left` : 'Full'}
                         </span>
                       </div>
                     </div>
@@ -324,7 +334,7 @@ export const HostelDirectory = ({
                       onClick={() => selectHostel(hostel)}
                     >
                       <img
-                        src={hostel.images[0]}
+                        src={hostel.photo}
                         alt={hostel.name}
                         style={hostelThumbnailStyle}
                       />
@@ -338,7 +348,13 @@ export const HostelDirectory = ({
                             </p>
                           </div>
                           <span style={{ fontSize: '0.95rem', fontWeight: 700 }}>
-                            PKR {hostel.price.toLocaleString()}/mo
+                            {(() => {
+                              if (!hostel.rooms || hostel.rooms.length === 0) return 'Rent N/A';
+                              const prices = hostel.rooms.map(r => r.price);
+                              const min = Math.min(...prices);
+                              const max = Math.max(...prices);
+                              return min === max ? `PKR ${min.toLocaleString()}/mo` : `PKR ${min.toLocaleString()} - ${max.toLocaleString()}/mo`;
+                            })()}
                           </span>
                         </div>
 

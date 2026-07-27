@@ -61,6 +61,7 @@ def create_hostel(hostel_in: HostelCreate, db: Session = Depends(get_db), curren
         db.add(db_amenity)
 
     db.commit()
+    db.refresh(new_hostel)
     return new_hostel
 
 @router.put("/hostels/{hostel_id}")
@@ -84,6 +85,7 @@ def update_hostel(hostel_id: uuid.UUID, hostel_in: HostelCreate, db: Session = D
         db.add(db_amenity)
 
     db.commit()
+    db.refresh(hostel)
     return hostel
 
 @router.delete("/hostels/{hostel_id}")
