@@ -22,39 +22,42 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
   const [floor, setFloor] = useState('Ground Floor');
   const [hasAttachedBathroom, setHasAttachedBathroom] = useState(false);
   const [furniture, setFurniture] = useState<'bed' | 'mattress' | 'nothing'>('nothing');
-  const [photoUrls, setPhotoUrls] = useState<string[]>(['', '']); // Start with 2 empty photo fields
-  const [uploadingIndexes, setUploadingIndexes] = useState<number[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
-  const handlePhotoUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleMultiplePhotosUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    setUploadingIndexes(prev => [...prev, index]);
-    const formData = new FormData();
-    formData.append('file', file);
+    setUploading(true);
+    const newUrls: string[] = [];
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/owners/upload-image`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || 'Upload failed');
+      try {
+        const response = await fetch(`${API_BASE_URL}/owners/upload-image`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || 'Upload failed');
+        }
+        newUrls.push(data.url);
+      } catch (err: any) {
+        alert(`Failed to upload file "${file.name}": ${err.message || err}`);
       }
-
-      const updated = [...photoUrls];
-      updated[index] = data.url;
-      setPhotoUrls(updated);
-    } catch (err: any) {
-      alert(err.message || 'Failed to upload photo');
-    } finally {
-      setUploadingIndexes(prev => prev.filter(i => i !== index));
     }
+
+    setPhotoUrls(prev => [...prev, ...newUrls]);
+    setUploading(false);
   };
 
   const fetchRooms = async () => {
@@ -87,15 +90,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
     fetchRooms();
   }, [hostel.id]);
 
-  const handleAddPhotoField = () => {
-    setPhotoUrls([...photoUrls, '']);
-  };
 
-  const handleRemovePhotoField = (index: number) => {
-    if (photoUrls.length > 2) {
-      setPhotoUrls(photoUrls.filter((_, i) => i !== index));
-    }
-  };
 
 
   const handleAddRoom = async (e: React.FormEvent) => {
@@ -297,61 +292,53 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
 
             <div className="form-group">
               <label className="form-label">
-                Room Photos <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>(Upload at least 2 photos)</span>
+                Room & Washroom Photos <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>(Upload at least 2 photos)</span>
               </label>
               <p style={{ color: 'var(--muted)', fontSize: '0.75rem', margin: '0 0 0.5rem 0' }}>
-                💡 <em>Provide at least one photo of the sleeping/bed area and one photo of the bathroom.</em>
+                💡 <em>Select and upload multiple photos at once (including sleeping area and bathroom).</em>
               </p>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {photoUrls.map((url, idx) => {
-                  const isUploading = uploadingIndexes.includes(idx);
-                  return (
-                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', border: '1px dashed var(--border)', padding: '0.75rem', borderRadius: 'var(--radius)', backgroundColor: 'var(--card)' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)' }}>
-                        {idx === 0 ? "Photo 1: Room Area *" : idx === 1 ? "Photo 2: Bathroom *" : `Photo ${idx + 1}`}
-                      </span>
-                      {url ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <img src={url} style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="" />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = [...photoUrls];
-                              updated[idx] = '';
-                              setPhotoUrls(updated);
-                            }}
-                            className="btn btn-secondary"
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: 'var(--danger)' }}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            required={idx < 2}
-                            onChange={(e) => handlePhotoUpload(idx, e)}
-                            disabled={isUploading}
-                            style={{ fontSize: '0.8rem' }}
-                          />
-                          {photoUrls.length > 2 && (
-                            <button type="button" onClick={() => handleRemovePhotoField(idx)} style={removeFieldBtnStyle}>
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      {isUploading && <span style={{ color: 'var(--primary)', fontSize: '0.75rem' }}>Uploading...</span>}
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleMultiplePhotosUpload}
+                disabled={uploading}
+                style={{ width: '100%', marginBottom: '0.5rem' }}
+              />
+              {uploading && <span style={{ color: 'var(--primary)', fontSize: '0.85rem', display: 'block', marginTop: '0.25rem' }}>Uploading photos to Cloudflare R2...</span>}
+
+              {photoUrls.length > 0 && (
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                  {photoUrls.map((url, idx) => (
+                    <div key={idx} style={{ position: 'relative', width: '80px', height: '60px' }}>
+                      <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }} alt="" />
+                      <button
+                        type="button"
+                        onClick={() => setPhotoUrls(photoUrls.filter((_, i) => i !== idx))}
+                        style={{
+                          position: 'absolute',
+                          top: '-5px',
+                          right: '-5px',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--danger)',
+                          color: 'white',
+                          border: 'none',
+                          fontSize: '10px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        ✕
+                      </button>
                     </div>
-                  );
-                })}
-              </div>
-              <button type="button" onClick={handleAddPhotoField} className="btn btn-secondary" style={{ marginTop: '0.75rem', fontSize: '0.8rem', padding: '0.375rem 0.75rem' }}>
-                + Add More Photo Fields
-              </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>

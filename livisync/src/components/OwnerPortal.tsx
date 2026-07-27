@@ -20,7 +20,9 @@ const BUILTIN_AMENITIES = [
   'Gym',
   'Geyser/Hot Water',
   'Security/CCTV',
-  'Power Backup'
+  'Power Backup',
+  'Terrace',
+  'Rooftop'
 ];
 
 export const OwnerPortal = ({
