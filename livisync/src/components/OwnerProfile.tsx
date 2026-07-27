@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import type { Owner } from '../types';
 import { User as UserIcon, Settings, Save } from 'lucide-react';
@@ -25,7 +26,7 @@ export const OwnerProfile = ({ currentUser }: OwnerProfileProps) => {
 
     const token = localStorage.getItem('livisync_token');
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/change-password', {
+      const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

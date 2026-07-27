@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import type { Hostel, User } from '../types';
 import { Search, MapPin, Check, Users, ArrowLeft } from 'lucide-react';
@@ -33,7 +34,7 @@ export const HostelDirectory = ({
     if (!token || !selectedHostel) return;
     setLoadingPhone(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/hostels/${selectedHostel.id}/view-phone`, {
+      const response = await fetch(`${API_BASE_URL}/hostels/${selectedHostel.id}/view-phone`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

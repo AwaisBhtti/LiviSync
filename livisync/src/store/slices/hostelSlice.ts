@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { Hostel } from '../../types';
 
@@ -18,8 +19,8 @@ export const fetchHostels = createAsyncThunk(
   async ({ token, role }: { token: string; role: string }, { rejectWithValue }) => {
     try {
       const endpoint = role === 'admin'
-        ? 'http://127.0.0.1:8000/admin/hostels'
-        : 'http://127.0.0.1:8000/hostels';
+        ? `${API_BASE_URL}/admin/hostels`
+        : `${API_BASE_URL}/hostels`;
 
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -27,7 +28,28 @@ export const fetchHostels = createAsyncThunk(
       if (!response.ok) {
         throw new Error('Failed to fetch hostels');
       }
-      return await response.json() as Hostel[];
+      const data = await response.json();
+      const mappedHostels = data.map((h: any) => ({
+        id: h.id,
+        name: h.name,
+        location: h.location,
+        description: h.description || '',
+        photo: h.photo || '',
+        amenities: h.amenities ? h.amenities.map((a: any) => a.amenity) : [],
+        ownerId: h.owner_id,
+        isVerified: h.is_verified,
+        rooms: h.rooms ? h.rooms.map((r: any) => ({
+          id: r.id,
+          hostelId: r.hostel_id,
+          sharingType: r.sharing_type,
+          price: r.price,
+          seatsAvailable: r.seats_available,
+          floor: r.floor,
+          hasAttachedBathroom: r.has_attached_bathroom,
+          images: r.images || []
+        })) : []
+      }));
+      return mappedHostels as Hostel[];
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error fetching hostels');
     }
@@ -38,7 +60,7 @@ export const verifyHostel = createAsyncThunk(
   'hostels/verifyHostel',
   async ({ hostelId, token }: { hostelId: string; token: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/admin/hostels/${hostelId}/verify`, {
+      const response = await fetch(`${API_BASE_URL}/admin/hostels/${hostelId}/verify`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -57,7 +79,7 @@ export const addHostel = createAsyncThunk(
   'hostels/addHostel',
   async ({ newHostel, token }: { newHostel: Omit<Hostel, 'id' | 'isVerified'>; token: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/owners/hostels', {
+      const response = await fetch(`${API_BASE_URL}/owners/hostels`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +91,17 @@ export const addHostel = createAsyncThunk(
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to list hostel');
       }
-      return data as Hostel;
+      return {
+        id: data.id,
+        name: data.name,
+        location: data.location,
+        description: data.description || '',
+        photo: data.photo || '',
+        amenities: data.amenities ? data.amenities.map((a: any) => a.amenity) : [],
+        ownerId: data.owner_id,
+        isVerified: data.is_verified,
+        rooms: []
+      } as Hostel;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error listing hostel');
     }
@@ -80,7 +112,7 @@ export const editHostel = createAsyncThunk(
   'hostels/editHostel',
   async ({ updatedHostel, token }: { updatedHostel: Hostel; token: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/owners/hostels/${updatedHostel.id}`, {
+      const response = await fetch(`${API_BASE_URL}/owners/hostels/${updatedHostel.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +124,26 @@ export const editHostel = createAsyncThunk(
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to update hostel listing');
       }
-      return updatedHostel;
+      return {
+        id: data.id,
+        name: data.name,
+        location: data.location,
+        description: data.description || '',
+        photo: data.photo || '',
+        amenities: data.amenities ? data.amenities.map((a: any) => a.amenity) : [],
+        ownerId: data.owner_id,
+        isVerified: data.is_verified,
+        rooms: data.rooms ? data.rooms.map((r: any) => ({
+          id: r.id,
+          hostelId: r.hostel_id,
+          sharingType: r.sharing_type,
+          price: r.price,
+          seatsAvailable: r.seats_available,
+          floor: r.floor,
+          hasAttachedBathroom: r.has_attached_bathroom,
+          images: r.images || []
+        })) : []
+      } as Hostel;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error updating hostel listing');
     }
@@ -103,7 +154,7 @@ export const deleteHostel = createAsyncThunk(
   'hostels/deleteHostel',
   async ({ hostelId, token }: { hostelId: string; token: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/owners/hostels/${hostelId}`, {
+      const response = await fetch(`${API_BASE_URL}/owners/hostels/${hostelId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

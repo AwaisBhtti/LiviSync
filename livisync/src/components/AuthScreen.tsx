@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import { Building, Mail, Lock, User, AlertCircle } from 'lucide-react';
 
@@ -24,7 +25,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
         ? { email, password }
         : { email, password, name };
 
-      const response = await fetch(`http://127.0.0.1:8000/auth/${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/auth/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
         onAuthSuccess(data.access_token);
       } else {
         // Automatically log in after registration
-        const loginResponse = await fetch('http://127.0.0.1:8000/auth/login', {
+        const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

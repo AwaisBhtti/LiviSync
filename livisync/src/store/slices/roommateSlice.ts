@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { Student } from '../../types';
 
@@ -17,7 +18,7 @@ export const fetchRoommates = createAsyncThunk(
   'roommates/fetchRoommates',
   async (token: string, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/students/roommates', {
+      const response = await fetch(`${API_BASE_URL}/students/roommates`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {

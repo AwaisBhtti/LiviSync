@@ -71,20 +71,27 @@ export interface Admin {
 
 export type User = Student | Owner | Admin;
 
+export interface Room {
+  id: string;
+  hostelId: string;
+  sharingType: 'single' | 'double' | 'triple' | 'quad';
+  price: number;
+  seatsAvailable: number;
+  floor: string;
+  hasAttachedBathroom: boolean;
+  images: string[];
+}
+
 export interface Hostel {
   id: string;
   name: string;
   location: string;
-  price: number; // monthly rent
   description: string;
-  images: string[];
+  photo?: string;
   amenities: string[];
   ownerId?: string;
   isVerified: boolean;
-  rooms: {
-    sharingType: 'single' | 'double' | 'triple';
-    available: number;
-  }[];
+  rooms: Room[];
   currentOccupants?: string[];
 }
 

@@ -20,18 +20,20 @@ def require_owner(current_user = Depends(get_current_user)):
         )
     return current_user
 
-class RoomSchema(BaseModel):
-    sharingType: str
-    available: int
+class RoomCreate(BaseModel):
+    sharing_type: str
+    price: int
+    seats_available: int
+    floor: str
+    has_attached_bathroom: bool
+    images: List[str]
 
 class HostelCreate(BaseModel):
     name: str
     location: str
-    price: int
     description: str
-    images: List[str]
+    photo: str
     amenities: List[str]
-    rooms: List[RoomSchema]
 
 @router.get("/hostels")
 def get_my_hostels(db: Session = Depends(get_db), current_user: Owner = Depends(require_owner)):
@@ -42,9 +44,8 @@ def create_hostel(hostel_in: HostelCreate, db: Session = Depends(get_db), curren
     new_hostel = Hostel(
         name=hostel_in.name,
         location=hostel_in.location,
-        price=hostel_in.price,
         description=hostel_in.description,
-        images=hostel_in.images,
+        photo=hostel_in.photo,
         owner_id=current_user.id,
         is_verified=False  # Must be verified by admin
     )
@@ -56,11 +57,6 @@ def create_hostel(hostel_in: HostelCreate, db: Session = Depends(get_db), curren
     for amenity in hostel_in.amenities:
         db_amenity = HostelAmenity(hostel_id=new_hostel.id, amenity=amenity)
         db.add(db_amenity)
-
-    # Add rooms
-    for room in hostel_in.rooms:
-        db_room = HostelRoom(hostel_id=new_hostel.id, sharing_type=room.sharingType, available=room.available)
-        db.add(db_room)
 
     db.commit()
     return new_hostel
@@ -76,21 +72,14 @@ def update_hostel(hostel_id: uuid.UUID, hostel_in: HostelCreate, db: Session = D
     
     hostel.name = hostel_in.name
     hostel.location = hostel_in.location
-    hostel.price = hostel_in.price
     hostel.description = hostel_in.description
-    hostel.images = hostel_in.images
+    hostel.photo = hostel_in.photo
     
     # Re-add amenities
     db.query(HostelAmenity).filter(HostelAmenity.hostel_id == hostel_id).delete()
     for amenity in hostel_in.amenities:
         db_amenity = HostelAmenity(hostel_id=hostel_id, amenity=amenity)
         db.add(db_amenity)
-
-    # Re-add rooms
-    db.query(HostelRoom).filter(HostelRoom.hostel_id == hostel_id).delete()
-    for room in hostel_in.rooms:
-        db_room = HostelRoom(hostel_id=hostel_id, sharing_type=room.sharingType, available=room.available)
-        db.add(db_room)
 
     db.commit()
     return hostel
@@ -107,3 +96,56 @@ def delete_hostel(hostel_id: uuid.UUID, db: Session = Depends(get_db), current_u
     db.delete(hostel)
     db.commit()
     return {"message": "Hostel listing deleted successfully"}
+
+@router.post("/hostels/{hostel_id}/rooms", status_code=status.HTTP_201_CREATED)
+def create_room(hostel_id: uuid.UUID, room_in: RoomCreate, db: Session = Depends(get_db), current_user: Owner = Depends(require_owner)):
+    # Verify owner owns this hostel
+    hostel = db.query(Hostel).filter(Hostel.id == hostel_id, Hostel.owner_id == current_user.id).first()
+    if not hostel:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Hostel listing not found or not owned by you"
+        )
+    
+    # Enforce uploading at least 2 images
+    if len(room_in.images) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You must upload at least 2 pictures for the room (including room area and bathroom)."
+        )
+        
+    db_room = HostelRoom(
+        hostel_id=hostel_id,
+        sharing_type=room_in.sharing_type,
+        price=room_in.price,
+        seats_available=room_in.seats_available,
+        floor=room_in.floor,
+        has_attached_bathroom=room_in.has_attached_bathroom,
+        images=room_in.images
+    )
+    db.add(db_room)
+    db.commit()
+    db.refresh(db_room)
+    return db_room
+
+@router.get("/hostels/{hostel_id}/rooms")
+def get_hostel_rooms(hostel_id: uuid.UUID, db: Session = Depends(get_db), current_user: Owner = Depends(require_owner)):
+    hostel = db.query(Hostel).filter(Hostel.id == hostel_id, Hostel.owner_id == current_user.id).first()
+    if not hostel:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Hostel listing not found or not owned by you"
+        )
+    return db.query(HostelRoom).filter(HostelRoom.hostel_id == hostel_id).all()
+
+@router.delete("/rooms/{room_id}")
+def delete_room(room_id: uuid.UUID, db: Session = Depends(get_db), current_user: Owner = Depends(require_owner)):
+    room = db.query(HostelRoom).join(Hostel).filter(HostelRoom.id == room_id, Hostel.owner_id == current_user.id).first()
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Room not found or not owned by you"
+        )
+    db.delete(room)
+    db.commit()
+    return {"message": "Room deleted successfully"}

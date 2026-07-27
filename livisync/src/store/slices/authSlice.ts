@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { User, Student, Owner, Admin } from '../../types';
 
@@ -17,7 +18,7 @@ export const fetchCurrentUser = createAsyncThunk(
   'auth/fetchCurrentUser',
   async (authToken: string, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/me', {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -85,7 +86,7 @@ export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
   async ({ updatedUser, token }: { updatedUser: Student; token: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/students/profile', {
+      const response = await fetch(`${API_BASE_URL}/students/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import type { User, Report, Hostel } from '../types';
 import { Building, Users, ShieldAlert, CheckCircle, Ban, RefreshCw } from 'lucide-react';
@@ -147,6 +148,15 @@ export const AdminPanel = ({
 }: AdminPanelProps) => {
   const pendingReports = reports.filter((r) => r.status === 'pending');
 
+  const getPriceRangeString = (hostel: Hostel) => {
+    if (!hostel.rooms || hostel.rooms.length === 0) return 'Rooms not listed';
+    const prices = hostel.rooms.map(r => r.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    if (minPrice === maxPrice) return `PKR ${minPrice.toLocaleString()}`;
+    return `PKR ${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()}`;
+  };
+
   const [invitations, setInvitations] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
@@ -159,7 +169,7 @@ export const AdminPanel = ({
   const fetchInvitations = async () => {
     try {
       const token = localStorage.getItem('livisync_token');
-      const response = await fetch('http://127.0.0.1:8000/admin/invitations', {
+      const response = await fetch(`${API_BASE_URL}/admin/invitations`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -178,7 +188,7 @@ export const AdminPanel = ({
   const handleRevokeInvitation = async (token: string) => {
     try {
       const userToken = localStorage.getItem('livisync_token');
-      const response = await fetch(`http://127.0.0.1:8000/admin/invitations/${token}/revoke`, {
+      const response = await fetch(`${API_BASE_URL}/admin/invitations/${token}/revoke`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${userToken}` }
       });
@@ -199,7 +209,7 @@ export const AdminPanel = ({
 
     try {
       const token = localStorage.getItem('livisync_token');
-      const response = await fetch('http://127.0.0.1:8000/admin/invite', {
+      const response = await fetch(`${API_BASE_URL}/admin/invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -651,7 +661,7 @@ export const AdminPanel = ({
                   <tr key={hostel.id} style={tableRowStyle}>
                     <td style={tdStyle}>{hostel.name}</td>
                     <td style={tdStyle}>{hostel.location}</td>
-                    <td style={tdStyle}>{hostel.price.toLocaleString()}</td>
+                    <td style={tdStyle}>{getPriceRangeString(hostel)}</td>
                     <td style={tdStyle}>
                       <button
                         className="btn btn-primary"

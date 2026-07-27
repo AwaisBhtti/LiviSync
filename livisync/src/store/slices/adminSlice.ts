@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config';
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { User, Report } from '../../types';
 
@@ -19,7 +20,7 @@ export const fetchReports = createAsyncThunk(
   'admin/fetchReports',
   async (token: string, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/admin/reports', {
+      const response = await fetch(`${API_BASE_URL}/admin/reports`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -46,7 +47,7 @@ export const resolveReport = createAsyncThunk(
   'admin/resolveReport',
   async ({ reportId, token }: { reportId: string; token: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/admin/reports/${reportId}/resolve`, {
+      const response = await fetch(`${API_BASE_URL}/admin/reports/${reportId}/resolve`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -65,7 +66,7 @@ export const fetchUsers = createAsyncThunk(
   'admin/fetchUsers',
   async (token: string, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/admin/users', {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -84,7 +85,7 @@ export const toggleUserStatus = createAsyncThunk(
   async ({ userId, token, currentStatus, role }: { userId: string; token: string; currentStatus: string; role: 'student' | 'owner' }, { rejectWithValue }) => {
     try {
       const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
-      const response = await fetch(`http://127.0.0.1:8000/admin/users/${role}/${userId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${role}/${userId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ export const deleteUser = createAsyncThunk(
   'admin/deleteUser',
   async ({ userId, token, role }: { userId: string; token: string; role: 'student' | 'owner' }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/admin/users/${role}/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${role}/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
