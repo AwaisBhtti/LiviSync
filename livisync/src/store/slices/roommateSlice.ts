@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import type { User } from '../../types';
+import type { Student } from '../../types';
 
 interface RoommateState {
-  users: User[];
+  users: Student[];
   loading: boolean;
   error: string | null;
 }
@@ -15,13 +15,9 @@ const initialState: RoommateState = {
 
 export const fetchRoommates = createAsyncThunk(
   'roommates/fetchRoommates',
-  async ({ token, role }: { token: string; role: string }, { rejectWithValue }) => {
+  async (token: string, { rejectWithValue }) => {
     try {
-      const endpoint = role === 'admin'
-        ? 'http://127.0.0.1:8000/admin/users'
-        : 'http://127.0.0.1:8000/users/roommates';
-        
-      const response = await fetch(endpoint, {
+      const response = await fetch('http://127.0.0.1:8000/students/roommates', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -29,27 +25,23 @@ export const fetchRoommates = createAsyncThunk(
       }
       const data = await response.json();
       
-      if (role === 'admin') {
-        // admin endpoint returns raw admin user structures
-        return data as User[];
-      }
-      
-      // Map student endpoint structures
-      const mappedUsers: User[] = data.map((u: any) => ({
+      const mappedUsers: Student[] = data.map((u: any) => ({
         id: u.id,
         email: u.email,
-        name: u.profile?.name || 'New User',
-        age: u.profile?.age || 18,
-        gender: u.profile?.gender || 'male',
-        photo: u.profile?.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80',
-        bio: u.profile?.bio || '',
-        budget: u.profile?.budget || 0,
-        location: u.profile?.location || '',
-        role: u.profile?.role || 'student',
-        status: u.profile?.status || 'active',
-        occupation: u.profile?.occupation || 'student',
-        institution: u.profile?.institution || '',
-        company: u.profile?.company || '',
+        name: u.name || 'New User',
+        age: u.age || 18,
+        gender: u.gender || 'male',
+        photo: u.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80',
+        bio: u.bio || '',
+        budget: u.budget || 0,
+        location: u.location || '',
+        role: 'student',
+        status: u.status || 'active',
+        occupation: u.occupation || 'student',
+        institution: u.institution || '',
+        company: u.company || '',
+        phone: u.phone || '',
+        hostelId: u.hostel_id || undefined,
         preferences: {
           sleepSchedule: u.preferences?.sleep_schedule || 'flexible',
           cleanliness: u.preferences?.cleanliness || 'moderate',
@@ -66,59 +58,14 @@ export const fetchRoommates = createAsyncThunk(
   }
 );
 
-export const toggleUserStatus = createAsyncThunk(
-  'roommates/toggleUserStatus',
-  async ({ userId, token, currentStatus }: { userId: string; token: string; currentStatus: string }, { rejectWithValue }) => {
-    try {
-      const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
-      const response = await fetch(`http://127.0.0.1:8000/admin/users/${userId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: nextStatus })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to update status on server');
-      }
-      return { userId, nextStatus: nextStatus as 'active' | 'suspended' };
-    } catch (err: any) {
-      return rejectWithValue(err.message || 'Error toggling user status');
-    }
-  }
-);
-
-export const deleteUser = createAsyncThunk(
-  'roommates/deleteUser',
-  async ({ userId, token }: { userId: string; token: string }, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`http://127.0.0.1:8000/admin/users/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to delete user on server');
-      }
-      return userId;
-    } catch (err: any) {
-      return rejectWithValue(err.message || 'Error deleting user');
-    }
-  }
-);
-
 const roommateSlice = createSlice({
   name: 'roommates',
   initialState,
   reducers: {
-    updateUserInList: (state, action: PayloadAction<User>) => {
+    updateUserInList: (state, action: PayloadAction<Student>) => {
       state.users = state.users.map((u) => u.id === action.payload.id ? action.payload : u);
     },
-    setUsersState: (state, action: PayloadAction<User[]>) => {
+    setUsersState: (state, action: PayloadAction<Student[]>) => {
       state.users = action.payload;
     }
   },
@@ -128,19 +75,13 @@ const roommateSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchRoommates.fulfilled, (state, action: PayloadAction<User[]>) => {
+      .addCase(fetchRoommates.fulfilled, (state, action: PayloadAction<Student[]>) => {
         state.loading = false;
         state.users = action.payload;
       })
       .addCase(fetchRoommates.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      })
-      .addCase(toggleUserStatus.fulfilled, (state, action: PayloadAction<{ userId: string; nextStatus: 'active' | 'suspended' }>) => {
-        state.users = state.users.map((u) => u.id === action.payload.userId ? { ...u, status: action.payload.nextStatus } : u);
-      })
-      .addCase(deleteUser.fulfilled, (state, action: PayloadAction<string>) => {
-        state.users = state.users.filter((u) => u.id !== action.payload);
       });
   }
 });

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from . import models  # Ensure models are loaded so they are created in the database
-from .routers import auth, admin, users, hostels, matches
+from .routers import auth, admin, students, owners, hostels
 
 # Create tables in database
 Base.metadata.create_all(bind=engine)
@@ -16,16 +16,16 @@ app = FastAPI(
 
 # Register routers
 app.include_router(auth.router)
-app.include_router(users.router)
+app.include_router(students.router)
+app.include_router(owners.router)
 app.include_router(hostels.router)
-app.include_router(matches.router)
 app.include_router(admin.router)
 
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to specific domains (e.g. ["http://localhost:5173"]) in production
+    allow_origins=["*"],  # Adjust this to specific domains in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

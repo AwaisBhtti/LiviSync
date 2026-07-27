@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import type { User, Hostel, Report } from './types';
+import type { User, Hostel, Report, Student, Owner, Admin } from './types';
 import { Navbar } from './components/Navbar';
 import { HostelDirectory } from './components/HostelDirectory';
 import { RoommateFinder } from './components/RoommateFinder';
 import { ChatModule } from './components/ChatModule';
-import { ProfileSettings } from './components/ProfileSettings';
+import { StudentProfile } from './components/StudentProfile';
+import { OwnerProfile } from './components/OwnerProfile';
+import { AdminProfile } from './components/AdminProfile';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthScreen } from './components/AuthScreen';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -28,8 +30,6 @@ import {
 } from './store/slices/hostelSlice';
 import {
   fetchRoommates,
-  toggleUserStatus,
-  deleteUser,
   updateUserInList,
 } from './store/slices/roommateSlice';
 import {
@@ -43,6 +43,9 @@ import {
   fetchReports,
   resolveReport,
   addLocalReport,
+  fetchUsers,
+  toggleUserStatus,
+  deleteUser,
 } from './store/slices/adminSlice';
 
 export default function App() {
@@ -51,9 +54,9 @@ export default function App() {
   // Select states from Redux store
   const { token, currentUser, loadingData: authLoading } = useAppSelector((state) => state.auth);
   const { hostels, loading: hostelsLoading } = useAppSelector((state) => state.hostels);
-  const { users, loading: usersLoading } = useAppSelector((state) => state.roommates);
+  const { users: studentRoommates, loading: usersLoading } = useAppSelector((state) => state.roommates);
   const { matchRequests, loading: matchesLoading } = useAppSelector((state) => state.matches);
-  const { reports, loading: adminLoading } = useAppSelector((state) => state.admin);
+  const { users: adminUsers, reports, loading: adminLoading } = useAppSelector((state) => state.admin);
 
   const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading;
 
@@ -69,10 +72,12 @@ export default function App() {
     if (token && currentUser) {
       const role = currentUser.role;
       dispatch(fetchHostels({ token, role }));
-      dispatch(fetchRoommates({ token, role }));
-      dispatch(fetchMatches({ token, role }));
 
-      if (role === 'admin') {
+      if (role === 'student') {
+        dispatch(fetchRoommates(token));
+        dispatch(fetchMatches({ token, role }));
+      } else if (role === 'admin') {
+        dispatch(fetchUsers(token));
         dispatch(fetchReports(token));
       }
     }
@@ -90,7 +95,7 @@ export default function App() {
   const handleSaveProfile = async (updatedUser: User) => {
     if (!token) return;
     try {
-      const result = await dispatch(updateProfile({ updatedUser, token })).unwrap();
+      const result = await dispatch(updateProfile({ updatedUser: updatedUser as Student, token })).unwrap();
       dispatch(updateUserInList(result));
     } catch (err: any) {
       alert(err || 'Error occurred saving profile.');
@@ -116,7 +121,7 @@ export default function App() {
 
   // Handler: Block User
   const handleBlockUser = (targetId: string) => {
-    if (!currentUser) return;
+    if (!currentUser || currentUser.role !== 'student') return;
     const updatedBlocked = currentUser.blockedUsers.includes(targetId)
       ? currentUser.blockedUsers
       : [...currentUser.blockedUsers, targetId];
@@ -137,7 +142,7 @@ export default function App() {
       reason: reason as any,
       description,
       status: 'pending',
-      timestamp: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     };
 
     dispatch(addLocalReport(newReport));
@@ -147,11 +152,11 @@ export default function App() {
   // Handler Admin: Toggle User Status (Suspend/Activate)
   const handleToggleUserStatus = async (userId: string) => {
     if (!token) return;
-    const user = users.find((u) => u.id === userId);
+    const user = adminUsers.find((u) => u.id === userId);
     if (!user) return;
 
     try {
-      await dispatch(toggleUserStatus({ userId, token, currentStatus: user.status })).unwrap();
+      await dispatch(toggleUserStatus({ userId, token, currentStatus: user.status, role: user.role as 'student' | 'owner' })).unwrap();
     } catch (err: any) {
       alert(err || 'Error occurred updating status.');
     }
@@ -181,8 +186,10 @@ export default function App() {
   // Handler Admin: Delete User Profile
   const handleDeleteUser = async (userId: string) => {
     if (!token) return;
+    const user = adminUsers.find((u) => u.id === userId);
+    if (!user) return;
     try {
-      await dispatch(deleteUser({ userId, token })).unwrap();
+      await dispatch(deleteUser({ userId, token, role: user.role as 'student' | 'owner' })).unwrap();
       dispatch(removeMatchesForUser(userId));
       alert('User deleted successfully.');
     } catch (err: any) {
@@ -190,16 +197,34 @@ export default function App() {
     }
   };
 
-  const handleAddHostel = (newHostel: Hostel) => {
-    dispatch(addHostel(newHostel));
+  const handleAddHostel = async (newHostel: Omit<Hostel, 'id' | 'isVerified'>) => {
+    if (!token) return;
+    try {
+      await dispatch(addHostel({ newHostel, token })).unwrap();
+      alert('Hostel listing added successfully!');
+    } catch (err: any) {
+      alert(err || 'Error adding hostel listing.');
+    }
   };
 
-  const handleEditHostel = (updatedHostel: Hostel) => {
-    dispatch(editHostel(updatedHostel));
+  const handleEditHostel = async (updatedHostel: Hostel) => {
+    if (!token) return;
+    try {
+      await dispatch(editHostel({ updatedHostel, token })).unwrap();
+      alert('Hostel listing updated successfully!');
+    } catch (err: any) {
+      alert(err || 'Error updating hostel listing.');
+    }
   };
 
-  const handleDeleteHostel = (hostelId: string) => {
-    dispatch(deleteHostel(hostelId));
+  const handleDeleteHostel = async (hostelId: string) => {
+    if (!token) return;
+    try {
+      await dispatch(deleteHostel({ hostelId, token })).unwrap();
+      alert('Hostel listing deleted.');
+    } catch (err: any) {
+      alert(err || 'Error deleting hostel listing.');
+    }
   };
 
   // Layout for protected routes
@@ -263,6 +288,9 @@ export default function App() {
     return <SpinnerLoader />;
   }
 
+  // Define active list of users based on current role (admin uses adminUsers, students use studentRoommates)
+  const displayUsers = currentUser?.role === 'admin' ? adminUsers : studentRoommates;
+
   return (
     <>
       <BrowserRouter>
@@ -306,7 +334,7 @@ export default function App() {
                 element={
                   <HostelDirectory
                     hostels={hostels}
-                    users={users}
+                    users={displayUsers}
                     currentUser={currentUser!}
                     token={token}
                   />
@@ -317,7 +345,7 @@ export default function App() {
                 element={
                   <RoommateFinder
                     currentUser={currentUser!}
-                    users={users}
+                    users={displayUsers}
                     matchRequests={matchRequests}
                     onSendRequest={handleSendRequest}
                     onBlockUser={handleBlockUser}
@@ -331,7 +359,7 @@ export default function App() {
                 element={
                   <ChatModule
                     currentUser={currentUser!}
-                    users={users}
+                    users={displayUsers}
                     matchRequests={matchRequests}
                     onAcceptRequest={handleAcceptRequest}
                     onDeclineRequest={handleDeclineRequest}
@@ -342,7 +370,13 @@ export default function App() {
               <Route
                 path="/profile"
                 element={
-                  <ProfileSettings currentUser={currentUser!} onSave={handleSaveProfile} hostels={hostels} />
+                  currentUser?.role === 'student' ? (
+                    <StudentProfile currentUser={currentUser as Student} onSave={handleSaveProfile} hostels={hostels} />
+                  ) : currentUser?.role === 'owner' ? (
+                    <OwnerProfile currentUser={currentUser as Owner} />
+                  ) : (
+                    <AdminProfile currentUser={currentUser as Admin} />
+                  )
                 }
               />
               <Route
@@ -350,10 +384,9 @@ export default function App() {
                 element={
                   currentUser?.role === 'admin' ? (
                     <AdminPanel
-                      users={users}
+                      users={adminUsers}
                       reports={reports}
                       hostels={hostels}
-                      matchRequests={matchRequests}
                       onToggleUserStatus={handleToggleUserStatus}
                       onResolveReport={handleResolveReport}
                       onDeleteUser={handleDeleteUser}

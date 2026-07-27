@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 
@@ -10,44 +10,9 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: Optional[UUID] = None
+    role: Optional[str] = None
 
-# User Schemas
-class UserBase(BaseModel):
-    email: EmailStr
-
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str = Field(..., min_length=6)
-    name: str = Field(..., min_length=1)
-
-class UserOut(BaseModel):
-    id: UUID
-    email: EmailStr
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-# Profile Schemas
-class ProfileOut(BaseModel):
-    id: UUID
-    name: str
-    age: int
-    gender: str
-    photo: Optional[str] = None
-    bio: Optional[str] = None
-    budget: int
-    location: str
-    role: str
-    status: str
-    occupation: Optional[str] = None
-    institution: Optional[str] = None
-    phone: Optional[str] = None
-    hostel_id: Optional[UUID] = None
-
-    class Config:
-        from_attributes = True
-
+# Preferences Schema
 class PreferencesOut(BaseModel):
     sleep_schedule: str
     cleanliness: str
@@ -58,11 +23,75 @@ class PreferencesOut(BaseModel):
     class Config:
         from_attributes = True
 
-class UserWithProfile(BaseModel):
+# Student Schemas
+class StudentCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+    name: str = Field(..., min_length=1)
+
+class StudentOut(BaseModel):
     id: UUID
     email: EmailStr
-    profile: Optional[ProfileOut] = None
+    name: str
+    age: int
+    gender: str
+    photo: Optional[str] = None
+    bio: Optional[str] = None
+    budget: int
+    location: str
+    status: str
+    occupation: Optional[str] = None
+    institution: Optional[str] = None
+    company: Optional[str] = None
+    phone: Optional[str] = None
+    hostel_id: Optional[UUID] = None
+    created_at: datetime
     preferences: Optional[PreferencesOut] = None
+
+    class Config:
+        from_attributes = True
+
+class StudentUpdate(BaseModel):
+    name: str
+    age: int
+    gender: str
+    bio: Optional[str] = None
+    budget: int
+    location: str
+    occupation: Optional[str] = None
+    institution: Optional[str] = None
+    company: Optional[str] = None
+    sleep_schedule: str
+    cleanliness: str
+    smoking: str
+    pets: str
+    guest_tolerance: str
+    hostel_id: Optional[UUID] = None
+
+# Owner Schemas
+class OwnerRegister(BaseModel):
+    token: str
+    name: str
+    password: str = Field(..., min_length=6)
+    phone: str
+
+class OwnerOut(BaseModel):
+    id: UUID
+    email: EmailStr
+    name: str
+    phone: str
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Admin Schemas
+class AdminOut(BaseModel):
+    id: UUID
+    email: EmailStr
+    name: str
+    created_at: datetime
 
     class Config:
         from_attributes = True
