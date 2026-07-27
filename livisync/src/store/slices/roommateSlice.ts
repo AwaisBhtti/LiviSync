@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { User } from '../../types';
 
 interface RoommateState {
@@ -83,7 +83,7 @@ export const toggleUserStatus = createAsyncThunk(
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to update status on server');
       }
-      return { userId, nextStatus };
+      return { userId, nextStatus: nextStatus as 'active' | 'suspended' };
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error toggling user status');
     }
