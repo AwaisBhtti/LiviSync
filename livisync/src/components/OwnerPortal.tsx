@@ -42,6 +42,39 @@ export const OwnerPortal = ({
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = localStorage.getItem('livisync_token') || '';
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/owners/upload-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Upload failed');
+      }
+
+      setPhoto(data.url);
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload photo');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Filter hostels owned by this user
   const myHostels = hostels.filter(
@@ -234,18 +267,24 @@ export const OwnerPortal = ({
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">Hostel Cover Photo URL</label>
+              <label className="form-label">Hostel Cover Photo</label>
               <p style={{ color: 'var(--muted)', fontSize: '0.75rem', margin: '0 0 0.5rem 0' }}>
-                💡 <em>Provide a single clear photo url displaying the front view or main entrance of the building.</em>
+                💡 <em>Upload a single clear photo showing the front view or main entrance of the building.</em>
               </p>
               <input
-                type="url"
-                className="form-input"
-                placeholder="e.g. https://images.unsplash.com/..."
-                value={photo}
-                onChange={(e) => setPhoto(e.target.value)}
-                required
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                disabled={uploading}
+                required={!photo}
+                style={{ width: '100%' }}
               />
+              {uploading && <span style={{ color: 'var(--primary)', fontSize: '0.85rem', display: 'block', marginTop: '0.25rem' }}>Uploading to Cloudflare R2...</span>}
+              {photo && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <img src={photo} alt="Hostel Cover" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
+                </div>
+              )}
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>

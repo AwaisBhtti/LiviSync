@@ -1,9 +1,11 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+import boto3
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Owner, Hostel, HostelAmenity, HostelRoom
 from ..auth import get_current_user
+from ..config import settings
 from pydantic import BaseModel
 from typing import List
 
@@ -149,3 +151,44 @@ def delete_room(room_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     db.delete(room)
     db.commit()
     return {"message": "Room deleted successfully"}
+
+@router.post("/upload-image")
+async def upload_image(file: UploadFile = File(...), current_user: Owner = Depends(require_owner)):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file must be an image."
+        )
+
+    r2_endpoint = f"https://{settings.R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    unique_filename = f"{uuid.uuid4()}.{file_ext}"
+
+    try:
+        s3 = boto3.client(
+            service_name="s3",
+            endpoint_url=r2_endpoint,
+            aws_access_key_id=settings.R2_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
+            region_name="auto"
+        )
+
+        file_content = await file.read()
+
+        s3.put_object(
+            Bucket=settings.R2_BUCKET_NAME,
+            Key=unique_filename,
+            Body=file_content,
+            ContentType=file.content_type
+        )
+
+        base_domain = settings.R2_PUBLIC_CUSTOM_DOMAIN.rstrip("/")
+        public_url = f"{base_domain}/{unique_filename}"
+
+        return {"url": public_url}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload image to Cloudflare R2: {str(e)}"
+        )
