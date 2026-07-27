@@ -216,6 +216,4 @@ def resolve_report(report_id: uuid.UUID, db: Session = Depends(get_db), admin: A
     db.commit()
     return {"message": "Report resolved successfully."}
 
-@router.get("/matches", response_model=List[MatchRequestOut])
-def get_all_matches(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
-    return db.query(MatchRequest).all()
+

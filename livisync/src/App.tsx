@@ -79,7 +79,6 @@ export default function App() {
       } else if (role === 'admin') {
         dispatch(fetchUsers(token));
         dispatch(fetchReports(token));
-        dispatch(fetchMatches({ token, role }));
       }
     }
   }, [token, currentUser, dispatch]);
@@ -388,7 +387,6 @@ export default function App() {
                       users={adminUsers}
                       reports={reports}
                       hostels={hostels}
-                      matchRequests={matchRequests}
                       onToggleUserStatus={handleToggleUserStatus}
                       onResolveReport={handleResolveReport}
                       onDeleteUser={handleDeleteUser}

@@ -34,21 +34,25 @@ export const Navbar = ({
               <Building size={16} />
               Hostels
             </Link>
-            <Link
-              to="/roommates"
-              style={tabButtonStyle(currentPath === '/roommates')}
-            >
-              <Users size={16} />
-              Roommates
-            </Link>
-            <Link
-              to="/chats"
-              style={tabButtonStyle(currentPath === '/chats')}
-            >
-              <MessageSquare size={16} />
-              Inbox
-              {unreadCount > 0 && <span style={unreadBadgeStyle}>{unreadCount}</span>}
-            </Link>
+            {currentUser.role === 'student' && (
+              <>
+                <Link
+                  to="/roommates"
+                  style={tabButtonStyle(currentPath === '/roommates')}
+                >
+                  <Users size={16} />
+                  Roommates
+                </Link>
+                <Link
+                  to="/chats"
+                  style={tabButtonStyle(currentPath === '/chats')}
+                >
+                  <MessageSquare size={16} />
+                  Inbox
+                  {unreadCount > 0 && <span style={unreadBadgeStyle}>{unreadCount}</span>}
+                </Link>
+              </>
+            )}
             <Link
               to="/profile"
               style={tabButtonStyle(currentPath === '/profile')}
@@ -99,23 +103,27 @@ export const Navbar = ({
           <Building size={20} />
           <span style={mobileTabTextStyle}>Hostels</span>
         </Link>
-        <Link
-          to="/roommates"
-          style={mobileTabButtonStyle(currentPath === '/roommates')}
-        >
-          <Users size={20} />
-          <span style={mobileTabTextStyle}>Roommates</span>
-        </Link>
-        <Link
-          to="/chats"
-          style={mobileTabButtonStyle(currentPath === '/chats')}
-        >
-          <div style={{ position: 'relative' }}>
-            <MessageSquare size={20} />
-            {unreadCount > 0 && <span style={mobileUnreadBadgeStyle}>{unreadCount}</span>}
-          </div>
-          <span style={mobileTabTextStyle}>Inbox</span>
-        </Link>
+        {currentUser.role === 'student' && (
+          <>
+            <Link
+              to="/roommates"
+              style={mobileTabButtonStyle(currentPath === '/roommates')}
+            >
+              <Users size={20} />
+              <span style={mobileTabTextStyle}>Roommates</span>
+            </Link>
+            <Link
+              to="/chats"
+              style={mobileTabButtonStyle(currentPath === '/chats')}
+            >
+              <div style={{ position: 'relative' }}>
+                <MessageSquare size={20} />
+                {unreadCount > 0 && <span style={mobileUnreadBadgeStyle}>{unreadCount}</span>}
+              </div>
+              <span style={mobileTabTextStyle}>Inbox</span>
+            </Link>
+          </>
+        )}
         <Link
           to="/profile"
           style={mobileTabButtonStyle(currentPath === '/profile')}
