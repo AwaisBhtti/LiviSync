@@ -314,77 +314,163 @@ export const AdminPanel = ({
         )}
       </div>
 
-      {/* User Directory Management */}
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <h3 style={sectionTitleStyle}>
-          <Users size={18} /> User Management & Directory
-        </h3>
-        <div style={tableContainerStyle}>
-          <table style={tableStyle}>
-            <thead>
-              <tr style={tableHeaderRowStyle}>
-                <th style={thStyle}>Student Profile</th>
-                <th style={thStyle}>Location</th>
-                <th style={thStyle}>Role</th>
-                <th style={thStyle}>Account Status</th>
-                <th style={thStyle}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} style={tableRowStyle}>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <img src={user.photo} style={smallAvatarStyle} alt="" />
-                      <div>
-                        <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>{user.name}</span>
-                        <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--muted)' }}>
-                          {user.age} y/o • {user.gender}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={tdStyle}>{user.location}</td>
-                  <td style={{ ...tdStyle, textTransform: 'capitalize' }}>{user.role}</td>
-                  <td style={tdStyle}>
-                    <span style={{
-                      fontWeight: 600,
-                      fontSize: '0.8rem',
-                      color: user.status === 'suspended' ? 'var(--danger)' : 'var(--success)'
-                    }}>
-                      {user.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>
-                    {user.role !== 'admin' && (
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button
-                          className="btn btn-secondary"
-                          style={tableBtnStyle}
-                          onClick={() => onToggleUserStatus(user.id)}
-                        >
-                          <RefreshCw size={12} /> Toggle Suspend
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          style={tableBtnStyle}
-                          onClick={() => {
-                            if (confirm(`Are you sure you want to delete ${user.name}'s account?`)) {
-                              onDeleteUser(user.id);
-                            }
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
+      {/* Helper to get status text color */}
+      {(() => {
+        const getStatusColor = (status: string) => {
+          if (status === 'suspended') return 'var(--danger)';
+          if (status === 'unapproved') return '#f59e0b';
+          return 'var(--success)';
+        };
+
+        const students = users.filter((u) => u.role === 'student');
+        const owners = users.filter((u) => u.role === 'owner');
+
+        return (
+          <>
+            {/* Student Directory Management */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h3 style={sectionTitleStyle}>
+                <Users size={18} /> Student Directory
+              </h3>
+              <div style={tableContainerStyle}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr style={tableHeaderRowStyle}>
+                      <th style={thStyle}>Student Profile</th>
+                      <th style={thStyle}>Location</th>
+                      <th style={thStyle}>Account Status</th>
+                      <th style={thStyle}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.map((user) => (
+                      <tr key={user.id} style={tableRowStyle}>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <img src={user.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} style={smallAvatarStyle} alt="" />
+                            <div>
+                              <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>{user.name}</span>
+                              <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--muted)' }}>
+                                {user.age} y/o • {user.gender}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={tdStyle}>{user.location}</td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            color: getStatusColor(user.status)
+                          }}>
+                            {user.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button
+                              className="btn btn-secondary"
+                              style={tableBtnStyle}
+                              onClick={() => onToggleUserStatus(user.id)}
+                            >
+                              <RefreshCw size={12} /> Toggle Suspend
+                            </button>
+                            <button
+                              className="btn btn-danger"
+                              style={tableBtnStyle}
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete ${user.name}'s account?`)) {
+                                  onDeleteUser(user.id);
+                                }
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {students.length === 0 && (
+                      <tr>
+                        <td colSpan={4} style={{ ...tdStyle, textAlign: 'center', color: 'var(--muted)' }}>
+                          No students registered.
+                        </td>
+                      </tr>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Hostel Owner Directory Management */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h3 style={sectionTitleStyle}>
+                <Users size={18} /> Hostel Owner Directory
+              </h3>
+              <div style={tableContainerStyle}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr style={tableHeaderRowStyle}>
+                      <th style={thStyle}>Owner Name</th>
+                      <th style={thStyle}>Email</th>
+                      <th style={thStyle}>Phone</th>
+                      <th style={thStyle}>Verification Status</th>
+                      <th style={thStyle}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {owners.map((user) => (
+                      <tr key={user.id} style={tableRowStyle}>
+                        <td style={{ ...tdStyle, fontWeight: 500 }}>{user.name}</td>
+                        <td style={tdStyle}>{user.email}</td>
+                        <td style={tdStyle}>{user.phone || 'N/A'}</td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            color: getStatusColor(user.status)
+                          }}>
+                            {user.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button
+                              className="btn btn-secondary"
+                              style={tableBtnStyle}
+                              onClick={() => onToggleUserStatus(user.id)}
+                            >
+                              <RefreshCw size={12} /> {user.status === 'active' ? 'Suspend' : 'Approve'}
+                            </button>
+                            <button
+                              className="btn btn-danger"
+                              style={tableBtnStyle}
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete owner ${user.name}?`)) {
+                                  onDeleteUser(user.id);
+                                }
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {owners.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ ...tdStyle, textAlign: 'center', color: 'var(--muted)' }}>
+                          No owners registered.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {/* Invite Section */}
       <div className="card" style={{ padding: '1.5rem' }}>

@@ -184,7 +184,7 @@ def register_owner(req: OwnerRegister, db: Session = Depends(get_db)):
         hashed_password=hashed_pwd,
         name=req.name,
         phone=req.phone,
-        status="suspended"  # Starts suspended pending admin activation
+        status="unapproved"  # Starts unapproved pending admin activation
     )
     db.add(db_owner)
     invite.is_used = True

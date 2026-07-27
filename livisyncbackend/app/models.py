@@ -46,11 +46,11 @@ class Owner(Base):
     hashed_password = Column(String(255), nullable=False)
     name = Column(String(100), nullable=False)
     phone = Column(String(20), nullable=False)
-    status = Column(String(10), nullable=False, default='suspended')
+    status = Column(String(10), nullable=False, default='unapproved')
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     __table_args__ = (
-        CheckConstraint("status IN ('active', 'suspended')", name="owner_status_check"),
+        CheckConstraint("status IN ('active', 'suspended', 'unapproved')", name="owner_status_check"),
     )
 
     owned_hostels = relationship("Hostel", back_populates="owner")
