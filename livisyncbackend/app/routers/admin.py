@@ -119,6 +119,7 @@ def get_all_users(db: Session = Depends(get_db), admin: Admin = Depends(require_
             "role": "owner",
             "status": o.status,
             "name": o.name,
+            "phone": o.phone,
             "age": 18,
             "gender": "male",
             "photo": "",
