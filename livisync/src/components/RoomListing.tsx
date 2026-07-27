@@ -16,11 +16,12 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Form states
-  const [sharingType, setSharingType] = useState<'single' | 'double' | 'triple' | 'quad'>('single');
+  const [sharingType, setSharingType] = useState<'single' | 'double' | 'triple' | 'quad' | 'penta'>('single');
   const [price, setPrice] = useState('');
   const [seatsAvailable, setSeatsAvailable] = useState('1');
   const [floor, setFloor] = useState('Ground Floor');
   const [hasAttachedBathroom, setHasAttachedBathroom] = useState(false);
+  const [furniture, setFurniture] = useState<'bed' | 'mattress' | 'nothing'>('nothing');
   const [photoUrls, setPhotoUrls] = useState<string[]>(['', '']); // Start with 2 empty photo fields
   const [uploadingIndexes, setUploadingIndexes] = useState<number[]>([]);
 
@@ -109,6 +110,20 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       return;
     }
 
+    const capacityMap = {
+      single: 1,
+      double: 2,
+      triple: 3,
+      quad: 4,
+      penta: 5
+    };
+    const maxCap = capacityMap[sharingType];
+    const seatsNum = parseInt(seatsAvailable);
+    if (seatsNum < 1 || seatsNum > maxCap) {
+      setErrorMsg(`Seats available must be between 1 and ${maxCap} for a ${sharingType} sharing room.`);
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/owners/hostels/${hostel.id}/rooms`, {
         method: 'POST',
@@ -119,9 +134,10 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
         body: JSON.stringify({
           sharing_type: sharingType,
           price: parseInt(price),
-          seats_available: parseInt(seatsAvailable),
+          seats_available: seatsNum,
           floor,
           has_attached_bathroom: hasAttachedBathroom,
+          furniture,
           images: filteredPhotos
         })
       });
@@ -139,6 +155,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       setSeatsAvailable('1');
       setFloor('Ground Floor');
       setHasAttachedBathroom(false);
+      setFurniture('nothing');
       setPhotoUrls(['', '']);
       fetchRooms();
     } catch (err: any) {
@@ -199,11 +216,17 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
 
             <div className="form-group">
               <label className="form-label">Sharing Status / Type</label>
-              <select className="form-select" value={sharingType} onChange={(e) => setSharingType(e.target.value as any)}>
+              <select className="form-select" value={sharingType} onChange={(e) => {
+                const newSharing = e.target.value as any;
+                setSharingType(newSharing);
+                const capacityMap = { single: 1, double: 2, triple: 3, quad: 4, penta: 5 };
+                setSeatsAvailable(String(Math.min(parseInt(seatsAvailable) || 1, capacityMap[newSharing])));
+              }}>
                 <option value="single">Single Room</option>
                 <option value="double">2-Sharing Room</option>
                 <option value="triple">3-Sharing Room</option>
                 <option value="quad">4-Sharing Room</option>
+                <option value="penta">5-Sharing Room</option>
               </select>
             </div>
 
@@ -221,12 +244,18 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Seats / Beds Available in this Room</label>
+              <label className="form-label">
+                Seats / Beds Available in this Room 
+                <span style={{ color: 'var(--muted)', fontSize: '0.75rem', marginLeft: '0.25rem' }}>
+                  (Max {sharingType === 'single' ? 1 : sharingType === 'double' ? 2 : sharingType === 'triple' ? 3 : sharingType === 'quad' ? 4 : 5})
+                </span>
+              </label>
               <input
                 type="number"
                 className="form-input"
                 required
-                min={0}
+                min={1}
+                max={sharingType === 'single' ? 1 : sharingType === 'double' ? 2 : sharingType === 'triple' ? 3 : sharingType === 'quad' ? 4 : 5}
                 placeholder="e.g. 2"
                 value={seatsAvailable}
                 onChange={(e) => setSeatsAvailable(e.target.value)}
@@ -235,14 +264,23 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
 
             <div className="form-group">
               <label className="form-label">Floor</label>
-              <input
-                type="text"
-                className="form-input"
-                required
-                placeholder="e.g. Ground Floor, 1st Floor"
-                value={floor}
-                onChange={(e) => setFloor(e.target.value)}
-              />
+              <select className="form-select" value={floor} onChange={(e) => setFloor(e.target.value)}>
+                <option value="Basement">Basement</option>
+                <option value="Ground Floor">Ground Floor</option>
+                <option value="1st Floor">1st Floor</option>
+                <option value="2nd Floor">2nd Floor</option>
+                <option value="3rd Floor">3rd Floor</option>
+                <option value="4th Floor">4th Floor</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Furniture Provided</label>
+              <select className="form-select" value={furniture} onChange={(e) => setFurniture(e.target.value as any)}>
+                <option value="bed">Bed</option>
+                <option value="mattress">Mattress Only</option>
+                <option value="nothing">Nothing</option>
+              </select>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -358,6 +396,9 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
                         </p>
                         <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--muted)' }}>
                           <strong>Bathroom:</strong> {room.hasAttachedBathroom ? 'Attached' : 'Shared'}
+                        </p>
+                        <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--muted)' }}>
+                          <strong>Furniture:</strong> <span style={{ textTransform: 'capitalize' }}>{room.furniture === 'nothing' ? 'None' : room.furniture === 'mattress' ? 'Mattress Only' : room.furniture}</span>
                         </p>
                       </div>
                     </div>

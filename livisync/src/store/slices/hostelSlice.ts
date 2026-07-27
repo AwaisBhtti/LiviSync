@@ -35,6 +35,7 @@ export const fetchHostels = createAsyncThunk(
         location: h.location,
         description: h.description || '',
         photo: h.photo || '',
+        electricityBillIncluded: h.electricity_bill_included,
         amenities: h.amenities ? h.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: h.owner_id,
         isVerified: h.is_verified,
@@ -46,6 +47,7 @@ export const fetchHostels = createAsyncThunk(
           seatsAvailable: r.seats_available,
           floor: r.floor,
           hasAttachedBathroom: r.has_attached_bathroom,
+          furniture: r.furniture,
           images: r.images || []
         })) : []
       }));
@@ -85,11 +87,21 @@ export const addHostel = createAsyncThunk(
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(newHostel)
+        body: JSON.stringify({
+          name: newHostel.name,
+          location: newHostel.location,
+          description: newHostel.description,
+          photo: newHostel.photo,
+          electricity_bill_included: newHostel.electricityBillIncluded,
+          amenities: newHostel.amenities
+        })
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.detail || 'Failed to list hostel');
+        const errMsg = Array.isArray(data.detail)
+          ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+          : data.detail || 'Failed to list hostel';
+        throw new Error(errMsg);
       }
       return {
         id: data.id,
@@ -97,6 +109,7 @@ export const addHostel = createAsyncThunk(
         location: data.location,
         description: data.description || '',
         photo: data.photo || '',
+        electricityBillIncluded: data.electricity_bill_included,
         amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
@@ -130,6 +143,7 @@ export const editHostel = createAsyncThunk(
         location: data.location,
         description: data.description || '',
         photo: data.photo || '',
+        electricityBillIncluded: data.electricity_bill_included,
         amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
@@ -141,6 +155,7 @@ export const editHostel = createAsyncThunk(
           seatsAvailable: r.seats_available,
           floor: r.floor,
           hasAttachedBathroom: r.has_attached_bathroom,
+          furniture: r.furniture,
           images: r.images || []
         })) : []
       } as Hostel;

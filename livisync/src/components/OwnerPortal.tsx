@@ -42,6 +42,7 @@ export const OwnerPortal = ({
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [electricityBillIncluded, setElectricityBillIncluded] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,6 +88,7 @@ export const OwnerPortal = ({
     setDescription('');
     setPhoto('');
     setSelectedAmenities([]);
+    setElectricityBillIncluded(false);
     setEditingHostel(null);
   };
 
@@ -97,6 +99,7 @@ export const OwnerPortal = ({
     setDescription(hostel.description);
     setPhoto(hostel.photo || '');
     setSelectedAmenities(hostel.amenities);
+    setElectricityBillIncluded(hostel.electricityBillIncluded || false);
     setShowAddForm(true);
   };
 
@@ -117,6 +120,7 @@ export const OwnerPortal = ({
       location,
       description,
       photo,
+      electricityBillIncluded,
       amenities: selectedAmenities,
       rooms: editingHostel?.rooms || [],
       currentOccupants: editingHostel?.currentOccupants || [],
@@ -145,6 +149,7 @@ export const OwnerPortal = ({
             location: hostelData.location,
             description: hostelData.description,
             photo: hostelData.photo,
+            electricity_bill_included: hostelData.electricityBillIncluded,
             amenities: hostelData.amenities
           })
         });
@@ -163,6 +168,7 @@ export const OwnerPortal = ({
           location: data.location,
           description: data.description,
           photo: data.photo,
+          electricityBillIncluded: data.electricity_bill_included,
           amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
           rooms: [],
           isVerified: data.is_verified,
@@ -288,6 +294,18 @@ export const OwnerPortal = ({
                   <img src={photo} alt="Hostel Cover" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
                 </div>
               )}
+            </div>
+
+            <div className="form-group" style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                type="checkbox"
+                id="electricityBillIncluded"
+                checked={electricityBillIncluded}
+                onChange={(e) => setElectricityBillIncluded(e.target.checked)}
+              />
+              <label htmlFor="electricityBillIncluded" style={{ fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
+                Electricity Bill Included in Rent (Applies to all rooms in this hostel)
+              </label>
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>

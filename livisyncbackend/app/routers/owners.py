@@ -28,6 +28,7 @@ class RoomCreate(BaseModel):
     seats_available: int
     floor: str
     has_attached_bathroom: bool
+    furniture: str
     images: List[str]
 
 class HostelCreate(BaseModel):
@@ -35,6 +36,7 @@ class HostelCreate(BaseModel):
     location: str
     description: str
     photo: str
+    electricity_bill_included: bool
     amenities: List[str]
 
 @router.get("/hostels")
@@ -48,6 +50,7 @@ def create_hostel(hostel_in: HostelCreate, db: Session = Depends(get_db), curren
         location=hostel_in.location,
         description=hostel_in.description,
         photo=hostel_in.photo,
+        electricity_bill_included=hostel_in.electricity_bill_included,
         owner_id=current_user.id,
         is_verified=False  # Must be verified by admin
     )
@@ -77,6 +80,7 @@ def update_hostel(hostel_id: uuid.UUID, hostel_in: HostelCreate, db: Session = D
     hostel.location = hostel_in.location
     hostel.description = hostel_in.description
     hostel.photo = hostel_in.photo
+    hostel.electricity_bill_included = hostel_in.electricity_bill_included
     
     # Re-add amenities
     db.query(HostelAmenity).filter(HostelAmenity.hostel_id == hostel_id).delete()
@@ -103,7 +107,6 @@ def delete_hostel(hostel_id: uuid.UUID, db: Session = Depends(get_db), current_u
 
 @router.post("/hostels/{hostel_id}/rooms", status_code=status.HTTP_201_CREATED)
 def create_room(hostel_id: uuid.UUID, room_in: RoomCreate, db: Session = Depends(get_db), current_user: Owner = Depends(require_owner)):
-    # Verify owner owns this hostel
     hostel = db.query(Hostel).filter(Hostel.id == hostel_id, Hostel.owner_id == current_user.id).first()
     if not hostel:
         raise HTTPException(
@@ -117,6 +120,34 @@ def create_room(hostel_id: uuid.UUID, room_in: RoomCreate, db: Session = Depends
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You must upload at least 2 pictures for the room (including room area and bathroom)."
         )
+
+    # Validate sharing type and dynamic seats available capacity limit
+    capacity_map = {
+        "single": 1,
+        "double": 2,
+        "triple": 3,
+        "quad": 4,
+        "penta": 5
+    }
+    
+    if room_in.sharing_type not in capacity_map:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid sharing type: {room_in.sharing_type}"
+        )
+        
+    max_cap = capacity_map[room_in.sharing_type]
+    if room_in.seats_available < 0 or room_in.seats_available > max_cap:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Seats available cannot exceed {max_cap} for a {room_in.sharing_type}-sharing room."
+        )
+
+    if room_in.furniture not in ["bed", "mattress", "nothing"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Furniture must be either 'bed', 'mattress', or 'nothing'."
+        )
         
     db_room = HostelRoom(
         hostel_id=hostel_id,
@@ -125,6 +156,7 @@ def create_room(hostel_id: uuid.UUID, room_in: RoomCreate, db: Session = Depends
         seats_available=room_in.seats_available,
         floor=room_in.floor,
         has_attached_bathroom=room_in.has_attached_bathroom,
+        furniture=room_in.furniture,
         images=room_in.images
     )
     db.add(db_room)

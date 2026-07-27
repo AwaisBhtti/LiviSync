@@ -203,7 +203,8 @@ export default function App() {
       await dispatch(addHostel({ newHostel, token })).unwrap();
       alert('Hostel listing added successfully!');
     } catch (err: any) {
-      alert(err || 'Error adding hostel listing.');
+      const errMsg = typeof err === 'string' ? err : (err.message || 'Error adding hostel listing.');
+      alert(errMsg);
     }
   };
 
@@ -213,7 +214,8 @@ export default function App() {
       await dispatch(editHostel({ updatedHostel, token })).unwrap();
       alert('Hostel listing updated successfully!');
     } catch (err: any) {
-      alert(err || 'Error updating hostel listing.');
+      const errMsg = typeof err === 'string' ? err : (err.message || 'Error updating hostel listing.');
+      alert(errMsg);
     }
   };
 

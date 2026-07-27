@@ -161,16 +161,41 @@ export const HostelDirectory = ({
 
                 <hr style={{ border: 0, borderTop: '1px solid var(--border)', margin: '1rem 0' }} />
 
-                <h4 style={{ marginBottom: '0.75rem' }}>Available Rooms</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ margin: 0 }}>Available Rooms</h4>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    backgroundColor: selectedHostel.electricityBillIncluded ? 'rgba(34, 197, 94, 0.1)' : 'var(--card-hover)',
+                    color: selectedHostel.electricityBillIncluded ? 'var(--success)' : 'var(--muted)',
+                    border: '1px solid ' + (selectedHostel.electricityBillIncluded ? 'rgba(34, 197, 94, 0.2)' : 'var(--border)'),
+                    fontWeight: 600
+                  }}>
+                    ⚡ Electricity: {selectedHostel.electricityBillIncluded ? 'Included' : 'Not Included'}
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {selectedHostel.rooms.map((room, idx) => (
-                    <div key={idx} style={roomRowStyle}>
-                      <span style={{ textTransform: 'capitalize', fontWeight: 500, fontSize: '0.875rem' }}>
-                        {room.sharingType} Room Sharing
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: room.seatsAvailable > 0 ? 'var(--success)' : 'var(--danger)' }}>
-                          {room.seatsAvailable > 0 ? `${room.seatsAvailable} left` : 'Full'}
+                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ textTransform: 'capitalize', fontWeight: 600, fontSize: '0.9rem' }}>
+                          {room.sharingType} Sharing ({room.floor})
+                        </span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)' }}>
+                          PKR {room.price.toLocaleString()}/mo
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.125rem' }}>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.7rem', padding: '0.15rem 0.35rem' }}>
+                          🛋️ {room.furniture === 'nothing' ? 'Unfurnished' : room.furniture === 'mattress' ? 'Mattress Provided' : 'Furnished (Bed)'}
+                        </span>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.7rem', padding: '0.15rem 0.35rem' }}>
+                          🚿 {room.hasAttachedBathroom ? 'Attached Bath' : 'Shared Bath'}
+                        </span>
+                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: 500, color: room.seatsAvailable > 0 ? 'var(--success)' : 'var(--danger)' }}>
+                          {room.seatsAvailable > 0 ? `${room.seatsAvailable} bed(s) left` : 'Full'}
                         </span>
                       </div>
                     </div>

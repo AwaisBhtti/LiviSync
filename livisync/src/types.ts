@@ -74,11 +74,12 @@ export type User = Student | Owner | Admin;
 export interface Room {
   id: string;
   hostelId: string;
-  sharingType: 'single' | 'double' | 'triple' | 'quad';
+  sharingType: 'single' | 'double' | 'triple' | 'quad' | 'penta';
   price: number;
   seatsAvailable: number;
   floor: string;
   hasAttachedBathroom: boolean;
+  furniture: 'bed' | 'mattress' | 'nothing';
   images: string[];
 }
 
@@ -88,6 +89,7 @@ export interface Hostel {
   location: string;
   description: string;
   photo?: string;
+  electricityBillIncluded: boolean;
   amenities: string[];
   ownerId?: string;
   isVerified: boolean;

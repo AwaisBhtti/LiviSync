@@ -95,6 +95,7 @@ class Hostel(Base):
     location = Column(String(255), nullable=False)
     description = Column(Text)
     photo = Column(Text, nullable=True)
+    electricity_bill_included = Column(Boolean, nullable=False, default=False)
     owner_id = Column(UUID(as_uuid=True), ForeignKey('owners.id', ondelete='SET NULL'), nullable=True)
     is_verified = Column(Boolean, nullable=False, default=False)
 
@@ -123,12 +124,14 @@ class HostelRoom(Base):
     seats_available = Column(Integer, nullable=False, default=1)
     floor = Column(String(50), nullable=False)
     has_attached_bathroom = Column(Boolean, nullable=False, default=False)
+    furniture = Column(String(20), nullable=False, default='nothing')
     images = Column(ARRAY(Text), nullable=False)
 
     __table_args__ = (
-        CheckConstraint("sharing_type IN ('single', 'double', 'triple', 'quad')", name="sharing_type_check"),
+        CheckConstraint("sharing_type IN ('single', 'double', 'triple', 'quad', 'penta')", name="sharing_type_check"),
         CheckConstraint("price >= 0", name="room_price_check"),
         CheckConstraint("seats_available >= 0", name="seats_available_check"),
+        CheckConstraint("furniture IN ('bed', 'mattress', 'nothing')", name="furniture_check"),
     )
 
     hostel = relationship("Hostel", back_populates="rooms")
