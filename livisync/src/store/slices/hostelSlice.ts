@@ -53,19 +53,77 @@ export const verifyHostel = createAsyncThunk(
   }
 );
 
+export const addHostel = createAsyncThunk(
+  'hostels/addHostel',
+  async ({ newHostel, token }: { newHostel: Omit<Hostel, 'id' | 'isVerified'>; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/owners/hostels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newHostel)
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to list hostel');
+      }
+      return data as Hostel;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error listing hostel');
+    }
+  }
+);
+
+export const editHostel = createAsyncThunk(
+  'hostels/editHostel',
+  async ({ updatedHostel, token }: { updatedHostel: Hostel; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/owners/hostels/${updatedHostel.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedHostel)
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to update hostel listing');
+      }
+      return updatedHostel;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error updating hostel listing');
+    }
+  }
+);
+
+export const deleteHostel = createAsyncThunk(
+  'hostels/deleteHostel',
+  async ({ hostelId, token }: { hostelId: string; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/owners/hostels/${hostelId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to delete hostel listing');
+      }
+      return hostelId;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error deleting hostel listing');
+    }
+  }
+);
+
 const hostelSlice = createSlice({
   name: 'hostels',
   initialState,
   reducers: {
-    addHostel: (state, action: PayloadAction<Hostel>) => {
-      state.hostels.push(action.payload);
-    },
-    editHostel: (state, action: PayloadAction<Hostel>) => {
-      state.hostels = state.hostels.map((h) => h.id === action.payload.id ? action.payload : h);
-    },
-    deleteHostel: (state, action: PayloadAction<string>) => {
-      state.hostels = state.hostels.filter((h) => h.id !== action.payload);
-    },
     setHostelsState: (state, action: PayloadAction<Hostel[]>) => {
       state.hostels = action.payload;
     }
@@ -86,9 +144,18 @@ const hostelSlice = createSlice({
       })
       .addCase(verifyHostel.fulfilled, (state, action: PayloadAction<string>) => {
         state.hostels = state.hostels.map((h) => h.id === action.payload ? { ...h, isVerified: true } : h);
+      })
+      .addCase(addHostel.fulfilled, (state, action: PayloadAction<Hostel>) => {
+        state.hostels.push(action.payload);
+      })
+      .addCase(editHostel.fulfilled, (state, action: PayloadAction<Hostel>) => {
+        state.hostels = state.hostels.map((h) => h.id === action.payload.id ? action.payload : h);
+      })
+      .addCase(deleteHostel.fulfilled, (state, action: PayloadAction<string>) => {
+        state.hostels = state.hostels.filter((h) => h.id !== action.payload);
       });
   }
 });
 
-export const { addHostel, editHostel, deleteHostel, setHostelsState } = hostelSlice.actions;
+export const { setHostelsState } = hostelSlice.actions;
 export default hostelSlice.reducer;

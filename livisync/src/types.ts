@@ -6,7 +6,7 @@ export interface Preferences {
   guestTolerance: 'rarely' | 'weekends' | 'anytime';
 }
 
-export interface User {
+export interface Student {
   id: string;
   name: string;
   email: string;
@@ -16,7 +16,7 @@ export interface User {
   bio: string;
   budget: number; // monthly max budget
   location: string; // e.g. Lahore, Islamabad
-  role: 'student' | 'admin' | 'owner';
+  role: 'student';
   status: 'active' | 'suspended';
   preferences: Preferences;
   blockedUsers: string[]; // user IDs blocked by this user
@@ -26,6 +26,50 @@ export interface User {
   phone?: string;
   hostelId?: string;
 }
+
+export interface Owner {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'owner';
+  status: 'active' | 'suspended';
+  age?: number;
+  gender?: 'male' | 'female' | 'other';
+  photo?: string;
+  bio?: string;
+  budget?: number;
+  location?: string;
+  preferences?: Preferences;
+  blockedUsers?: string[];
+  occupation?: 'student' | 'job';
+  institution?: string;
+  company?: string;
+  hostelId?: string;
+}
+
+export interface Admin {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin';
+  status?: 'active' | 'suspended';
+  age?: number;
+  gender?: 'male' | 'female' | 'other';
+  photo?: string;
+  bio?: string;
+  budget?: number;
+  location?: string;
+  preferences?: Preferences;
+  blockedUsers?: string[];
+  occupation?: 'student' | 'job';
+  institution?: string;
+  company?: string;
+  phone?: string;
+  hostelId?: string;
+}
+
+export type User = Student | Owner | Admin;
 
 export interface Hostel {
   id: string;
@@ -41,7 +85,7 @@ export interface Hostel {
     sharingType: 'single' | 'double' | 'triple';
     available: number;
   }[];
-  currentOccupants: string[]; // user IDs currently staying
+  currentOccupants?: string[];
 }
 
 export interface MatchRequest {
@@ -50,7 +94,7 @@ export interface MatchRequest {
   receiverId: string;
   status: 'pending' | 'accepted' | 'declined';
   message: string;
-  timestamp: string;
+  created_at: string;
 }
 
 export interface Message {
@@ -68,5 +112,5 @@ export interface Report {
   reason: 'fake-profile' | 'harassment' | 'spam' | 'other';
   description: string;
   status: 'pending' | 'resolved';
-  timestamp: string;
+  created_at: string;
 }

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import type { User } from '../../types';
+import type { User, Student, Owner, Admin } from '../../types';
 
 interface AuthState {
   token: string | null;
@@ -26,33 +26,55 @@ export const fetchCurrentUser = createAsyncThunk(
         throw new Error('Session expired or invalid token');
       }
       const data = await response.json();
-      const mappedUser: User = {
-        id: data.id,
-        email: data.email,
-        name: data.profile?.name || 'New User',
-        age: data.profile?.age || 18,
-        gender: data.profile?.gender === 'female' ? 'female' : data.profile?.gender === 'other' ? 'other' : 'male',
-        photo: data.profile?.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80',
-        bio: data.profile?.bio || '',
-        budget: data.profile?.budget || 0,
-        location: data.profile?.location || '',
-        role: data.profile?.role === 'admin' ? 'admin' : data.profile?.role === 'owner' ? 'owner' : 'student',
-        status: data.profile?.status === 'suspended' ? 'suspended' : 'active',
-        occupation: data.profile?.occupation || 'student',
-        institution: data.profile?.institution || '',
-        company: data.profile?.company || '',
-        phone: data.profile?.phone || '',
-        hostelId: data.profile?.hostel_id || undefined,
-        preferences: {
-          sleepSchedule: data.preferences?.sleep_schedule || 'flexible',
-          cleanliness: data.preferences?.cleanliness || 'moderate',
-          smoking: data.preferences?.smoking || 'no',
-          pets: data.preferences?.pets || 'no',
-          guestTolerance: data.preferences?.guest_tolerance || 'weekends'
-        },
-        blockedUsers: []
-      };
-      return mappedUser;
+      const role = data.profile?.role;
+
+      if (role === 'student') {
+        const mappedUser: Student = {
+          id: data.id,
+          email: data.email,
+          name: data.profile.name || 'New User',
+          age: data.profile.age || 18,
+          gender: data.profile.gender || 'male',
+          photo: data.profile.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80',
+          bio: data.profile.bio || '',
+          budget: data.profile.budget || 0,
+          location: data.profile.location || '',
+          role: 'student',
+          status: data.profile.status || 'active',
+          occupation: data.profile.occupation || 'student',
+          institution: data.profile.institution || '',
+          company: data.profile.company || '',
+          phone: data.profile.phone || '',
+          hostelId: data.profile.hostel_id || undefined,
+          preferences: {
+            sleepSchedule: data.preferences?.sleep_schedule || 'flexible',
+            cleanliness: data.preferences?.cleanliness || 'moderate',
+            smoking: data.preferences?.smoking || 'no',
+            pets: data.preferences?.pets || 'no',
+            guestTolerance: data.preferences?.guest_tolerance || 'weekends'
+          },
+          blockedUsers: []
+        };
+        return mappedUser;
+      } else if (role === 'owner') {
+        const mappedUser: Owner = {
+          id: data.id,
+          email: data.email,
+          name: data.profile.name,
+          phone: data.profile.phone || '',
+          role: 'owner',
+          status: data.profile.status || 'active'
+        };
+        return mappedUser;
+      } else {
+        const mappedUser: Admin = {
+          id: data.id,
+          email: data.email,
+          name: data.profile.name || 'System Admin',
+          role: 'admin'
+        };
+        return mappedUser;
+      }
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error fetching user');
     }
@@ -61,9 +83,9 @@ export const fetchCurrentUser = createAsyncThunk(
 
 export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
-  async ({ updatedUser, token }: { updatedUser: User; token: string }, { rejectWithValue }) => {
+  async ({ updatedUser, token }: { updatedUser: Student; token: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/users/profile', {
+      const response = await fetch('http://127.0.0.1:8000/students/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +135,7 @@ const authSlice = createSlice({
       state.currentUser = null;
     },
     setBlockedUsers: (state, action: PayloadAction<string[]>) => {
-      if (state.currentUser) {
+      if (state.currentUser && state.currentUser.role === 'student') {
         state.currentUser.blockedUsers = action.payload;
         localStorage.setItem('livisync_active_user', JSON.stringify(state.currentUser));
       }
@@ -139,7 +161,7 @@ const authSlice = createSlice({
       .addCase(updateProfile.pending, (state) => {
         state.loadingData = true;
       })
-      .addCase(updateProfile.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(updateProfile.fulfilled, (state, action: PayloadAction<Student>) => {
         state.loadingData = false;
         state.currentUser = action.payload;
         localStorage.setItem('livisync_active_user', JSON.stringify(action.payload));

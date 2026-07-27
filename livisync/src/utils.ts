@@ -1,6 +1,7 @@
 import type { Preferences } from './types';
 
-export function calculateCompatibility(prefA: Preferences, prefB: Preferences): number {
+export function calculateCompatibility(prefA?: Preferences, prefB?: Preferences): number {
+  if (!prefA || !prefB) return 0;
   let score = 0;
   let maxScore = 0;
 

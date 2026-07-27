@@ -4,24 +4,12 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from .database import Base
 
-class User(Base):
-    __tablename__ = 'users'
+class Student(Base):
+    __tablename__ = 'students'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-
-    # Relationships
-    profile = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    preferences = relationship("Preferences", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    owned_hostels = relationship("Hostel", back_populates="owner")
-
-
-class Profile(Base):
-    __tablename__ = 'profiles'
-
-    id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     name = Column(String(100), nullable=False)
     age = Column(Integer, nullable=False)
     gender = Column(String(10), nullable=False)
@@ -29,33 +17,59 @@ class Profile(Base):
     bio = Column(Text)
     budget = Column(Integer, nullable=False)
     location = Column(String(100), nullable=False)
-    role = Column(String(10), nullable=False, default='student')
     status = Column(String(10), nullable=False, default='active')
     
-    # New student or job fields
+    # Student specific fields
     occupation = Column(String(10), nullable=True)  # 'student' or 'job'
     institution = Column(String(255), nullable=True)
     company = Column(String(255), nullable=True)
     phone = Column(String(20), nullable=True)
     hostel_id = Column(UUID(as_uuid=True), ForeignKey('hostels.id', ondelete='SET NULL'), nullable=True)
-
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     __table_args__ = (
-        CheckConstraint("age >= 16 AND age <= 100", name="age_check"),
-        CheckConstraint("gender IN ('male', 'female', 'other')", name="gender_check"),
-        CheckConstraint("role IN ('student', 'admin', 'owner')", name="role_check"),
-        CheckConstraint("status IN ('active', 'suspended')", name="status_check"),
-        CheckConstraint("occupation IN ('student', 'job')", name="occupation_check"),
+        CheckConstraint("age >= 16 AND age <= 100", name="student_age_check"),
+        CheckConstraint("gender IN ('male', 'female', 'other')", name="student_gender_check"),
+        CheckConstraint("status IN ('active', 'suspended')", name="student_status_check"),
+        CheckConstraint("occupation IN ('student', 'job')", name="student_occupation_check"),
     )
 
-    user = relationship("User", back_populates="profile")
-    hostel = relationship("Hostel", back_populates="occupants_profile")
+    preferences = relationship("Preferences", back_populates="student", uselist=False, cascade="all, delete-orphan")
+    hostel = relationship("Hostel", back_populates="occupants")
+
+
+class Owner(Base):
+    __tablename__ = 'owners'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    name = Column(String(100), nullable=False)
+    phone = Column(String(20), nullable=False)
+    status = Column(String(10), nullable=False, default='suspended')
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("status IN ('active', 'suspended')", name="owner_status_check"),
+    )
+
+    owned_hostels = relationship("Hostel", back_populates="owner")
+
+
+class Admin(Base):
+    __tablename__ = 'admins'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    name = Column(String(100), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class Preferences(Base):
     __tablename__ = 'preferences'
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    student_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), primary_key=True)
     sleep_schedule = Column(String(20), nullable=False)
     cleanliness = Column(String(20), nullable=False)
     smoking = Column(String(20), nullable=False)
@@ -70,7 +84,7 @@ class Preferences(Base):
         CheckConstraint("guest_tolerance IN ('rarely', 'weekends', 'anytime')", name="guest_tolerance_check"),
     )
 
-    user = relationship("User", back_populates="preferences")
+    student = relationship("Student", back_populates="preferences")
 
 
 class Hostel(Base):
@@ -82,18 +96,17 @@ class Hostel(Base):
     price = Column(Integer, nullable=False)
     description = Column(Text)
     images = Column(ARRAY(Text))
-    owner_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    owner_id = Column(UUID(as_uuid=True), ForeignKey('owners.id', ondelete='SET NULL'), nullable=True)
     is_verified = Column(Boolean, nullable=False, default=False)
 
     __table_args__ = (
         CheckConstraint("price >= 0", name="price_check"),
     )
 
-    # Relationships
-    owner = relationship("User", back_populates="owned_hostels")
+    owner = relationship("Owner", back_populates="owned_hostels")
     amenities = relationship("HostelAmenity", back_populates="hostel", cascade="all, delete-orphan")
     rooms = relationship("HostelRoom", back_populates="hostel", cascade="all, delete-orphan")
-    occupants_profile = relationship("Profile", back_populates="hostel")
+    occupants = relationship("Student", back_populates="hostel")
 
 
 class HostelAmenity(Base):
@@ -120,15 +133,12 @@ class HostelRoom(Base):
     hostel = relationship("Hostel", back_populates="rooms")
 
 
-# HostelOccupancy has been removed in favor of Profile.hostel_id
-
-
 class MatchRequest(Base):
     __tablename__ = 'match_requests'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sender_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    receiver_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
+    receiver_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
     status = Column(String(10), nullable=False, default='pending')
     message = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -144,8 +154,8 @@ class Message(Base):
     __tablename__ = 'messages'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sender_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    receiver_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
+    receiver_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
     text = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     is_read = Column(Boolean, nullable=False, default=False)
@@ -154,8 +164,8 @@ class Message(Base):
 class BlockedUser(Base):
     __tablename__ = 'blocked_users'
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
-    blocked_user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), primary_key=True)
+    blocked_user_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), primary_key=True)
 
     __table_args__ = (
         CheckConstraint("user_id <> blocked_user_id", name="self_blocking_check"),
@@ -166,8 +176,8 @@ class Report(Base):
     __tablename__ = 'reports'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    reporter_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    reported_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    reporter_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
+    reported_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
     reason = Column(String(20), nullable=False)
     description = Column(Text)
     status = Column(String(10), nullable=False, default='pending')
@@ -192,7 +202,6 @@ class PhoneViewLog(Base):
     __tablename__ = 'phone_view_logs'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    student_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    student_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
     hostel_id = Column(UUID(as_uuid=True), ForeignKey('hostels.id', ondelete='CASCADE'), nullable=False)
     viewed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-

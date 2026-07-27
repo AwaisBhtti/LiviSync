@@ -19,7 +19,7 @@ export const fetchMatches = createAsyncThunk(
     try {
       const endpoint = role === 'admin'
         ? 'http://127.0.0.1:8000/admin/matches'
-        : 'http://127.0.0.1:8000/matches';
+        : 'http://127.0.0.1:8000/students/matches';
         
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -54,7 +54,7 @@ const matchSlice = createSlice({
         receiverId: action.payload.receiverId,
         status: 'pending',
         message: action.payload.message,
-        timestamp: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       };
       state.matchRequests.push(newRequest);
     },
