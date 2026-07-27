@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import type { User, Hostel, Report, Student } from './types';
+import type { User, Hostel, Report, Student, Owner, Admin } from './types';
 import { Navbar } from './components/Navbar';
 import { HostelDirectory } from './components/HostelDirectory';
 import { RoommateFinder } from './components/RoommateFinder';
 import { ChatModule } from './components/ChatModule';
-import { ProfileSettings } from './components/ProfileSettings';
+import { StudentProfile } from './components/StudentProfile';
+import { OwnerProfile } from './components/OwnerProfile';
+import { AdminProfile } from './components/AdminProfile';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthScreen } from './components/AuthScreen';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -369,7 +371,13 @@ export default function App() {
               <Route
                 path="/profile"
                 element={
-                  <ProfileSettings currentUser={currentUser!} onSave={handleSaveProfile} hostels={hostels} />
+                  currentUser?.role === 'student' ? (
+                    <StudentProfile currentUser={currentUser as Student} onSave={handleSaveProfile} hostels={hostels} />
+                  ) : currentUser?.role === 'owner' ? (
+                    <OwnerProfile currentUser={currentUser as Owner} />
+                  ) : (
+                    <AdminProfile currentUser={currentUser as Admin} />
+                  )
                 }
               />
               <Route

@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import type { User, Preferences, Hostel } from '../types';
+import type { Student, Preferences, Hostel, User } from '../types';
 import { User as UserIcon, Settings, Save } from 'lucide-react';
 
-interface ProfileSettingsProps {
-  currentUser: User;
+interface StudentProfileProps {
+  currentUser: Student;
   onSave: (updatedUser: User) => void;
   hostels: Hostel[];
 }
 
-export const ProfileSettings = ({ currentUser, onSave, hostels }: ProfileSettingsProps) => {
+export const StudentProfile = ({ currentUser, onSave, hostels }: StudentProfileProps) => {
   const [name, setName] = useState(currentUser.name);
   const [age, setAge] = useState(currentUser.age);
   const [gender, setGender] = useState(currentUser.gender);
@@ -16,7 +16,6 @@ export const ProfileSettings = ({ currentUser, onSave, hostels }: ProfileSetting
   const [budget, setBudget] = useState(currentUser.budget);
   const [location, setLocation] = useState(currentUser.location);
   
-  // New occupation status, institution, and company fields
   const [occupation, setOccupation] = useState<'student' | 'job'>(currentUser.occupation || 'student');
   const [institution, setInstitution] = useState(currentUser.institution || '');
   const [company, setCompany] = useState(currentUser.company || '');
@@ -48,7 +47,7 @@ export const ProfileSettings = ({ currentUser, onSave, hostels }: ProfileSetting
   const handlePrefChange = (key: keyof Preferences, value: string) => {
     setPreferences((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: value as any,
     }));
   };
 
@@ -131,18 +130,17 @@ export const ProfileSettings = ({ currentUser, onSave, hostels }: ProfileSetting
                 onChange={(e) => setOccupation(e.target.value as any)}
               >
                 <option value="student">Student</option>
-                <option value="job">Job Holder</option>
+                <option value="job">Working Professional</option>
               </select>
             </div>
 
-            {/* Conditionally display university or company */}
             {occupation === 'student' ? (
               <div className="form-group">
-                <label className="form-label">University / Institute (Optional)</label>
+                <label className="form-label">School / University (Optional)</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="e.g. NUST, FAST"
+                  placeholder="e.g. FAST NUCES, LUMS"
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
                 />
@@ -211,22 +209,22 @@ export const ProfileSettings = ({ currentUser, onSave, hostels }: ProfileSetting
                 value={preferences.sleepSchedule}
                 onChange={(e) => handlePrefChange('sleepSchedule', e.target.value)}
               >
-                <option value="early-bird">Early Bird (Sleep early, wake early)</option>
-                <option value="night-owl">Night Owl (Stay up late)</option>
-                <option value="flexible">Flexible / Dynamic</option>
+                <option value="early-bird">Early Bird</option>
+                <option value="night-owl">Night Owl</option>
+                <option value="flexible">Flexible</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Cleanliness Level</label>
+              <label className="form-label">Cleanliness</label>
               <select
                 className="form-select"
                 value={preferences.cleanliness}
                 onChange={(e) => handlePrefChange('cleanliness', e.target.value)}
               >
-                <option value="meticulous">Meticulous (Extremely clean & organized)</option>
-                <option value="moderate">Moderate (Standard tidiness)</option>
-                <option value="relaxed">Relaxed (Casual organizer)</option>
+                <option value="meticulous">Meticulous (Very Clean)</option>
+                <option value="moderate">Moderate</option>
+                <option value="relaxed">Relaxed</option>
               </select>
             </div>
 
@@ -237,35 +235,35 @@ export const ProfileSettings = ({ currentUser, onSave, hostels }: ProfileSetting
                 value={preferences.smoking}
                 onChange={(e) => handlePrefChange('smoking', e.target.value)}
               >
-                <option value="no">Non-smoker only</option>
-                <option value="outside-only">Smokes, but outside only</option>
-                <option value="yes">Smoker friendly</option>
+                <option value="no">Non-smoker</option>
+                <option value="yes">Smoker (In-room ok)</option>
+                <option value="outside-only">Outside Only</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Pet Policy</label>
+              <label className="form-label">Pet Friendliness</label>
               <select
                 className="form-select"
                 value={preferences.pets}
                 onChange={(e) => handlePrefChange('pets', e.target.value)}
               >
-                <option value="no">No pets allowed</option>
-                <option value="yes">Pet owner / friendly</option>
-                <option value="likes-but-no-own">Likes pets, but has no pet</option>
+                <option value="no">No Pets</option>
+                <option value="yes">Has/Likes Pets</option>
+                <option value="likes-but-no-own">Likes pets, but has no own</option>
               </select>
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">Guest Tolerance</label>
+              <label className="form-label">Guest Frequency Tolerance</label>
               <select
                 className="form-select"
                 value={preferences.guestTolerance}
                 onChange={(e) => handlePrefChange('guestTolerance', e.target.value)}
               >
-                <option value="rarely">Rarely (Only in emergencies)</option>
-                <option value="weekends">Weekends only</option>
-                <option value="anytime">Anytime / Friendly</option>
+                <option value="rarely">Rarely (Mainly study environment)</option>
+                <option value="weekends">Weekends Only</option>
+                <option value="anytime">Anytime / Open house</option>
               </select>
             </div>
           </div>
