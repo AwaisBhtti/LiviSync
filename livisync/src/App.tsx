@@ -336,7 +336,6 @@ export default function App() {
                 element={
                   <HostelDirectory
                     hostels={hostels}
-                    users={displayUsers}
                     currentUser={currentUser!}
                     token={token}
                   />

@@ -1,19 +1,16 @@
 import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import type { Hostel, User } from '../types';
-import { Search, MapPin, Check, Users, ArrowLeft } from 'lucide-react';
-import { calculateCompatibility } from '../utils';
+import { Search, MapPin, Check, ArrowLeft } from 'lucide-react';
 
 interface HostelDirectoryProps {
   hostels: Hostel[];
-  users: User[];
   currentUser: User;
   token: string | null;
 }
 
 export const HostelDirectory = ({
   hostels,
-  users,
   currentUser,
   token,
 }: HostelDirectoryProps) => {
@@ -83,11 +80,7 @@ export const HostelDirectory = ({
     return matchesSearch && matchesPrice && matchesSharing && matchesAmenity && isVisible;
   });
 
-  const renderCompatibilityBadge = (score: number) => {
-    if (score >= 80) return <span className="compatibility-ring compatibility-high">{score}%</span>;
-    if (score >= 50) return <span className="compatibility-ring compatibility-mid">{score}%</span>;
-    return <span className="compatibility-ring compatibility-low">{score}%</span>;
-  };
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -421,29 +414,7 @@ const amenityBadgeStyle: React.CSSProperties = {
   borderRadius: 'var(--radius)',
 };
 
-const roomRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '0.5rem 0',
-  borderBottom: '1px solid var(--border)',
-};
 
-const occupantCardStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-  padding: '0.5rem',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-};
-
-const occupantAvatarStyle: React.CSSProperties = {
-  width: '36px',
-  height: '36px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-};
 
 const heroHeaderStyle: React.CSSProperties = {
   backgroundColor: 'var(--card)',
