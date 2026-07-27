@@ -425,14 +425,7 @@ const contentGridStyle: React.CSSProperties = {
   gap: '1.5rem',
 };
 
-const removeFieldBtnStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: 'var(--danger)',
-  cursor: 'pointer',
-  fontSize: '1rem',
-  padding: '0 0.25rem',
-};
+
 
 const roomCardStyle: React.CSSProperties = {
   padding: '1rem',
