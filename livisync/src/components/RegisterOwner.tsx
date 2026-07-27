@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Building, User, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react';
+import { Building, User, Lock, Mail, AlertCircle, CheckCircle, Phone } from 'lucide-react';
 
 export const RegisterOwner = () => {
   const { token } = useParams<{ token: string }>();
@@ -9,6 +9,7 @@ export const RegisterOwner = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   
   const [verifying, setVerifying] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
@@ -59,6 +60,7 @@ export const RegisterOwner = () => {
           token,
           name,
           password,
+          phone,
         }),
       });
 
@@ -171,6 +173,22 @@ export const RegisterOwner = () => {
                   style={inputStyle}
                   required
                   minLength={6}
+                />
+              </div>
+            </div>
+
+            <div style={inputGroupStyle}>
+              <label style={labelStyle}>Phone Number</label>
+              <div style={inputWrapperStyle}>
+                <Phone size={18} style={iconStyle} />
+                <input
+                  type="tel"
+                  placeholder="e.g. +923001234567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="form-input auth-input"
+                  style={inputStyle}
+                  required
                 />
               </div>
             </div>

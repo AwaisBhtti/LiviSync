@@ -61,6 +61,7 @@ class UserAdminOut(BaseModel):
     occupation: Optional[str] = None
     institution: Optional[str] = None
     company: Optional[str] = None
+    hostel_id: Optional[uuid.UUID] = None
 
     class Config:
         from_attributes = True
@@ -171,7 +172,8 @@ def get_all_users(db: Session = Depends(get_db), admin: User = Depends(require_a
             "created_at": u.created_at,
             "occupation": profile_occupation,
             "institution": profile_institution,
-            "company": profile_company
+            "company": profile_company,
+            "hostel_id": u.profile.hostel_id if u.profile else None
         })
     return results
 

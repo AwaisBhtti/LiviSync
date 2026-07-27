@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import type { User, Preferences } from '../types';
+import type { User, Preferences, Hostel } from '../types';
 import { User as UserIcon, Settings, Save } from 'lucide-react';
 
 interface ProfileSettingsProps {
   currentUser: User;
   onSave: (updatedUser: User) => void;
+  hostels: Hostel[];
 }
 
-export const ProfileSettings = ({ currentUser, onSave }: ProfileSettingsProps) => {
+export const ProfileSettings = ({ currentUser, onSave, hostels }: ProfileSettingsProps) => {
   const [name, setName] = useState(currentUser.name);
   const [age, setAge] = useState(currentUser.age);
   const [gender, setGender] = useState(currentUser.gender);
@@ -22,6 +23,7 @@ export const ProfileSettings = ({ currentUser, onSave }: ProfileSettingsProps) =
 
   const [preferences, setPreferences] = useState<Preferences>({ ...currentUser.preferences });
   const [showSavedMsg, setShowSavedMsg] = useState(false);
+  const [hostelId, setHostelId] = useState(currentUser.hostelId || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +39,7 @@ export const ProfileSettings = ({ currentUser, onSave }: ProfileSettingsProps) =
       institution: occupation === 'student' ? institution : '',
       company: occupation === 'job' ? company : '',
       preferences,
+      hostelId: hostelId || undefined,
     });
     setShowSavedMsg(true);
     setTimeout(() => setShowSavedMsg(false), 3000);
@@ -166,6 +169,22 @@ export const ProfileSettings = ({ currentUser, onSave }: ProfileSettingsProps) =
                 onChange={(e) => setBudget(Number(e.target.value))}
                 required
               />
+            </div>
+
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label className="form-label">Current Hostel Residence</label>
+              <select
+                className="form-select"
+                value={hostelId}
+                onChange={(e) => setHostelId(e.target.value)}
+              >
+                <option value="">None / Not Staying in a Hostel</option>
+                {hostels.map((hostel) => (
+                  <option key={hostel.id} value={hostel.id}>
+                    {hostel.name} ({hostel.location})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>

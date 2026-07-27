@@ -90,6 +90,7 @@ class OwnerRegisterRequest(BaseModel):
     token: str
     name: str
     password: str
+    phone: str
 
 @router.get("/verify-invite/{token}")
 def verify_invite(token: str, db: Session = Depends(get_db)):
@@ -140,7 +141,8 @@ def register_owner(req: OwnerRegisterRequest, db: Session = Depends(get_db)):
         budget=0,
         location="Unknown",
         role="owner",
-        status="suspended"  # Starts suspended pending admin activation
+        status="suspended",  # Starts suspended pending admin activation
+        phone=req.phone
     )
     db.add(db_profile)
 

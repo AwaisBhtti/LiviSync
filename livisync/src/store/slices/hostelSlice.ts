@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { Hostel } from '../../types';
 
 interface HostelState {
@@ -20,7 +20,7 @@ export const fetchHostels = createAsyncThunk(
       const endpoint = role === 'admin'
         ? 'http://127.0.0.1:8000/admin/hostels'
         : 'http://127.0.0.1:8000/hostels';
-        
+
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -66,28 +66,6 @@ const hostelSlice = createSlice({
     deleteHostel: (state, action: PayloadAction<string>) => {
       state.hostels = state.hostels.filter((h) => h.id !== action.payload);
     },
-    bookRoom: (state, action: PayloadAction<{ hostelId: string; sharingType: 'single' | 'double' | 'triple'; currentUserId: string }>) => {
-      const { hostelId, sharingType, currentUserId } = action.payload;
-      state.hostels = state.hostels.map((h) => {
-        if (h.id === hostelId) {
-          const updatedRooms = h.rooms.map((r) => {
-            if (r.sharingType === sharingType && r.available > 0) {
-              return { ...r, available: r.available - 1 };
-            }
-            return r;
-          });
-          const currentOccupants = h.currentOccupants.includes(currentUserId)
-            ? h.currentOccupants
-            : [...h.currentOccupants, currentUserId];
-          return {
-            ...h,
-            rooms: updatedRooms,
-            currentOccupants,
-          };
-        }
-        return h;
-      });
-    },
     setHostelsState: (state, action: PayloadAction<Hostel[]>) => {
       state.hostels = action.payload;
     }
@@ -112,5 +90,5 @@ const hostelSlice = createSlice({
   }
 });
 
-export const { addHostel, editHostel, deleteHostel, bookRoom, setHostelsState } = hostelSlice.actions;
+export const { addHostel, editHostel, deleteHostel, setHostelsState } = hostelSlice.actions;
 export default hostelSlice.reducer;

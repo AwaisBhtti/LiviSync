@@ -6,6 +6,7 @@ from ..schemas import UserWithProfile
 from ..auth import get_current_user
 from pydantic import BaseModel
 from typing import Optional, List
+from uuid import UUID
 
 router = APIRouter(
     prefix="/users",
@@ -27,6 +28,7 @@ class ProfileUpdate(BaseModel):
     smoking: str
     pets: str
     guest_tolerance: str
+    hostel_id: Optional[UUID] = None
 
 @router.put("/profile")
 def update_profile(profile_in: ProfileUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -45,6 +47,7 @@ def update_profile(profile_in: ProfileUpdate, db: Session = Depends(get_db), cur
     profile.occupation = profile_in.occupation
     profile.institution = profile_in.institution
     profile.company = profile_in.company
+    profile.hostel_id = profile_in.hostel_id
     
     # 2. Update or create Preferences
     prefs = current_user.preferences

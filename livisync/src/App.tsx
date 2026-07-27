@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import type { User, Hostel, MatchRequest, Report } from './types';
+import type { User, Hostel, Report } from './types';
 import { Navbar } from './components/Navbar';
 import { HostelDirectory } from './components/HostelDirectory';
 import { RoommateFinder } from './components/RoommateFinder';
@@ -21,7 +21,6 @@ import {
 } from './store/slices/authSlice';
 import {
   fetchHostels,
-  bookRoom,
   addHostel,
   editHostel,
   deleteHostel,
@@ -98,12 +97,6 @@ export default function App() {
     }
   };
 
-  // Handler: Book a Room
-  const handleBookRoom = (hostelId: string, sharingType: 'single' | 'double' | 'triple') => {
-    if (!currentUser) return;
-    dispatch(bookRoom({ hostelId, sharingType, currentUserId: currentUser.id }));
-    alert(`Successfully booked a spot in the ${sharingType} sharing room!`);
-  };
 
   // Handler: Send Match Request
   const handleSendRequest = (receiverId: string, message: string) => {
@@ -315,7 +308,7 @@ export default function App() {
                     hostels={hostels}
                     users={users}
                     currentUser={currentUser!}
-                    onBookRoom={handleBookRoom}
+                    token={token}
                   />
                 }
               />
@@ -329,6 +322,7 @@ export default function App() {
                     onSendRequest={handleSendRequest}
                     onBlockUser={handleBlockUser}
                     onReportUser={handleReportUser}
+                    hostels={hostels}
                   />
                 }
               />
@@ -348,7 +342,7 @@ export default function App() {
               <Route
                 path="/profile"
                 element={
-                  <ProfileSettings currentUser={currentUser!} onSave={handleSaveProfile} />
+                  <ProfileSettings currentUser={currentUser!} onSave={handleSaveProfile} hostels={hostels} />
                 }
               />
               <Route

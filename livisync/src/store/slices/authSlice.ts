@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { User } from '../../types';
 
 interface AuthState {
@@ -41,6 +41,8 @@ export const fetchCurrentUser = createAsyncThunk(
         occupation: data.profile?.occupation || 'student',
         institution: data.profile?.institution || '',
         company: data.profile?.company || '',
+        phone: data.profile?.phone || '',
+        hostelId: data.profile?.hostel_id || undefined,
         preferences: {
           sleepSchedule: data.preferences?.sleep_schedule || 'flexible',
           cleanliness: data.preferences?.cleanliness || 'moderate',
@@ -82,6 +84,7 @@ export const updateProfile = createAsyncThunk(
           smoking: updatedUser.preferences.smoking,
           pets: updatedUser.preferences.pets,
           guest_tolerance: updatedUser.preferences.guestTolerance,
+          hostel_id: updatedUser.hostelId || null,
         })
       });
       const data = await response.json();

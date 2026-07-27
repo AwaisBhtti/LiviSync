@@ -7,20 +7,50 @@ interface HostelDirectoryProps {
   hostels: Hostel[];
   users: User[];
   currentUser: User;
-  onBookRoom: (hostelId: string, sharingType: 'single' | 'double' | 'triple') => void;
+  token: string | null;
 }
 
 export const HostelDirectory = ({
   hostels,
   users,
   currentUser,
-  onBookRoom,
+  token,
 }: HostelDirectoryProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
   const [maxPrice, setMaxPrice] = useState<number>(25000);
   const [selectedSharing, setSelectedSharing] = useState<string>('all');
   const [selectedAmenity, setSelectedAmenity] = useState<string>('all');
+  const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
+  const [loadingPhone, setLoadingPhone] = useState<boolean>(false);
+
+  const selectHostel = (hostel: Hostel | null) => {
+    setSelectedHostel(hostel);
+    setOwnerPhone(null);
+  };
+
+  const handleShowPhone = async () => {
+    if (!token || !selectedHostel) return;
+    setLoadingPhone(true);
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/hostels/${selectedHostel.id}/view-phone`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to fetch phone number');
+      }
+      setOwnerPhone(data.phone);
+    } catch (err: any) {
+      alert(err.message || 'Error fetching phone number');
+    } finally {
+      setLoadingPhone(false);
+    }
+  };
 
   // Find all unique amenities for filters
   const allAmenities = Array.from(
@@ -32,9 +62,9 @@ export const HostelDirectory = ({
     const matchesSearch =
       hostel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       hostel.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesPrice = hostel.price <= maxPrice;
-    
+
     const matchesSharing =
       selectedSharing === 'all' ||
       hostel.rooms.some(
@@ -50,10 +80,6 @@ export const HostelDirectory = ({
     return matchesSearch && matchesPrice && matchesSharing && matchesAmenity && isVisible;
   });
 
-  const getOccupantDetails = (occupantId: string) => {
-    return users.find((u) => u.id === occupantId);
-  };
-
   const renderCompatibilityBadge = (score: number) => {
     if (score >= 80) return <span className="compatibility-ring compatibility-high">{score}%</span>;
     if (score >= 50) return <span className="compatibility-ring compatibility-mid">{score}%</span>;
@@ -67,7 +93,7 @@ export const HostelDirectory = ({
         <div style={detailsPageStyle}>
           <button
             className="btn btn-secondary"
-            onClick={() => setSelectedHostel(null)}
+            onClick={() => selectHostel(null)}
             style={{ marginBottom: '1rem', width: 'fit-content' }}
           >
             <ArrowLeft size={16} />
@@ -135,18 +161,30 @@ export const HostelDirectory = ({
                         <span style={{ fontSize: '0.8rem', color: room.available > 0 ? 'var(--success)' : 'var(--danger)' }}>
                           {room.available > 0 ? `${room.available} left` : 'Full'}
                         </span>
-                        <button
-                          className="btn btn-primary"
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                          disabled={room.available === 0}
-                          onClick={() => onBookRoom(selectedHostel.id, room.sharingType)}
-                        >
-                          Book Now
-                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
+
+                {currentUser.role !== 'admin' && currentUser.role !== 'owner' && (
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                    {ownerPhone ? (
+                      <div style={{ padding: '0.75rem', backgroundColor: 'var(--card-hover)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', textAlign: 'center' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Owner's Contact Number:</p>
+                        <p style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--primary)', marginTop: '0.25rem' }}>{ownerPhone}</p>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleShowPhone}
+                        disabled={loadingPhone}
+                        className="btn btn-primary"
+                        style={{ width: '100%', padding: '0.625rem', fontSize: '0.85rem' }}
+                      >
+                        {loadingPhone ? 'Loading Contact Info...' : 'Show Owner\'s Phone Number'}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Occupants Compatibility Section */}
@@ -156,16 +194,14 @@ export const HostelDirectory = ({
                   Current Roommates In Hostel
                 </h3>
 
-                {selectedHostel.currentOccupants.length === 0 ? (
+                {users.filter((u) => u.hostelId === selectedHostel.id && u.role === 'student').length === 0 ? (
                   <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>No registered students currently staying here.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {selectedHostel.currentOccupants.map((occupantId) => {
-                      const occupant = getOccupantDetails(occupantId);
-                      if (!occupant) return null;
+                    {users.filter((u) => u.hostelId === selectedHostel.id && u.role === 'student').map((occupant) => {
                       const score = calculateCompatibility(currentUser.preferences, occupant.preferences);
                       return (
-                        <div key={occupantId} style={occupantCardStyle}>
+                        <div key={occupant.id} style={occupantCardStyle}>
                           <img
                             src={occupant.photo}
                             alt={occupant.name}
@@ -284,7 +320,7 @@ export const HostelDirectory = ({
                       key={hostel.id}
                       className="card"
                       style={hostelRowCardStyle}
-                      onClick={() => setSelectedHostel(hostel)}
+                      onClick={() => selectHostel(hostel)}
                     >
                       <img
                         src={hostel.images[0]}

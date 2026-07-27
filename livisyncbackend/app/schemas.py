@@ -42,7 +42,8 @@ class ProfileOut(BaseModel):
     status: str
     occupation: Optional[str] = None
     institution: Optional[str] = None
-    company: Optional[str] = None
+    phone: Optional[str] = None
+    hostel_id: Optional[UUID] = None
 
     class Config:
         from_attributes = True

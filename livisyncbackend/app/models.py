@@ -15,7 +15,6 @@ class User(Base):
     # Relationships
     profile = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     preferences = relationship("Preferences", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    bookings = relationship("HostelOccupancy", back_populates="user", cascade="all, delete-orphan")
     owned_hostels = relationship("Hostel", back_populates="owner")
 
 
@@ -37,6 +36,9 @@ class Profile(Base):
     occupation = Column(String(10), nullable=True)  # 'student' or 'job'
     institution = Column(String(255), nullable=True)
     company = Column(String(255), nullable=True)
+    phone = Column(String(20), nullable=True)
+    hostel_id = Column(UUID(as_uuid=True), ForeignKey('hostels.id', ondelete='SET NULL'), nullable=True)
+
 
     __table_args__ = (
         CheckConstraint("age >= 16 AND age <= 100", name="age_check"),
@@ -47,6 +49,7 @@ class Profile(Base):
     )
 
     user = relationship("User", back_populates="profile")
+    hostel = relationship("Hostel", back_populates="occupants_profile")
 
 
 class Preferences(Base):
@@ -90,7 +93,7 @@ class Hostel(Base):
     owner = relationship("User", back_populates="owned_hostels")
     amenities = relationship("HostelAmenity", back_populates="hostel", cascade="all, delete-orphan")
     rooms = relationship("HostelRoom", back_populates="hostel", cascade="all, delete-orphan")
-    occupants = relationship("HostelOccupancy", back_populates="hostel", cascade="all, delete-orphan")
+    occupants_profile = relationship("Profile", back_populates="hostel")
 
 
 class HostelAmenity(Base):
@@ -117,14 +120,7 @@ class HostelRoom(Base):
     hostel = relationship("Hostel", back_populates="rooms")
 
 
-class HostelOccupancy(Base):
-    __tablename__ = 'hostel_occupancy'
-
-    hostel_id = Column(UUID(as_uuid=True), ForeignKey('hostels.id', ondelete='CASCADE'), primary_key=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
-
-    hostel = relationship("Hostel", back_populates="occupants")
-    user = relationship("User", back_populates="bookings")
+# HostelOccupancy has been removed in favor of Profile.hostel_id
 
 
 class MatchRequest(Base):
@@ -190,3 +186,13 @@ class InviteToken(Base):
     email = Column(String(255), nullable=False)
     is_used = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class PhoneViewLog(Base):
+    __tablename__ = 'phone_view_logs'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    hostel_id = Column(UUID(as_uuid=True), ForeignKey('hostels.id', ondelete='CASCADE'), nullable=False)
+    viewed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+

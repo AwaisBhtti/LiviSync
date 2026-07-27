@@ -23,6 +23,8 @@ export interface User {
   occupation?: 'student' | 'job';
   institution?: string;
   company?: string;
+  phone?: string;
+  hostelId?: string;
 }
 
 export interface Hostel {
