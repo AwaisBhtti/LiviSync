@@ -223,44 +223,7 @@ export const HostelDirectory = ({
                 )}
               </div>
 
-              {/* Occupants Compatibility Section */}
-              <div className="card" style={{ padding: '1.5rem' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontSize: '1rem' }}>
-                  <Users size={18} />
-                  Current Roommates In Hostel
-                </h3>
 
-                {users.filter((u) => u.hostelId === selectedHostel.id && u.role === 'student').length === 0 ? (
-                  <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>No registered students currently staying here.</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {users.filter((u) => u.hostelId === selectedHostel.id && u.role === 'student').map((occupant) => {
-                      const score = calculateCompatibility(currentUser.preferences, occupant.preferences);
-                      return (
-                        <div key={occupant.id} style={occupantCardStyle}>
-                          <img
-                            src={occupant.photo}
-                            alt={occupant.name}
-                            style={occupantAvatarStyle}
-                          />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <h4 style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {occupant.name}
-                            </h4>
-                            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {occupant.age} y/o • {occupant.gender}
-                            </p>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            {renderCompatibilityBadge(score)}
-                            <span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px' }}>match</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -400,11 +363,7 @@ export const HostelDirectory = ({
                               </span>
                             )}
                           </div>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <Users size={14} />
-                            {hostel.currentOccupants.length} students
-                          </span>
-                        </div>
+                          </div>
                       </div>
                     </div>
                   ))}

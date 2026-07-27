@@ -39,6 +39,7 @@ export const fetchHostels = createAsyncThunk(
         amenities: h.amenities ? h.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: h.owner_id,
         isVerified: h.is_verified,
+        currentOccupants: h.current_occupants || [],
         rooms: h.rooms ? h.rooms.map((r: any) => ({
           id: r.id,
           hostelId: r.hostel_id,
@@ -113,6 +114,7 @@ export const addHostel = createAsyncThunk(
         amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
+        currentOccupants: [],
         rooms: []
       } as Hostel;
     } catch (err: any) {
@@ -131,7 +133,14 @@ export const editHostel = createAsyncThunk(
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(updatedHostel)
+        body: JSON.stringify({
+          name: updatedHostel.name,
+          location: updatedHostel.location,
+          description: updatedHostel.description,
+          photo: updatedHostel.photo,
+          electricity_bill_included: updatedHostel.electricityBillIncluded,
+          amenities: updatedHostel.amenities
+        })
       });
       const data = await response.json();
       if (!response.ok) {
@@ -147,6 +156,7 @@ export const editHostel = createAsyncThunk(
         amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
+        currentOccupants: data.current_occupants || updatedHostel.currentOccupants || [],
         rooms: data.rooms ? data.rooms.map((r: any) => ({
           id: r.id,
           hostelId: r.hostel_id,
