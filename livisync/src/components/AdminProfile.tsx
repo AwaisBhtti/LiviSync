@@ -6,7 +6,7 @@ interface AdminProfileProps {
   currentUser: Admin;
 }
 
-export const AdminProfile = ({ currentUser }: AdminProfileProps) => {
+export const AdminProfile = ({ currentUser: _currentUser }: AdminProfileProps) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

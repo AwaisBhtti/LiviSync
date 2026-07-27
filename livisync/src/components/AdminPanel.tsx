@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { User, Report, Hostel } from '../types';
 import { Building, Users, ShieldAlert, CheckCircle, Ban, RefreshCw } from 'lucide-react';
 
@@ -147,6 +147,7 @@ export const AdminPanel = ({
 }: AdminPanelProps) => {
   const pendingReports = reports.filter((r) => r.status === 'pending');
 
+  const [invitations, setInvitations] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
@@ -154,6 +155,40 @@ export const AdminPanel = ({
   const [inviteError, setInviteError] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const fetchInvitations = async () => {
+    try {
+      const token = localStorage.getItem('livisync_token');
+      const response = await fetch('http://127.0.0.1:8000/admin/invitations', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setInvitations(data);
+      }
+    } catch (err) {
+      console.error("Error fetching invitations:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvitations();
+  }, []);
+
+  const handleRevokeInvitation = async (token: string) => {
+    try {
+      const userToken = localStorage.getItem('livisync_token');
+      const response = await fetch(`http://127.0.0.1:8000/admin/invitations/${token}/revoke`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
+      if (response.ok) {
+        fetchInvitations();
+      }
+    } catch (err) {
+      console.error("Error revoking invitation:", err);
+    }
+  };
 
   const handleGenerateInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,6 +215,7 @@ export const AdminPanel = ({
       setGeneratedLink(data.invite_link);
       setInviteEmail('');
       setShowModal(true);
+      fetchInvitations();
     } catch (err: any) {
       setInviteError(err.message || 'Error occurred');
     } finally {
@@ -495,6 +531,59 @@ export const AdminPanel = ({
         </form>
 
         {inviteError && <p style={{ color: 'var(--danger)', fontSize: '0.875rem', marginTop: '0.5rem' }}>{inviteError}</p>}
+
+        {/* Active Invitations List */}
+        <div style={{ marginTop: '1.5rem' }}>
+          <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Generated Invitations
+          </h4>
+          {invitations.length === 0 ? (
+            <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>No invitation links generated yet.</p>
+          ) : (
+            <div style={tableContainerStyle}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr style={tableHeaderRowStyle}>
+                    <th style={thStyle}>Recipient Email</th>
+                    <th style={thStyle}>Invitation Token</th>
+                    <th style={thStyle}>Status</th>
+                    <th style={thStyle}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invitations.map((inv) => (
+                    <tr key={inv.token} style={tableRowStyle}>
+                      <td style={{ ...tdStyle, fontSize: '0.85rem' }}>{inv.email}</td>
+                      <td style={{ ...tdStyle, fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--muted)' }}>
+                        {inv.token.substring(0, 8)}...{inv.token.substring(inv.token.length - 8)}
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                          color: inv.is_used ? 'var(--muted)' : 'var(--success)'
+                        }}>
+                          {inv.is_used ? 'REVOKED / USED' : 'ACTIVE'}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        {!inv.is_used && (
+                          <button
+                            className="btn btn-danger"
+                            style={{ ...tableBtnStyle, padding: '0.25rem 0.5rem' }}
+                            onClick={() => handleRevokeInvitation(inv.token)}
+                          >
+                            Revoke
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Invite Link Modal Popup */}

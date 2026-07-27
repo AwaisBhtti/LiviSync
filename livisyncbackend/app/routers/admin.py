@@ -216,4 +216,18 @@ def resolve_report(report_id: uuid.UUID, db: Session = Depends(get_db), admin: A
     db.commit()
     return {"message": "Report resolved successfully."}
 
+@router.get("/invitations")
+def get_all_invitations(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    return db.query(InviteToken).order_by(InviteToken.created_at.desc()).all()
 
+@router.put("/invitations/{token}/revoke")
+def revoke_invitation(token: str, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    invite = db.query(InviteToken).filter(InviteToken.token == token).first()
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invitation not found"
+        )
+    invite.is_used = True
+    db.commit()
+    return {"message": "Invitation revoked successfully."}
