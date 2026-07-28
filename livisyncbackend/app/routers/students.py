@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Student, Owner, Hostel, PhoneViewLog, MatchRequest, Preferences, BlockedUser
+from ..models import Student, Owner, Hostel, PhoneViewLog, MatchRequest, Preferences, BlockedUser, Report
 from ..schemas import StudentOut, StudentUpdate
 from ..auth import get_current_user
 from pydantic import BaseModel
@@ -30,6 +30,11 @@ class MatchStatusUpdate(BaseModel):
 
 class BlockRequest(BaseModel):
     blocked_user_id: uuid.UUID
+
+class ReportCreate(BaseModel):
+    reported_id: uuid.UUID
+    reason: str
+    description: str
 
 @router.get("/roommates", response_model=List[StudentOut])
 def get_roommates(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
@@ -235,3 +240,20 @@ def unblock_user(blocked_user_id: uuid.UUID, db: Session = Depends(get_db), curr
     db.delete(block)
     db.commit()
     return {"message": "User unblocked successfully"}
+
+@router.post("/reports")
+def submit_report(req: ReportCreate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    reported_user = db.query(Student).filter(Student.id == req.reported_id).first()
+    if not reported_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reported user not found")
+        
+    new_report = Report(
+        reporter_id=current_user.id,
+        reported_id=req.reported_id,
+        reason=req.reason,
+        description=req.description,
+        status="pending"
+    )
+    db.add(new_report)
+    db.commit()
+    return {"message": "Report submitted successfully"}

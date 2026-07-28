@@ -46,6 +46,7 @@ import {
   fetchUsers,
   toggleUserStatus,
   deleteUser,
+  warnUser,
 } from './store/slices/adminSlice';
 import { API_BASE_URL } from './config';
 
@@ -251,22 +252,49 @@ export default function App() {
     }
   };
 
-  // Handler: Report User
-  const handleReportUser = (reportedId: string, reason: string, description: string) => {
-    if (!currentUser) return;
+  const handleReportUser = async (reportedId: string, reason: string, description: string) => {
+    if (!currentUser || !token) return;
 
-    const newReport: Report = {
-      id: `rep_${Date.now()}`,
-      reporterId: currentUser.id,
-      reportedId,
-      reason: reason as any,
-      description,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/reports`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          reported_id: reportedId,
+          reason,
+          description
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to submit safety report');
+      }
 
-    dispatch(addLocalReport(newReport));
-    alert('Thank you. The report has been filed and sent to administrators for review.');
+      const newReport: Report = {
+        id: `rep_${Date.now()}`,
+        reporterId: currentUser.id,
+        reportedId,
+        reason: reason as any,
+        description,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+
+      dispatch(addLocalReport(newReport));
+      
+      const confirmBlock = window.confirm(
+        'Thank you. The safety report has been filed and sent to administrators for review.\n\n' +
+        'Would you like to block this user as well to prevent them from contacting or matching with you?'
+      );
+      if (confirmBlock) {
+        await handleBlockUser(reportedId);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error submitting safety report');
+    }
   };
 
   // Handler Admin: Toggle User Status (Suspend/Activate)
@@ -279,6 +307,17 @@ export default function App() {
       await dispatch(toggleUserStatus({ userId, token, currentStatus: user.status, role: user.role as 'student' | 'owner' })).unwrap();
     } catch (err: any) {
       alert(err || 'Error occurred updating status.');
+    }
+  };
+
+  // Handler Admin: Warn User
+  const handleWarnUser = async (reportId: string) => {
+    if (!token) return;
+    try {
+      await dispatch(warnUser({ reportId, token })).unwrap();
+      alert('Warning email sent successfully and report resolved.');
+    } catch (err: any) {
+      alert(err || 'Error sending warning email.');
     }
   };
 
@@ -514,6 +553,7 @@ export default function App() {
                       onResolveReport={handleResolveReport}
                       onDeleteUser={handleDeleteUser}
                       onVerifyHostel={handleVerifyHostel}
+                      onWarnUser={handleWarnUser}
                     />
                   ) : (
                     <Navigate to="/hostels" replace />

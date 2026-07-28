@@ -10,6 +10,7 @@ interface AdminPanelProps {
   hostels: Hostel[];
   onToggleUserStatus: (userId: string) => void;
   onResolveReport: (reportId: string) => void;
+  onWarnUser: (reportId: string) => void;
   onDeleteUser: (userId: string) => void;
   onVerifyHostel: (hostelId: string) => void;
 }
@@ -144,6 +145,7 @@ export const AdminPanel = ({
   hostels,
   onToggleUserStatus,
   onResolveReport,
+  onWarnUser,
   onDeleteUser,
   onVerifyHostel,
 }: AdminPanelProps) => {
@@ -348,6 +350,13 @@ export const AdminPanel = ({
                             onClick={() => onResolveReport(report.id)}
                           >
                             <CheckCircle size={12} /> Resolve
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            style={tableBtnStyle}
+                            onClick={() => onWarnUser(report.id)}
+                          >
+                            ✉ Warn
                           </button>
                           {reported && (
                             <button
