@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Student, Owner, Hostel, PhoneViewLog, MatchRequest, Preferences
+from ..models import Student, Owner, Hostel, PhoneViewLog, MatchRequest, Preferences, BlockedUser
 from ..schemas import StudentOut, StudentUpdate
 from ..auth import get_current_user
 from pydantic import BaseModel
@@ -27,6 +27,9 @@ class MatchRequestCreate(BaseModel):
 
 class MatchStatusUpdate(BaseModel):
     status: str
+
+class BlockRequest(BaseModel):
+    blocked_user_id: uuid.UUID
 
 @router.get("/roommates", response_model=List[StudentOut])
 def get_roommates(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
@@ -170,3 +173,46 @@ def cancel_match_request(request_id: uuid.UUID, db: Session = Depends(get_db), c
     db.delete(req)
     db.commit()
     return {"message": "Match request cancelled/deleted successfully"}
+
+@router.get("/blocks")
+def get_blocked_users(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    blocks = db.query(BlockedUser).filter(BlockedUser.user_id == current_user.id).all()
+    return [str(b.blocked_user_id) for b in blocks]
+
+@router.post("/blocks")
+def block_user(req: BlockRequest, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    if req.blocked_user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot block yourself")
+    
+    # Check if already blocked
+    existing = db.query(BlockedUser).filter(
+        BlockedUser.user_id == current_user.id,
+        BlockedUser.blocked_user_id == req.blocked_user_id
+    ).first()
+    if existing:
+        return {"message": "User is already blocked"}
+    
+    new_block = BlockedUser(user_id=current_user.id, blocked_user_id=req.blocked_user_id)
+    db.add(new_block)
+    
+    # Delete any existing match requests between them
+    db.query(MatchRequest).filter(
+        ((MatchRequest.sender_id == current_user.id) & (MatchRequest.receiver_id == req.blocked_user_id)) |
+        ((MatchRequest.sender_id == req.blocked_user_id) & (MatchRequest.receiver_id == current_user.id))
+    ).delete()
+    
+    db.commit()
+    return {"message": "User blocked successfully"}
+
+@router.delete("/blocks/{blocked_user_id}")
+def unblock_user(blocked_user_id: uuid.UUID, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    block = db.query(BlockedUser).filter(
+        BlockedUser.user_id == current_user.id,
+        BlockedUser.blocked_user_id == blocked_user_id
+    ).first()
+    if not block:
+        raise HTTPException(status_code=404, detail="Block record not found")
+    
+    db.delete(block)
+    db.commit()
+    return {"message": "User unblocked successfully"}

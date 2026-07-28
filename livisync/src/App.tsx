@@ -195,15 +195,60 @@ export default function App() {
   };
 
   // Handler: Block User
-  const handleBlockUser = (targetId: string) => {
-    if (!currentUser || currentUser.role !== 'student') return;
-    const updatedBlocked = currentUser.blockedUsers.includes(targetId)
-      ? currentUser.blockedUsers
-      : [...currentUser.blockedUsers, targetId];
+  const handleBlockUser = async (targetId: string) => {
+    if (!currentUser || currentUser.role !== 'student' || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/blocks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ blocked_user_id: targetId })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to block user');
+      }
 
-    dispatch(setBlockedUsers(updatedBlocked));
-    const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
-    dispatch(updateUserInList(updatedUser));
+      const updatedBlocked = currentUser.blockedUsers.includes(targetId)
+        ? currentUser.blockedUsers
+        : [...currentUser.blockedUsers, targetId];
+
+      dispatch(setBlockedUsers(updatedBlocked));
+      const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
+      dispatch(updateUserInList(updatedUser));
+      dispatch(removeMatchesForUser(targetId));
+      alert('User blocked successfully.');
+    } catch (err: any) {
+      alert(err.message || 'Error blocking user');
+    }
+  };
+
+  // Handler: Unblock User
+  const handleUnblockUser = async (targetId: string) => {
+    if (!currentUser || currentUser.role !== 'student' || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/blocks/${targetId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to unblock user');
+      }
+
+      const updatedBlocked = currentUser.blockedUsers.filter(id => id !== targetId);
+
+      dispatch(setBlockedUsers(updatedBlocked));
+      const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
+      dispatch(updateUserInList(updatedUser));
+      alert('User unblocked successfully.');
+    } catch (err: any) {
+      alert(err.message || 'Error unblocking user');
+    }
   };
 
   // Handler: Report User
@@ -443,7 +488,13 @@ export default function App() {
                 path="/profile"
                 element={
                   currentUser?.role === 'student' ? (
-                    <StudentProfile currentUser={currentUser as Student} onSave={handleSaveProfile} hostels={hostels} />
+                    <StudentProfile
+                      currentUser={currentUser as Student}
+                      onSave={handleSaveProfile}
+                      hostels={hostels}
+                      users={studentRoommates}
+                      onUnblockUser={handleUnblockUser}
+                    />
                   ) : currentUser?.role === 'owner' ? (
                     <OwnerProfile currentUser={currentUser as Owner} />
                   ) : (
