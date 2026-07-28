@@ -115,6 +115,17 @@ def get_my_matches(db: Session = Depends(get_db), current_user: Student = Depend
 
 @router.post("/matches")
 def send_match_request(req_in: MatchRequestCreate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    # Check if a block exists between these two users
+    block_exists = db.query(BlockedUser).filter(
+        ((BlockedUser.user_id == current_user.id) & (BlockedUser.blocked_user_id == req_in.receiver_id)) |
+        ((BlockedUser.user_id == req_in.receiver_id) & (BlockedUser.blocked_user_id == current_user.id))
+    ).first()
+    if block_exists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot send connection request. You have blocked this user or they have blocked you."
+        )
+
     receiver = db.query(Student).filter(Student.id == req_in.receiver_id).first()
     if not receiver:
         raise HTTPException(
