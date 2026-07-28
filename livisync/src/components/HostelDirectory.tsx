@@ -274,8 +274,8 @@ export const HostelDirectory = ({
                 <label className="form-label" style={{ fontSize: '0.75rem' }}>Max Price (PKR): {maxPrice.toLocaleString()}</label>
                 <input
                   type="range"
-                  min="10000"
-                  max="30000"
+                  min="5000"
+                  max="35000"
                   step="1000"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(Number(e.target.value))}
@@ -292,9 +292,11 @@ export const HostelDirectory = ({
                   onChange={(e) => setSelectedSharing(e.target.value)}
                 >
                   <option value="all">Any Sharing</option>
-                  <option value="single">Single Room</option>
-                  <option value="double">Double Room</option>
-                  <option value="triple">Triple Room</option>
+                  <option value="single">1 Seater Room</option>
+                  <option value="double">2 Seater Room</option>
+                  <option value="triple">3 Seater Room</option>
+                  <option value="quad">4 Seater Room</option>
+                  <option value="penta">5 Seater Room</option>
                 </select>
               </div>
 
