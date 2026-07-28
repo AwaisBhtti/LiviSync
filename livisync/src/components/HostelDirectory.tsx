@@ -2,6 +2,7 @@ import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import type { Hostel, User } from '../types';
 import { Search, MapPin, Check, ArrowLeft } from 'lucide-react';
+import { ImageLightbox } from './ImageLightbox';
 
 interface HostelDirectoryProps {
   hostels: Hostel[];
@@ -18,6 +19,7 @@ export const HostelDirectory = ({
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
   const [maxPrice, setMaxPrice] = useState<number>(25000);
   const [selectedSharing, setSelectedSharing] = useState<string>('all');
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [selectedAmenity, setSelectedAmenity] = useState<string>('all');
   const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
   const [loadingPhone, setLoadingPhone] = useState<boolean>(false);
@@ -103,7 +105,8 @@ export const HostelDirectory = ({
                 <img
                   src={selectedHostel.photo}
                   alt={selectedHostel.name}
-                  style={mainImageStyle}
+                  onClick={() => setLightboxUrl(selectedHostel.photo)}
+                  style={{ ...mainImageStyle, cursor: 'zoom-in' }}
                 />
               </div>
 
@@ -168,7 +171,7 @@ export const HostelDirectory = ({
                     ⚡ Electricity: {selectedHostel.electricityBillIncluded ? 'Included' : 'Not Included'}
                   </span>
                 </div>
-                
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {selectedHostel.rooms.map((room, idx) => (
                     <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
@@ -191,6 +194,24 @@ export const HostelDirectory = ({
                           {room.seatsAvailable > 0 ? `${room.seatsAvailable} bed(s) left` : 'Full'}
                         </span>
                       </div>
+                      {room.description && (
+                        <p style={{ margin: '0.25rem 0', fontSize: '0.8rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                          "{room.description}"
+                        </p>
+                      )}
+                      {room.images && room.images.length > 0 && (
+                        <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', overflowX: 'auto' }}>
+                          {room.images.filter(img => img.trim().length > 0).map((img, i) => (
+                            <img
+                              key={i}
+                              src={img}
+                              alt=""
+                              onClick={() => setLightboxUrl(img)}
+                              style={{ width: '60px', height: '45px', objectFit: 'cover', borderRadius: '4px', cursor: 'zoom-in' }}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -356,7 +377,7 @@ export const HostelDirectory = ({
                               </span>
                             )}
                           </div>
-                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -366,6 +387,8 @@ export const HostelDirectory = ({
           </div>
         </>
       )}
+
+      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   );
 };

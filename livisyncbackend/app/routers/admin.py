@@ -1,6 +1,6 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from ..database import get_db
 from ..models import Admin, Student, Owner, Hostel, InviteToken, Report, MatchRequest
 from ..auth import get_current_user
@@ -186,7 +186,7 @@ def toggle_user_status(role: str, user_id: uuid.UUID, req: StatusToggleRequest, 
 
 @router.get("/hostels")
 def get_all_hostels(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
-    return db.query(Hostel).all()
+    return db.query(Hostel).options(joinedload(Hostel.rooms), joinedload(Hostel.amenities)).all()
 
 @router.put("/hostels/{hostel_id}/verify")
 def verify_hostel(hostel_id: uuid.UUID, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):

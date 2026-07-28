@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { User, Hostel } from '../types';
 import { Plus, Edit2, Trash2, Building, MapPin, ListPlus, X, Info } from 'lucide-react';
 import { RoomListing } from './RoomListing';
+import { ImageLightbox } from './ImageLightbox';
 
 interface OwnerPortalProps {
   currentUser: User;
@@ -34,7 +35,7 @@ export const OwnerPortal = ({
 }: OwnerPortalProps) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingHostel, setEditingHostel] = useState<Hostel | null>(null);
-  
+
   // Redirection state to manage rooms
   const [selectedHostelForRooms, setSelectedHostelForRooms] = useState<Hostel | null>(null);
 
@@ -46,6 +47,7 @@ export const OwnerPortal = ({
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [electricityBillIncluded, setElectricityBillIncluded] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -155,7 +157,7 @@ export const OwnerPortal = ({
             amenities: hostelData.amenities
           })
         });
-        
+
         const data = await response.json();
         if (!response.ok) {
           const errMsg = Array.isArray(data.detail)
@@ -449,7 +451,7 @@ export const OwnerPortal = ({
                         <span style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600 }}>Rent:</span>
                         <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{getPriceRangeString(hostel)}</span>
                       </div>
-                      
+
                       <button
                         onClick={() => setSelectedHostelForRooms(hostel)}
                         className="btn btn-secondary"
@@ -465,6 +467,8 @@ export const OwnerPortal = ({
           )}
         </div>
       )}
+
+      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   );
 };

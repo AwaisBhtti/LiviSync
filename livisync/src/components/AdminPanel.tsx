@@ -2,6 +2,7 @@ import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import type { User, Report, Hostel } from '../types';
 import { Building, Users, ShieldAlert, CheckCircle, Ban, RefreshCw } from 'lucide-react';
+import { ImageLightbox } from './ImageLightbox';
 
 interface AdminPanelProps {
   users: User[];
@@ -166,6 +167,7 @@ export const AdminPanel = ({
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const fetchInvitations = async () => {
     try {
@@ -691,7 +693,7 @@ export const AdminPanel = ({
 
       {selectedHostel && (
         <div style={modalOverlayStyle}>
-          <div style={{ ...modalContentStyle, maxWidth: '640px' }}>
+          <div style={{ ...modalContentStyle, maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Hostel Details</h3>
               <button
@@ -708,7 +710,8 @@ export const AdminPanel = ({
                 <img
                   src={selectedHostel.photo}
                   alt={selectedHostel.name}
-                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}
+                  onClick={() => setLightboxUrl(selectedHostel.photo)}
+                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--border)', cursor: 'zoom-in' }}
                 />
               )}
 
@@ -762,7 +765,13 @@ export const AdminPanel = ({
                         {room.images && room.images.length > 0 && (
                           <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', overflowX: 'auto' }}>
                             {room.images.filter(img => img.trim().length > 0).map((img, i) => (
-                              <img key={i} src={img} alt="" style={{ width: '60px', height: '45px', objectFit: 'cover', borderRadius: '4px' }} />
+                              <img
+                                key={i}
+                                src={img}
+                                alt=""
+                                onClick={() => setLightboxUrl(img)}
+                                style={{ width: '60px', height: '45px', objectFit: 'cover', borderRadius: '4px', cursor: 'zoom-in' }}
+                              />
                             ))}
                           </div>
                         )}
@@ -794,6 +803,8 @@ export const AdminPanel = ({
           </div>
         </div>
       )}
+
+      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   );
 };

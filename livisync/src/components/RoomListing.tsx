@@ -2,6 +2,7 @@ import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import type { Room, Hostel } from '../types';
 import { Plus, Trash2, ArrowLeft, Check, Edit2 } from 'lucide-react';
+import { ImageLightbox } from './ImageLightbox';
 
 interface RoomListingProps {
   hostel: Hostel;
@@ -38,6 +39,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
   const [editUploading, setEditUploading] = useState(false);
   const [editDescription, setEditDescription] = useState('');
   const [editErrorMsg, setEditErrorMsg] = useState('');
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const handleEditMultiplePhotosUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -319,7 +321,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
         {/* Left Side: Add Room Form */}
         <div className="card" style={{ padding: '1.5rem', height: 'fit-content' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>Add Room Details</h3>
-          
+
           <form onSubmit={handleAddRoom} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {errorMsg && <div style={{ color: 'var(--destructive)', fontSize: '0.85rem' }}>{errorMsg}</div>}
             {successMsg && <div style={{ color: 'var(--success)', fontSize: '0.85rem' }}>{successMsg}</div>}
@@ -355,7 +357,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
 
             <div className="form-group">
               <label className="form-label">
-                Seats / Beds Available in this Room 
+                Seats / Beds Available in this Room
                 <span style={{ color: 'var(--muted)', fontSize: '0.75rem', marginLeft: '0.25rem' }}>
                   (Max {sharingType === 'single' ? 1 : sharingType === 'double' ? 2 : sharingType === 'triple' ? 3 : sharingType === 'quad' ? 4 : 5})
                 </span>
@@ -438,7 +440,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
                   {photoUrls.map((url, idx) => (
                     <div key={idx} style={{ position: 'relative', width: '80px', height: '60px' }}>
-                      <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }} alt="" />
+                      <img src={url} onClick={() => setLightboxUrl(url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)', cursor: 'zoom-in' }} alt="" />
                       <button
                         type="button"
                         onClick={() => setPhotoUrls(photoUrls.filter((_, i) => i !== idx))}
@@ -489,8 +491,8 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
                   <div key={room.id} style={roomCardStyle}>
                     <div style={{ display: 'flex', gap: '1rem' }}>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        {room.images.slice(0, 2).map((img, i) => (
-                          <img key={i} src={img} style={roomThumbStyle} alt="" />
+                        {room.images.filter(img => img.trim().length > 0).slice(0, 2).map((img, i) => (
+                          <img key={i} src={img} onClick={() => setLightboxUrl(img)} style={{ ...roomThumbStyle, cursor: 'zoom-in' }} alt="" />
                         ))}
                       </div>
                       <div style={{ flex: 1 }}>
@@ -682,7 +684,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
                     {editPhotoUrls.map((url, idx) => (
                       <div key={idx} style={{ position: 'relative', width: '80px', height: '60px' }}>
-                        <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }} alt="" />
+                        <img src={url} onClick={() => setLightboxUrl(url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)', cursor: 'zoom-in' }} alt="" />
                         <button
                           type="button"
                           onClick={() => setEditPhotoUrls(editPhotoUrls.filter((_, i) => i !== idx))}
@@ -724,6 +726,8 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
           </div>
         </div>
       )}
+
+      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   );
 };
