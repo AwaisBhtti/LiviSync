@@ -165,6 +165,7 @@ export const AdminPanel = ({
   const [inviteError, setInviteError] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
 
   const fetchInvitations = async () => {
     try {
@@ -659,7 +660,16 @@ export const AdminPanel = ({
               <tbody>
                 {hostels.filter(h => !h.isVerified).map((hostel) => (
                   <tr key={hostel.id} style={tableRowStyle}>
-                    <td style={tdStyle}>{hostel.name}</td>
+                    <td style={tdStyle}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedHostel(hostel)}
+                        style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', padding: 0, textDecoration: 'underline', textAlign: 'left' }}
+                        title="Click to view details"
+                      >
+                        {hostel.name}
+                      </button>
+                    </td>
                     <td style={tdStyle}>{hostel.location}</td>
                     <td style={tdStyle}>{getPriceRangeString(hostel)}</td>
                     <td style={tdStyle}>
@@ -678,6 +688,112 @@ export const AdminPanel = ({
           </div>
         )}
       </div>
+
+      {selectedHostel && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, maxWidth: '640px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Hostel Details</h3>
+              <button
+                type="button"
+                onClick={() => setSelectedHostel(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.25rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '0.5rem' }}>
+              {selectedHostel.photo && (
+                <img
+                  src={selectedHostel.photo}
+                  alt={selectedHostel.name}
+                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}
+                />
+              )}
+
+              <div>
+                <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>{selectedHostel.name}</h4>
+                <p style={{ color: 'var(--muted)', fontSize: '0.85rem', margin: 0 }}>📍 {selectedHostel.location}</p>
+              </div>
+
+              <div>
+                <h5 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>Description</h5>
+                <p style={{ color: 'var(--muted)', fontSize: '0.875rem', margin: 0, lineHeight: '1.5' }}>{selectedHostel.description || 'No description provided.'}</p>
+              </div>
+
+              <div>
+                <h5 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>Amenities</h5>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {selectedHostel.amenities.length === 0 ? (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>No amenities specified.</span>
+                  ) : (
+                    selectedHostel.amenities.map((a, i) => (
+                      <span key={i} className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                        ✓ {a}
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h5 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>Available Rooms ({selectedHostel.rooms?.length || 0})</h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                  {!selectedHostel.rooms || selectedHostel.rooms.length === 0 ? (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>No rooms listed yet.</span>
+                  ) : (
+                    selectedHostel.rooms.map((room, idx) => (
+                      <div key={idx} style={{ padding: '0.75rem', backgroundColor: 'var(--secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.875rem', textTransform: 'capitalize' }}>
+                          <span>{room.sharingType} Sharing ({room.floor})</span>
+                          <span style={{ color: 'var(--primary)' }}>PKR {room.price.toLocaleString()} / mo</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.375rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
+                          <span>🛋️ {room.furniture === 'nothing' ? 'Unfurnished' : room.furniture === 'mattress' ? 'Mattress Provided' : 'Furnished (Bed)'}</span>
+                          <span>• 🚿 {room.hasAttachedBathroom ? 'Attached Bath' : 'Shared Bath'}</span>
+                          <span>• 🛏️ {room.seatsAvailable} bed(s) available</span>
+                        </div>
+                        {room.description && (
+                          <p style={{ margin: '0.375rem 0 0 0', fontSize: '0.8rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                            "{room.description}"
+                          </p>
+                        )}
+                        {room.images && room.images.length > 0 && (
+                          <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', overflowX: 'auto' }}>
+                            {room.images.filter(img => img.trim().length > 0).map((img, i) => (
+                              <img key={i} src={img} alt="" style={{ width: '60px', height: '45px', objectFit: 'cover', borderRadius: '4px' }} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                {!selectedHostel.isVerified && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ flex: 1 }}
+                    onClick={() => {
+                      onVerifyHostel(selectedHostel.id);
+                      setSelectedHostel(null);
+                    }}
+                  >
+                    Verify & Approve Listing
+                  </button>
+                )}
+                <button type="button" className="btn btn-secondary" style={{ flex: !selectedHostel.isVerified ? 0.3 : 1 }} onClick={() => setSelectedHostel(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
