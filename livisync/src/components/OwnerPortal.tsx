@@ -418,6 +418,23 @@ export const OwnerPortal = ({
                       </div>
                     </div>
 
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                      <span style={{
+                        fontSize: '0.7rem',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontWeight: 600,
+                        backgroundColor: hostel.isVerified ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                        color: hostel.isVerified ? 'var(--success)' : '#d97706',
+                        border: '1px solid ' + (hostel.isVerified ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)'),
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}>
+                        {hostel.isVerified ? '✓ Verified Listing' : '⏳ Pending Verification'}
+                      </span>
+                    </div>
+
                     <p style={descStyle}>{hostel.description}</p>
 
                     {hostel.rooms && hostel.rooms.length === 0 && (
