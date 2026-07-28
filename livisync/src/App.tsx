@@ -304,25 +304,7 @@ export default function App() {
     }
   };
 
-  // Layout for protected routes
-  const AppLayout = () => {
-    const unreadCount = matchRequests.filter(
-      (r) => r.receiverId === currentUser!.id && r.status === 'pending'
-    ).length;
 
-    return (
-      <div className="app-container">
-        <Navbar
-          currentUser={currentUser!}
-          onLogout={handleLogout}
-          unreadCount={unreadCount}
-        />
-        <main className="main-content">
-          <Outlet />
-        </main>
-      </div>
-    );
-  };
 
   const SpinnerLoader = () => (
     <div style={{
@@ -404,7 +386,20 @@ export default function App() {
           />
 
           <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
+            <Route element={
+              <div className="app-container">
+                <Navbar
+                  currentUser={currentUser!}
+                  onLogout={handleLogout}
+                  unreadCount={matchRequests.filter(
+                    (r) => r.receiverId === currentUser!.id && r.status === 'pending'
+                  ).length}
+                />
+                <main className="main-content">
+                  <Outlet />
+                </main>
+              </div>
+            }>
               <Route path="/" element={<Navigate to="/hostels" replace />} />
               <Route
                 path="/hostels"
@@ -440,8 +435,6 @@ export default function App() {
                     currentUser={currentUser!}
                     users={displayUsers}
                     matchRequests={matchRequests}
-                    onAcceptRequest={handleAcceptRequest}
-                    onDeclineRequest={handleDeclineRequest}
                     onBlockUser={handleBlockUser}
                   />
                 }

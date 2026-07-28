@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MatchRequest, User, Message } from '../types';
-import { Send, Check, X, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare } from 'lucide-react';
 
 interface ChatModuleProps {
   currentUser: User;
   users: User[];
   matchRequests: MatchRequest[];
-  onAcceptRequest: (reqId: string) => void;
-  onDeclineRequest: (reqId: string) => void;
   onBlockUser: (targetId: string) => void;
 }
 
@@ -15,8 +13,6 @@ export const ChatModule = ({
   currentUser,
   users,
   matchRequests,
-  onAcceptRequest,
-  onDeclineRequest,
   onBlockUser,
 }: ChatModuleProps) => {
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
@@ -35,9 +31,7 @@ export const ChatModule = ({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, activeChatUserId]);
 
-  const incomingPendingRequests = matchRequests.filter(
-    (r) => r.receiverId === currentUser.id && r.status === 'pending' && !currentUser.blockedUsers?.includes(r.senderId)
-  );
+
 
   // Filter out users who are active matches (accepted status)
   const activeMatches = matchRequests
@@ -99,60 +93,13 @@ export const ChatModule = ({
     <div style={containerStyle}>
       {/* If screen is mobile and chat is open, hide chat lists and only show active conversation */}
       <div style={chatGridStyle}>
-        {/* Left Side: Inbox Lists (Requests & Active Chats) */}
+        {/* Left Side: Inbox Lists (Active Chats Only) */}
         <div style={inboxListStyle(!!activeChatUserId)} className="card">
-          {/* Section: Pending Requests */}
-          <div style={sectionStyle}>
-            <h3 style={sectionHeaderStyle}>Match Requests ({incomingPendingRequests.length})</h3>
-            {incomingPendingRequests.length === 0 ? (
-              <p style={emptyTextStyle}>No pending roommate requests.</p>
-            ) : (
-              <div style={listStyle}>
-                {incomingPendingRequests.map((req) => {
-                  const sender = users.find((u) => u.id === req.senderId);
-                  if (!sender) return null;
-                  return (
-                    <div key={req.id} style={requestCardStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <img src={sender.photo} alt={sender.name} style={avatarStyle} />
-                        <div>
-                          <h4 style={{ fontSize: '0.85rem' }}>{sender.name}</h4>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                            wants to match
-                          </span>
-                        </div>
-                      </div>
-                      <p style={requestMessageStyle}>"{req.message}"</p>
-                      <div style={buttonGroupStyle}>
-                        <button
-                          className="btn btn-primary"
-                          style={smallBtnStyle}
-                          onClick={() => onAcceptRequest(req.id)}
-                        >
-                          <Check size={14} /> Accept
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          style={smallBtnStyle}
-                          onClick={() => onDeclineRequest(req.id)}
-                        >
-                          <X size={14} /> Decline
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <hr style={{ border: 0, borderTop: '1px solid var(--border)' }} />
-
           {/* Section: Active Chats */}
           <div style={sectionStyle}>
             <h3 style={sectionHeaderStyle}>Roommate Chats ({activeMatches.length})</h3>
             {activeMatches.length === 0 ? (
-              <p style={emptyTextStyle}>No confirmed roommate matches yet.</p>
+              <p style={emptyTextStyle}>No confirmed roommate matches yet. Connect with roommates from the roommate directory!</p>
             ) : (
               <div style={listStyle}>
                 {activeMatches.map((matchUser) => (
@@ -335,15 +282,7 @@ const listStyle: React.CSSProperties = {
   gap: '0.75rem',
 };
 
-const requestCardStyle: React.CSSProperties = {
-  padding: '0.75rem',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  backgroundColor: 'var(--background)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-};
+
 
 const avatarStyle: React.CSSProperties = {
   width: '32px',
@@ -352,26 +291,7 @@ const avatarStyle: React.CSSProperties = {
   objectFit: 'cover',
 };
 
-const requestMessageStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  color: 'var(--muted)',
-  fontStyle: 'italic',
-  background: 'var(--card)',
-  padding: '0.375rem 0.5rem',
-  borderRadius: '4px',
-  border: '1px solid var(--border)',
-};
 
-const buttonGroupStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: '0.375rem',
-};
-
-const smallBtnStyle: React.CSSProperties = {
-  padding: '0.25rem 0.5rem',
-  fontSize: '0.75rem',
-  flex: 1,
-};
 
 const chatRowStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
