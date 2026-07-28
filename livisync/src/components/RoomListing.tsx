@@ -25,7 +25,54 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [description, setDescription] = useState('');
-  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+
+  // Edit Modal states
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [editSharingType, setEditSharingType] = useState<'single' | 'double' | 'triple' | 'quad' | 'penta'>('single');
+  const [editPrice, setEditPrice] = useState('');
+  const [editSeatsAvailable, setEditSeatsAvailable] = useState('1');
+  const [editFloor, setEditFloor] = useState('Ground Floor');
+  const [editHasAttachedBathroom, setEditHasAttachedBathroom] = useState(false);
+  const [editFurniture, setEditFurniture] = useState<'bed' | 'mattress' | 'nothing'>('nothing');
+  const [editPhotoUrls, setEditPhotoUrls] = useState<string[]>([]);
+  const [editUploading, setEditUploading] = useState(false);
+  const [editDescription, setEditDescription] = useState('');
+  const [editErrorMsg, setEditErrorMsg] = useState('');
+
+  const handleEditMultiplePhotosUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setEditUploading(true);
+    const newUrls: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/owners/upload-image`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || 'Upload failed');
+        }
+        newUrls.push(data.url);
+      } catch (err: any) {
+        alert(`Failed to upload file "${file.name}": ${err.message || err}`);
+      }
+    }
+
+    setEditPhotoUrls(prev => [...prev, ...newUrls]);
+    setEditUploading(false);
+  };
 
   const handleMultiplePhotosUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -124,13 +171,8 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
     }
 
     try {
-      const url = editingRoomId
-        ? `${API_BASE_URL}/owners/rooms/${editingRoomId}`
-        : `${API_BASE_URL}/owners/hostels/${hostel.id}/rooms`;
-      const method = editingRoomId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method: method,
+      const response = await fetch(`${API_BASE_URL}/owners/hostels/${hostel.id}/rooms`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -151,11 +193,11 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       if (!response.ok) {
         const errMsg = Array.isArray(data.detail)
           ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
-          : data.detail || 'Failed to save room';
+          : data.detail || 'Failed to list room';
         throw new Error(errMsg);
       }
 
-      setSuccessMsg(editingRoomId ? 'Room updated successfully!' : 'Room listed successfully!');
+      setSuccessMsg('Room listed successfully!');
       setPrice('');
       setSeatsAvailable('1');
       setFloor('Ground Floor');
@@ -163,10 +205,71 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       setFurniture('nothing');
       setPhotoUrls([]);
       setDescription('');
-      setEditingRoomId(null);
       fetchRooms();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to save room');
+      setErrorMsg(err.message || 'Failed to list room');
+    }
+  };
+
+  const handleUpdateRoom = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditErrorMsg('');
+
+    if (!editingRoom) return;
+
+    const filteredPhotos = editPhotoUrls.filter(url => url.trim().length > 0);
+
+    if (filteredPhotos.length < 2) {
+      setEditErrorMsg('You must upload at least 2 pictures for the room (including room area and bathroom).');
+      return;
+    }
+
+    const capacityMap = {
+      single: 1,
+      double: 2,
+      triple: 3,
+      quad: 4,
+      penta: 5
+    };
+    const maxCap = capacityMap[editSharingType];
+    const seatsNum = parseInt(editSeatsAvailable);
+    if (seatsNum < 1 || seatsNum > maxCap) {
+      setEditErrorMsg(`Seats available must be between 1 and ${maxCap} for a ${editSharingType} sharing room.`);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/owners/rooms/${editingRoom.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          sharing_type: editSharingType,
+          price: parseInt(editPrice),
+          seats_available: seatsNum,
+          floor: editFloor,
+          has_attached_bathroom: editHasAttachedBathroom,
+          furniture: editFurniture,
+          images: filteredPhotos,
+          description: editDescription
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        const errMsg = Array.isArray(data.detail)
+          ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+          : data.detail || 'Failed to update room';
+        throw new Error(errMsg);
+      }
+
+      setEditingRoom(null);
+      fetchRooms();
+      alert('Room updated successfully!');
+    } catch (err: any) {
+      setEditErrorMsg(err.message || 'Failed to update room');
     }
   };
 
@@ -215,9 +318,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       <div style={contentGridStyle}>
         {/* Left Side: Add Room Form */}
         <div className="card" style={{ padding: '1.5rem', height: 'fit-content' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>
-            {editingRoomId ? 'Edit Room Details' : 'Add Room Details'}
-          </h3>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>Add Room Details</h3>
           
           <form onSubmit={handleAddRoom} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {errorMsg && <div style={{ color: 'var(--destructive)', fontSize: '0.85rem' }}>{errorMsg}</div>}
@@ -325,6 +426,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
               <input
                 type="file"
                 multiple
+                key={photoUrls.length === 0 ? 'empty' : 'loaded'}
                 accept="image/*"
                 onChange={handleMultiplePhotosUpload}
                 disabled={uploading}
@@ -366,30 +468,9 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button type="submit" className="btn btn-primary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                {editingRoomId ? 'Update Room' : <><Plus size={16} /> List Room</>}
-              </button>
-              {editingRoomId && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setEditingRoomId(null);
-                    setSharingType('single');
-                    setPrice('');
-                    setSeatsAvailable('1');
-                    setFloor('Ground Floor');
-                    setHasAttachedBathroom(false);
-                    setFurniture('nothing');
-                    setPhotoUrls([]);
-                    setDescription('');
-                  }}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
+            <button type="submit" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <Plus size={16} /> List Room
+            </button>
           </form>
         </div>
 
@@ -421,15 +502,16 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
                             <button
                               type="button"
                               onClick={() => {
-                                setEditingRoomId(room.id);
-                                setSharingType(room.sharingType);
-                                setPrice(String(room.price));
-                                setSeatsAvailable(String(room.seatsAvailable));
-                                setFloor(room.floor);
-                                setHasAttachedBathroom(room.hasAttachedBathroom);
-                                setFurniture(room.furniture);
-                                setPhotoUrls(room.images);
-                                setDescription(room.description || '');
+                                setEditingRoom(room);
+                                setEditSharingType(room.sharingType);
+                                setEditPrice(String(room.price));
+                                setEditSeatsAvailable(String(room.seatsAvailable));
+                                setEditFloor(room.floor);
+                                setEditHasAttachedBathroom(room.hasAttachedBathroom);
+                                setEditFurniture(room.furniture);
+                                setEditPhotoUrls(room.images);
+                                setEditDescription(room.description || '');
+                                setEditErrorMsg('');
                               }}
                               style={{ ...deleteBtnStyle, color: 'var(--muted)' }}
                               title="Edit Room"
@@ -471,8 +553,210 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
           </button>
         </div>
       </div>
+
+      {editingRoom && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Edit Room Details</h3>
+              <button
+                type="button"
+                onClick={() => setEditingRoom(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.25rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateRoom} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '0.5rem' }}>
+              {editErrorMsg && <div style={{ color: 'var(--destructive)', fontSize: '0.85rem' }}>{editErrorMsg}</div>}
+
+              <div className="form-group">
+                <label className="form-label">Sharing Status / Type</label>
+                <select className="form-select" value={editSharingType} onChange={(e) => {
+                  const newSharing = e.target.value as any;
+                  setEditSharingType(newSharing);
+                  const capacityMap = { single: 1, double: 2, triple: 3, quad: 4, penta: 5 };
+                  setEditSeatsAvailable(String(Math.min(parseInt(editSeatsAvailable) || 1, capacityMap[newSharing])));
+                }}>
+                  <option value="single">Single Room</option>
+                  <option value="double">2-Sharing Room</option>
+                  <option value="triple">3-Sharing Room</option>
+                  <option value="quad">4-Sharing Room</option>
+                  <option value="penta">5-Sharing Room</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Price (PKR / Month per Room)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  required
+                  min={0}
+                  placeholder="e.g. 18000"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  Seats / Beds Available in this Room
+                  <span style={{ color: 'var(--muted)', fontSize: '0.75rem', marginLeft: '0.25rem' }}>
+                    (Max {editSharingType === 'single' ? 1 : editSharingType === 'double' ? 2 : editSharingType === 'triple' ? 3 : editSharingType === 'quad' ? 4 : 5})
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  className="form-input"
+                  required
+                  min={1}
+                  max={editSharingType === 'single' ? 1 : editSharingType === 'double' ? 2 : editSharingType === 'triple' ? 3 : editSharingType === 'quad' ? 4 : 5}
+                  placeholder="e.g. 2"
+                  value={editSeatsAvailable}
+                  onChange={(e) => setEditSeatsAvailable(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Floor</label>
+                <select className="form-select" value={editFloor} onChange={(e) => setEditFloor(e.target.value)}>
+                  <option value="Basement">Basement</option>
+                  <option value="Ground Floor">Ground Floor</option>
+                  <option value="1st Floor">1st Floor</option>
+                  <option value="2nd Floor">2nd Floor</option>
+                  <option value="3rd Floor">3rd Floor</option>
+                  <option value="4th Floor">4th Floor</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Furniture Provided</label>
+                <select className="form-select" value={editFurniture} onChange={(e) => setEditFurniture(e.target.value as any)}>
+                  <option value="bed">Bed</option>
+                  <option value="mattress">Mattress Only</option>
+                  <option value="nothing">Nothing</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="editAttachedBathroom"
+                  checked={editHasAttachedBathroom}
+                  onChange={(e) => setEditHasAttachedBathroom(e.target.checked)}
+                />
+                <label htmlFor="editAttachedBathroom" style={{ fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
+                  Has Attached Bathroom
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Room Description (Optional)</label>
+                <textarea
+                  className="form-input"
+                  placeholder="e.g. Spacious corner room with study desk."
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  style={{ minHeight: '60px', resize: 'vertical' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  Room & Washroom Photos <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>(Upload at least 2 photos)</span>
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  key={editPhotoUrls.length === 0 ? 'empty' : 'loaded'}
+                  accept="image/*"
+                  onChange={handleEditMultiplePhotosUpload}
+                  disabled={editUploading}
+                  style={{ width: '100%', marginBottom: '0.5rem' }}
+                />
+                {editUploading && <span style={{ color: 'var(--primary)', fontSize: '0.85rem', display: 'block', marginTop: '0.25rem' }}>Uploading photos to Cloudflare R2...</span>}
+
+                {editPhotoUrls.length > 0 && (
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                    {editPhotoUrls.map((url, idx) => (
+                      <div key={idx} style={{ position: 'relative', width: '80px', height: '60px' }}>
+                        <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }} alt="" />
+                        <button
+                          type="button"
+                          onClick={() => setEditPhotoUrls(editPhotoUrls.filter((_, i) => i !== idx))}
+                          style={{
+                            position: 'absolute',
+                            top: '-5px',
+                            right: '-5px',
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--danger)',
+                            color: 'white',
+                            border: 'none',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  Save Changes
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setEditingRoom(null)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
+};
+
+const modalOverlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  backdropFilter: 'blur(8px)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 9999,
+  padding: '1rem',
+};
+
+const modalContentStyle: React.CSSProperties = {
+  backgroundColor: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  padding: '2rem',
+  width: '100%',
+  maxWidth: '480px',
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1.25rem',
+  position: 'relative',
+  maxHeight: '90vh',
+  overflowY: 'auto',
 };
 
 // Styles
