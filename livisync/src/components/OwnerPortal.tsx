@@ -4,6 +4,7 @@ import type { User, Hostel } from '../types';
 import { Plus, Edit2, Trash2, Building, MapPin, ListPlus, X, Info } from 'lucide-react';
 import { RoomListing } from './RoomListing';
 import { ImageLightbox } from './ImageLightbox';
+import { BUILTIN_AMENITIES } from './Amenities';
 
 interface OwnerPortalProps {
   currentUser: User;
@@ -13,18 +14,7 @@ interface OwnerPortalProps {
   onDeleteHostel?: (hostelId: string) => void;
 }
 
-const BUILTIN_AMENITIES = [
-  'Wifi',
-  'AC',
-  'Laundry',
-  'Mess/Food',
-  'Gym',
-  'Geyser/Hot Water',
-  'Security/CCTV',
-  'Power Backup',
-  'Terrace',
-  'Rooftop'
-];
+
 
 export const OwnerPortal = ({
   currentUser,

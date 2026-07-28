@@ -46,6 +46,7 @@ class StudentOut(BaseModel):
     phone: Optional[str] = None
     hostel_id: Optional[UUID] = None
     created_at: datetime
+    is_email_verified: bool = False
     preferences: Optional[PreferencesOut] = None
 
     class Config:

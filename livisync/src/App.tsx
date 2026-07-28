@@ -34,10 +34,10 @@ import {
 } from './store/slices/roommateSlice';
 import {
   fetchMatches,
-  sendRequest,
   acceptRequest,
   declineRequest,
   removeMatchesForUser,
+  setMatchesState,
 } from './store/slices/matchSlice';
 import {
   fetchReports,
@@ -47,6 +47,7 @@ import {
   toggleUserStatus,
   deleteUser,
 } from './store/slices/adminSlice';
+import { API_BASE_URL } from './config';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -104,19 +105,93 @@ export default function App() {
 
 
   // Handler: Send Match Request
-  const handleSendRequest = (receiverId: string, message: string) => {
-    if (!currentUser) return;
-    dispatch(sendRequest({ receiverId, message, senderId: currentUser.id }));
+  const handleSendRequest = async (receiverId: string, message: string) => {
+    if (!currentUser || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/matches`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ receiver_id: receiverId, message })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to send request');
+      }
+      dispatch(fetchMatches({ token, role: currentUser.role }));
+      alert('Match request sent successfully!');
+    } catch (err: any) {
+      alert(err.message || 'Error sending request');
+    }
   };
 
   // Handler: Accept Request
-  const handleAcceptRequest = (reqId: string) => {
-    dispatch(acceptRequest(reqId));
+  const handleAcceptRequest = async (reqId: string) => {
+    if (!currentUser || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/matches/${reqId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'accepted' })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to accept request');
+      }
+      dispatch(acceptRequest(reqId));
+      alert('Match request accepted!');
+    } catch (err: any) {
+      alert(err.message || 'Error accepting request');
+    }
   };
 
   // Handler: Decline Request
-  const handleDeclineRequest = (reqId: string) => {
-    dispatch(declineRequest(reqId));
+  const handleDeclineRequest = async (reqId: string) => {
+    if (!currentUser || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/matches/${reqId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'declined' })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to decline request');
+      }
+      dispatch(declineRequest(reqId));
+      alert('Match request declined.');
+    } catch (err: any) {
+      alert(err.message || 'Error declining request');
+    }
+  };
+
+  // Handler: Cancel Match Request
+  const handleCancelRequest = async (reqId: string) => {
+    if (!currentUser || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/matches/${reqId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to cancel request');
+      }
+      dispatch(setMatchesState(matchRequests.filter((r) => r.id !== reqId)));
+      alert('Match request cancelled.');
+    } catch (err: any) {
+      alert(err.message || 'Error cancelling request');
+    }
   };
 
   // Handler: Block User
@@ -229,25 +304,7 @@ export default function App() {
     }
   };
 
-  // Layout for protected routes
-  const AppLayout = () => {
-    const unreadCount = matchRequests.filter(
-      (r) => r.receiverId === currentUser!.id && r.status === 'pending'
-    ).length;
 
-    return (
-      <div className="app-container">
-        <Navbar
-          currentUser={currentUser!}
-          onLogout={handleLogout}
-          unreadCount={unreadCount}
-        />
-        <main className="main-content">
-          <Outlet />
-        </main>
-      </div>
-    );
-  };
 
   const SpinnerLoader = () => (
     <div style={{
@@ -329,7 +386,20 @@ export default function App() {
           />
 
           <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
+            <Route element={
+              <div className="app-container">
+                <Navbar
+                  currentUser={currentUser!}
+                  onLogout={handleLogout}
+                  unreadCount={matchRequests.filter(
+                    (r) => r.receiverId === currentUser!.id && r.status === 'pending'
+                  ).length}
+                />
+                <main className="main-content">
+                  <Outlet />
+                </main>
+              </div>
+            }>
               <Route path="/" element={<Navigate to="/hostels" replace />} />
               <Route
                 path="/hostels"
@@ -352,6 +422,9 @@ export default function App() {
                     onBlockUser={handleBlockUser}
                     onReportUser={handleReportUser}
                     hostels={hostels}
+                    onCancelRequest={handleCancelRequest}
+                    onAcceptRequest={handleAcceptRequest}
+                    onDeclineRequest={handleDeclineRequest}
                   />
                 }
               />
@@ -362,8 +435,6 @@ export default function App() {
                     currentUser={currentUser!}
                     users={displayUsers}
                     matchRequests={matchRequests}
-                    onAcceptRequest={handleAcceptRequest}
-                    onDeclineRequest={handleDeclineRequest}
                     onBlockUser={handleBlockUser}
                   />
                 }

@@ -18,6 +18,7 @@ class Student(Base):
     budget = Column(Integer, nullable=False)
     location = Column(String(100), nullable=False)
     status = Column(String(10), nullable=False, default='active')
+    is_email_verified = Column(Boolean, nullable=False, default=False)
     
     # Student specific fields
     occupation = Column(String(10), nullable=True)  # 'student' or 'job'
