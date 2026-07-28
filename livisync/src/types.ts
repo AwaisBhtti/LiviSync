@@ -81,6 +81,7 @@ export interface Room {
   hasAttachedBathroom: boolean;
   furniture: 'bed' | 'mattress' | 'nothing';
   images: string[];
+  description?: string;
 }
 
 export interface Hostel {

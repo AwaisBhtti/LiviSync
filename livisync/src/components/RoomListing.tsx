@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import type { Room, Hostel } from '../types';
-import { Plus, Trash2, ArrowLeft, Check } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Check, Edit2 } from 'lucide-react';
 
 interface RoomListingProps {
   hostel: Hostel;
@@ -24,6 +24,8 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
   const [furniture, setFurniture] = useState<'bed' | 'mattress' | 'nothing'>('nothing');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [description, setDescription] = useState('');
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
 
   const handleMultiplePhotosUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -76,7 +78,9 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
           seatsAvailable: r.seats_available,
           floor: r.floor,
           hasAttachedBathroom: r.has_attached_bathroom,
-          images: r.images || []
+          furniture: r.furniture,
+          images: r.images || [],
+          description: r.description || ''
         })));
       }
     } catch (err) {
@@ -120,8 +124,13 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/owners/hostels/${hostel.id}/rooms`, {
-        method: 'POST',
+      const url = editingRoomId
+        ? `${API_BASE_URL}/owners/rooms/${editingRoomId}`
+        : `${API_BASE_URL}/owners/hostels/${hostel.id}/rooms`;
+      const method = editingRoomId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -133,7 +142,8 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
           floor,
           has_attached_bathroom: hasAttachedBathroom,
           furniture,
-          images: filteredPhotos
+          images: filteredPhotos,
+          description: description
         })
       });
 
@@ -141,20 +151,22 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       if (!response.ok) {
         const errMsg = Array.isArray(data.detail)
           ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
-          : data.detail || 'Failed to list room';
+          : data.detail || 'Failed to save room';
         throw new Error(errMsg);
       }
 
-      setSuccessMsg('Room listed successfully!');
+      setSuccessMsg(editingRoomId ? 'Room updated successfully!' : 'Room listed successfully!');
       setPrice('');
       setSeatsAvailable('1');
       setFloor('Ground Floor');
       setHasAttachedBathroom(false);
       setFurniture('nothing');
-      setPhotoUrls(['', '']);
+      setPhotoUrls([]);
+      setDescription('');
+      setEditingRoomId(null);
       fetchRooms();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to list room');
+      setErrorMsg(err.message || 'Failed to save room');
     }
   };
 
@@ -203,7 +215,9 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       <div style={contentGridStyle}>
         {/* Left Side: Add Room Form */}
         <div className="card" style={{ padding: '1.5rem', height: 'fit-content' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>Add Room Details</h3>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>
+            {editingRoomId ? 'Edit Room Details' : 'Add Room Details'}
+          </h3>
           
           <form onSubmit={handleAddRoom} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {errorMsg && <div style={{ color: 'var(--destructive)', fontSize: '0.85rem' }}>{errorMsg}</div>}
@@ -291,6 +305,17 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
             </div>
 
             <div className="form-group">
+              <label className="form-label">Room Description (Optional)</label>
+              <textarea
+                className="form-input"
+                placeholder="e.g. Spacious corner room with study desk and nice view."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                style={{ minHeight: '60px', resize: 'vertical' }}
+              />
+            </div>
+
+            <div className="form-group">
               <label className="form-label">
                 Room & Washroom Photos <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>(Upload at least 2 photos)</span>
               </label>
@@ -341,9 +366,30 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
               )}
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <Plus size={16} /> List Room
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button type="submit" className="btn btn-primary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                {editingRoomId ? 'Update Room' : <><Plus size={16} /> List Room</>}
+              </button>
+              {editingRoomId && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setEditingRoomId(null);
+                    setSharingType('single');
+                    setPrice('');
+                    setSeatsAvailable('1');
+                    setFloor('Ground Floor');
+                    setHasAttachedBathroom(false);
+                    setFurniture('nothing');
+                    setPhotoUrls([]);
+                    setDescription('');
+                  }}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -371,9 +417,29 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
                           <span style={{ fontWeight: 600, fontSize: '0.95rem', textTransform: 'capitalize' }}>
                             {room.sharingType} Sharing ({room.floor})
                           </span>
-                          <button onClick={() => handleDeleteRoom(room.id)} style={deleteBtnStyle}>
-                            <Trash2 size={14} />
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingRoomId(room.id);
+                                setSharingType(room.sharingType);
+                                setPrice(String(room.price));
+                                setSeatsAvailable(String(room.seatsAvailable));
+                                setFloor(room.floor);
+                                setHasAttachedBathroom(room.hasAttachedBathroom);
+                                setFurniture(room.furniture);
+                                setPhotoUrls(room.images);
+                                setDescription(room.description || '');
+                              }}
+                              style={{ ...deleteBtnStyle, color: 'var(--muted)' }}
+                              title="Edit Room"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button onClick={() => handleDeleteRoom(room.id)} style={deleteBtnStyle} title="Delete Room">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                         <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--muted)' }}>
                           <strong>Price:</strong> PKR {room.price.toLocaleString()} / month
@@ -387,6 +453,11 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
                         <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--muted)' }}>
                           <strong>Furniture:</strong> <span style={{ textTransform: 'capitalize' }}>{room.furniture === 'nothing' ? 'None' : room.furniture === 'mattress' ? 'Mattress Only' : room.furniture}</span>
                         </p>
+                        {room.description && (
+                          <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                            "{room.description}"
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -7,7 +7,7 @@ from ..models import Owner, Hostel, HostelAmenity, HostelRoom
 from ..auth import get_current_user
 from ..config import settings
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/owners",
@@ -30,6 +30,7 @@ class RoomCreate(BaseModel):
     has_attached_bathroom: bool
     furniture: str
     images: List[str]
+    description: Optional[str] = None
 
 class HostelCreate(BaseModel):
     name: str
@@ -157,7 +158,8 @@ def create_room(hostel_id: uuid.UUID, room_in: RoomCreate, db: Session = Depends
         floor=room_in.floor,
         has_attached_bathroom=room_in.has_attached_bathroom,
         furniture=room_in.furniture,
-        images=room_in.images
+        images=room_in.images,
+        description=room_in.description
     )
     db.add(db_room)
     db.commit()
@@ -185,6 +187,62 @@ def delete_room(room_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     db.delete(room)
     db.commit()
     return {"message": "Room deleted successfully"}
+
+@router.put("/rooms/{room_id}")
+def update_room(room_id: uuid.UUID, room_in: RoomCreate, db: Session = Depends(get_db), current_user: Owner = Depends(require_owner)):
+    room = db.query(HostelRoom).join(Hostel).filter(HostelRoom.id == room_id, Hostel.owner_id == current_user.id).first()
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Room not found or not owned by you"
+        )
+    
+    # Enforce uploading at least 2 images
+    if len(room_in.images) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You must upload at least 2 pictures for the room (including room area and bathroom)."
+        )
+
+    capacity_map = {
+        "single": 1,
+        "double": 2,
+        "triple": 3,
+        "quad": 4,
+        "penta": 5
+    }
+    
+    if room_in.sharing_type not in capacity_map:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid sharing type: {room_in.sharing_type}"
+        )
+        
+    max_cap = capacity_map[room_in.sharing_type]
+    if room_in.seats_available < 0 or room_in.seats_available > max_cap:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Seats available cannot exceed {max_cap} for a {room_in.sharing_type}-sharing room."
+        )
+
+    if room_in.furniture not in ["bed", "mattress", "nothing"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Furniture must be either 'bed', 'mattress', or 'nothing'."
+        )
+
+    room.sharing_type = room_in.sharing_type
+    room.price = room_in.price
+    room.seats_available = room_in.seats_available
+    room.floor = room_in.floor
+    room.has_attached_bathroom = room_in.has_attached_bathroom
+    room.furniture = room_in.furniture
+    room.images = room_in.images
+    room.description = room_in.description
+
+    db.commit()
+    db.refresh(room)
+    return room
 
 @router.post("/upload-image")
 async def upload_image(file: UploadFile = File(...), current_user: Owner = Depends(require_owner)):

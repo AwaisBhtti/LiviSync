@@ -126,6 +126,7 @@ class HostelRoom(Base):
     has_attached_bathroom = Column(Boolean, nullable=False, default=False)
     furniture = Column(String(20), nullable=False, default='nothing')
     images = Column(ARRAY(Text), nullable=False)
+    description = Column(Text, nullable=True)
 
     __table_args__ = (
         CheckConstraint("sharing_type IN ('single', 'double', 'triple', 'quad', 'penta')", name="sharing_type_check"),

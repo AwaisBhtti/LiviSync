@@ -49,7 +49,8 @@ export const fetchHostels = createAsyncThunk(
           floor: r.floor,
           hasAttachedBathroom: r.has_attached_bathroom,
           furniture: r.furniture,
-          images: r.images || []
+          images: r.images || [],
+          description: r.description || ''
         })) : []
       }));
       return mappedHostels as Hostel[];
@@ -166,7 +167,8 @@ export const editHostel = createAsyncThunk(
           floor: r.floor,
           hasAttachedBathroom: r.has_attached_bathroom,
           furniture: r.furniture,
-          images: r.images || []
+          images: r.images || [],
+          description: r.description || ''
         })) : []
       } as Hostel;
     } catch (err: any) {
