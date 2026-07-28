@@ -25,6 +25,8 @@ export interface Student {
   company?: string;
   phone?: string;
   hostelId?: string;
+  isEmailVerified?: boolean;
+  is_email_verified?: boolean;
 }
 
 export interface Owner {
@@ -46,6 +48,8 @@ export interface Owner {
   institution?: string;
   company?: string;
   hostelId?: string;
+  isEmailVerified?: boolean;
+  is_email_verified?: boolean;
 }
 
 export interface Admin {
@@ -67,6 +71,8 @@ export interface Admin {
   company?: string;
   phone?: string;
   hostelId?: string;
+  isEmailVerified?: boolean;
+  is_email_verified?: boolean;
 }
 
 export type User = Student | Owner | Admin;

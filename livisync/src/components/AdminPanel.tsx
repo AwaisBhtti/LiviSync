@@ -265,7 +265,15 @@ export const AdminPanel = ({
           <Users size={20} style={{ color: 'var(--muted)' }} />
           <div>
             <span style={statLabelStyle}>Total Students</span>
-            <h2 style={statValueStyle}>{users.filter(u => u.role !== 'admin').length}</h2>
+            <h2 style={statValueStyle}>{users.filter(u => u.role === 'student').length}</h2>
+          </div>
+        </div>
+
+        <div className="card" style={statCardStyle}>
+          <Users size={20} style={{ color: 'var(--muted)' }} />
+          <div>
+            <span style={statLabelStyle}>Hostel Owners</span>
+            <h2 style={statValueStyle}>{users.filter(u => u.role === 'owner').length}</h2>
           </div>
         </div>
 
@@ -276,8 +284,6 @@ export const AdminPanel = ({
             <h2 style={statValueStyle}>{hostels.length}</h2>
           </div>
         </div>
-
-
 
         <div className="card" style={statCardStyle}>
           <ShieldAlert size={20} style={{ color: 'var(--danger)' }} />
@@ -387,6 +393,7 @@ export const AdminPanel = ({
                     <tr style={tableHeaderRowStyle}>
                       <th style={thStyle}>Student Profile</th>
                       <th style={thStyle}>Location</th>
+                      <th style={thStyle}>Email Status</th>
                       <th style={thStyle}>Account Status</th>
                       <th style={thStyle}>Actions</th>
                     </tr>
@@ -400,12 +407,26 @@ export const AdminPanel = ({
                             <div>
                               <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>{user.name}</span>
                               <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--muted)' }}>
-                                {user.age} y/o • {user.gender}
+                                {user.age} y/o • {user.gender} • {user.email}
                               </span>
                             </div>
                           </div>
                         </td>
                         <td style={tdStyle}>{user.location}</td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            color: user.is_email_verified ? 'var(--success)' : '#d97706',
+                            backgroundColor: user.is_email_verified ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                            padding: '0.2rem 0.4rem',
+                            borderRadius: '4px',
+                            border: '1px solid ' + (user.is_email_verified ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)'),
+                            display: 'inline-block'
+                          }}>
+                            {user.is_email_verified ? 'VERIFIED' : 'UNVERIFIED'}
+                          </span>
+                        </td>
                         <td style={tdStyle}>
                           <span style={{
                             fontWeight: 600,

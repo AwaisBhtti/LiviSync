@@ -109,7 +109,8 @@ def get_all_users(db: Session = Depends(get_db), admin: Admin = Depends(require_
             "occupation": s.occupation,
             "institution": s.institution,
             "company": s.company,
-            "hostel_id": s.hostel_id
+            "hostel_id": s.hostel_id,
+            "is_email_verified": s.is_email_verified
         })
         
     for o in owners:
@@ -130,7 +131,8 @@ def get_all_users(db: Session = Depends(get_db), admin: Admin = Depends(require_
             "occupation": None,
             "institution": None,
             "company": None,
-            "hostel_id": None
+            "hostel_id": None,
+            "is_email_verified": True
         })
         
     return results
