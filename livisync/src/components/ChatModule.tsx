@@ -35,9 +35,8 @@ export const ChatModule = ({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, activeChatUserId]);
 
-  // Filter incoming pending requests
   const incomingPendingRequests = matchRequests.filter(
-    (r) => r.receiverId === currentUser.id && r.status === 'pending'
+    (r) => r.receiverId === currentUser.id && r.status === 'pending' && !currentUser.blockedUsers?.includes(r.senderId)
   );
 
   // Filter out users who are active matches (accepted status)

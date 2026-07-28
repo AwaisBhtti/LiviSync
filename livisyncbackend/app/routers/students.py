@@ -153,3 +153,20 @@ def respond_match_request(request_id: uuid.UUID, req_in: MatchStatusUpdate, db: 
     req.status = req_in.status
     db.commit()
     return {"message": f"Match request {req_in.status} successfully"}
+
+@router.delete("/matches/{request_id}")
+def cancel_match_request(request_id: uuid.UUID, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    req = db.query(MatchRequest).filter(MatchRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Match request not found"
+        )
+    if req.sender_id != current_user.id and req.receiver_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete/cancel this request"
+        )
+    db.delete(req)
+    db.commit()
+    return {"message": "Match request cancelled/deleted successfully"}
