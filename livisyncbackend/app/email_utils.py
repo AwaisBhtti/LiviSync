@@ -224,7 +224,7 @@ def send_suspension_email(recipient_email: str, name: str):
         f"Hello {name},\n\n"
         f"We regret to inform you that your LiviSync account has been suspended by Administration due to violations of our safety guidelines.\n"
         f"You will no longer be able to log in, search for roommates, view hostels, or chat with other users.\n\n"
-        f"If you believe this was in error, you may contact our support team.\n\n"
+        f"If you believe this was in error, you may contact our support team at support@livisync.me.\n\n"
         f"Best regards,\nThe LiviSync Safety Team"
     )
     
@@ -258,9 +258,67 @@ def send_suspension_email(recipient_email: str, name: str):
                     <li>All your active connections, match requests, and chats have been disabled.</li>
                 </ul>
             </p>
-            <p>If you believe this action was taken in error and wish to appeal, please contact support.</p>
+            <p>If you believe this action was taken in error and wish to appeal, please contact support at <a href="mailto:support@livisync.me">support@livisync.me</a>.</p>
             
             <p>Best regards,<br/>The LiviSync Safety & Moderation Team</p>
+            
+            <div class="footer">
+                &copy; 2026 LiviSync. All rights reserved.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    thread = threading.Thread(target=send_email_sync, args=(subject, recipient_email, html_content, text_content))
+    thread.daemon = True
+    thread.start()
+
+
+def send_reactivation_email(recipient_email: str, name: str):
+    """Asynchronously dispatches an account reactivation email using a background thread."""
+    subject = "LiviSync Account Status: Reactivated"
+    
+    text_content = (
+        f"Hello {name},\n\n"
+        f"We are pleased to inform you that your LiviSync account has been reactivated by Administration.\n"
+        f"You can now log in, search for roommates, view hostels, and chat with your connections as usual.\n\n"
+        f"Thank you for your patience.\n\n"
+        f"Best regards,\nThe LiviSync Team"
+    )
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {{ font-family: sans-serif; background-color: #f8fafc; color: #334155; padding: 20px; }}
+            .container {{ max-width: 580px; margin: 0 auto; background: #ffffff; padding: 32px; border-radius: 8px; border: 1px solid #e2e8f0; }}
+            .header {{ color: #16a34a; font-size: 20px; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }}
+            .success-box {{ background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; margin: 20px 0; border-radius: 4px; color: #166534; }}
+            .footer {{ margin-top: 30px; font-size: 12px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">Account Reactivated</div>
+            <p>Hello {name},</p>
+            
+            <div class="success-box">
+                <strong>Your account is now fully active.</strong>
+            </div>
+            
+            <p>LiviSync Administration has reviewed and reactivated your profile status. You have been granted full access back to the platform.</p>
+            <p>You can now:
+                <ul>
+                    <li>Log in to your account.</li>
+                    <li>Appear in student/roommate directories.</li>
+                    <li>Send/receive roommate match requests and chat with your matches.</li>
+                </ul>
+            </p>
+            
+            <p>Welcome back!<br/>The LiviSync Team</p>
             
             <div class="footer">
                 &copy; 2026 LiviSync. All rights reserved.

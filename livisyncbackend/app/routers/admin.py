@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 from ..database import get_db
 from ..models import Admin, Student, Owner, Hostel, InviteToken, Report, MatchRequest
 from ..auth import get_current_user
-from ..email_utils import send_invitation_email, send_warning_email, send_suspension_email
+from ..email_utils import send_invitation_email, send_warning_email, send_suspension_email, send_reactivation_email
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
@@ -186,6 +186,8 @@ def toggle_user_status(role: str, user_id: uuid.UUID, req: StatusToggleRequest, 
     db.commit()
     if req.status == "suspended":
         send_suspension_email(user.email, user.name)
+    elif req.status == "active":
+        send_reactivation_email(user.email, user.name)
     return {"message": f"User status updated to {req.status} successfully."}
 
 @router.get("/hostels")
