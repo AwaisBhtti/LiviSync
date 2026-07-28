@@ -58,6 +58,14 @@ export const RoommateFinder = ({
       // Don't show blocked users
       if (currentUser.blockedUsers?.includes(u.id)) return false;
 
+      // Don't show already connected (accepted match) users
+      const hasConnection = matchRequests.some(
+        (r) => r.status === 'accepted' &&
+               ((r.senderId === currentUser.id && r.receiverId === u.id) ||
+                (r.senderId === u.id && r.receiverId === currentUser.id))
+      );
+      if (hasConnection) return false;
+
       // Apply Filters
       const matchesSleep = filterSleep === 'all' || u.preferences.sleepSchedule === filterSleep;
       const matchesClean = filterCleanliness === 'all' || u.preferences.cleanliness === filterCleanliness;
