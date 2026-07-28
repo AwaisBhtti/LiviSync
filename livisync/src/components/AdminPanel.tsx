@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import type { User, Report, Hostel, MatchRequest } from '../types';
-import { Building, Users, ShieldAlert, CheckCircle, Ban, RefreshCw, Star } from 'lucide-react';
+import { API_BASE_URL } from '../config';
+import { useState, useEffect } from 'react';
+import type { User, Report, Hostel } from '../types';
+import { Building, Users, ShieldAlert, CheckCircle, Ban, RefreshCw } from 'lucide-react';
+import { ImageLightbox } from './ImageLightbox';
 
 interface AdminPanelProps {
   users: User[];
   reports: Report[];
   hostels: Hostel[];
-  matchRequests: MatchRequest[];
   onToggleUserStatus: (userId: string) => void;
   onResolveReport: (reportId: string) => void;
   onDeleteUser: (userId: string) => void;
@@ -141,15 +142,23 @@ export const AdminPanel = ({
   users,
   reports,
   hostels,
-  matchRequests,
   onToggleUserStatus,
   onResolveReport,
   onDeleteUser,
   onVerifyHostel,
 }: AdminPanelProps) => {
-  const activeMatchesCount = matchRequests.filter((r) => r.status === 'accepted').length;
   const pendingReports = reports.filter((r) => r.status === 'pending');
 
+  const getPriceRangeString = (hostel: Hostel) => {
+    if (!hostel.rooms || hostel.rooms.length === 0) return 'Rooms not listed';
+    const prices = hostel.rooms.map(r => r.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    if (minPrice === maxPrice) return `PKR ${minPrice.toLocaleString()}`;
+    return `PKR ${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()}`;
+  };
+
+  const [invitations, setInvitations] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
@@ -157,6 +166,42 @@ export const AdminPanel = ({
   const [inviteError, setInviteError] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  const fetchInvitations = async () => {
+    try {
+      const token = localStorage.getItem('livisync_token');
+      const response = await fetch(`${API_BASE_URL}/admin/invitations`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setInvitations(data);
+      }
+    } catch (err) {
+      console.error("Error fetching invitations:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvitations();
+  }, []);
+
+  const handleRevokeInvitation = async (token: string) => {
+    try {
+      const userToken = localStorage.getItem('livisync_token');
+      const response = await fetch(`${API_BASE_URL}/admin/invitations/${token}/revoke`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
+      if (response.ok) {
+        fetchInvitations();
+      }
+    } catch (err) {
+      console.error("Error revoking invitation:", err);
+    }
+  };
 
   const handleGenerateInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,7 +212,7 @@ export const AdminPanel = ({
 
     try {
       const token = localStorage.getItem('livisync_token');
-      const response = await fetch('http://127.0.0.1:8000/admin/invite', {
+      const response = await fetch(`${API_BASE_URL}/admin/invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -183,6 +228,7 @@ export const AdminPanel = ({
       setGeneratedLink(data.invite_link);
       setInviteEmail('');
       setShowModal(true);
+      fetchInvitations();
     } catch (err: any) {
       setInviteError(err.message || 'Error occurred');
     } finally {
@@ -231,13 +277,7 @@ export const AdminPanel = ({
           </div>
         </div>
 
-        <div className="card" style={statCardStyle}>
-          <Star size={20} style={{ color: 'var(--muted)' }} />
-          <div>
-            <span style={statLabelStyle}>Confirmed Matches</span>
-            <h2 style={statValueStyle}>{activeMatchesCount}</h2>
-          </div>
-        </div>
+
 
         <div className="card" style={statCardStyle}>
           <ShieldAlert size={20} style={{ color: 'var(--danger)' }} />
@@ -323,77 +363,163 @@ export const AdminPanel = ({
         )}
       </div>
 
-      {/* User Directory Management */}
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <h3 style={sectionTitleStyle}>
-          <Users size={18} /> User Management & Directory
-        </h3>
-        <div style={tableContainerStyle}>
-          <table style={tableStyle}>
-            <thead>
-              <tr style={tableHeaderRowStyle}>
-                <th style={thStyle}>Student Profile</th>
-                <th style={thStyle}>Location</th>
-                <th style={thStyle}>Role</th>
-                <th style={thStyle}>Account Status</th>
-                <th style={thStyle}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} style={tableRowStyle}>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <img src={user.photo} style={smallAvatarStyle} alt="" />
-                      <div>
-                        <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>{user.name}</span>
-                        <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--muted)' }}>
-                          {user.age} y/o • {user.gender}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={tdStyle}>{user.location}</td>
-                  <td style={{ ...tdStyle, textTransform: 'capitalize' }}>{user.role}</td>
-                  <td style={tdStyle}>
-                    <span style={{
-                      fontWeight: 600,
-                      fontSize: '0.8rem',
-                      color: user.status === 'suspended' ? 'var(--danger)' : 'var(--success)'
-                    }}>
-                      {user.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>
-                    {user.role !== 'admin' && (
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button
-                          className="btn btn-secondary"
-                          style={tableBtnStyle}
-                          onClick={() => onToggleUserStatus(user.id)}
-                        >
-                          <RefreshCw size={12} /> Toggle Suspend
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          style={tableBtnStyle}
-                          onClick={() => {
-                            if (confirm(`Are you sure you want to delete ${user.name}'s account?`)) {
-                              onDeleteUser(user.id);
-                            }
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
+      {/* Helper to get status text color */}
+      {(() => {
+        const getStatusColor = (status: string) => {
+          if (status === 'suspended') return 'var(--danger)';
+          if (status === 'unapproved') return '#f59e0b';
+          return 'var(--success)';
+        };
+
+        const students = users.filter((u) => u.role === 'student');
+        const owners = users.filter((u) => u.role === 'owner');
+
+        return (
+          <>
+            {/* Student Directory Management */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h3 style={sectionTitleStyle}>
+                <Users size={18} /> Student Directory
+              </h3>
+              <div style={tableContainerStyle}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr style={tableHeaderRowStyle}>
+                      <th style={thStyle}>Student Profile</th>
+                      <th style={thStyle}>Location</th>
+                      <th style={thStyle}>Account Status</th>
+                      <th style={thStyle}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.map((user) => (
+                      <tr key={user.id} style={tableRowStyle}>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <img src={user.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} style={smallAvatarStyle} alt="" />
+                            <div>
+                              <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>{user.name}</span>
+                              <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--muted)' }}>
+                                {user.age} y/o • {user.gender}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={tdStyle}>{user.location}</td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            color: getStatusColor(user.status)
+                          }}>
+                            {user.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button
+                              className="btn btn-secondary"
+                              style={tableBtnStyle}
+                              onClick={() => onToggleUserStatus(user.id)}
+                            >
+                              <RefreshCw size={12} /> Toggle Suspend
+                            </button>
+                            <button
+                              className="btn btn-danger"
+                              style={tableBtnStyle}
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete ${user.name}'s account?`)) {
+                                  onDeleteUser(user.id);
+                                }
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {students.length === 0 && (
+                      <tr>
+                        <td colSpan={4} style={{ ...tdStyle, textAlign: 'center', color: 'var(--muted)' }}>
+                          No students registered.
+                        </td>
+                      </tr>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Hostel Owner Directory Management */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h3 style={sectionTitleStyle}>
+                <Users size={18} /> Hostel Owner Directory
+              </h3>
+              <div style={tableContainerStyle}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr style={tableHeaderRowStyle}>
+                      <th style={thStyle}>Owner Name</th>
+                      <th style={thStyle}>Email</th>
+                      <th style={thStyle}>Phone</th>
+                      <th style={thStyle}>Verification Status</th>
+                      <th style={thStyle}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {owners.map((user) => (
+                      <tr key={user.id} style={tableRowStyle}>
+                        <td style={{ ...tdStyle, fontWeight: 500 }}>{user.name}</td>
+                        <td style={tdStyle}>{user.email}</td>
+                        <td style={tdStyle}>{user.phone || 'N/A'}</td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            color: getStatusColor(user.status)
+                          }}>
+                            {user.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button
+                              className="btn btn-secondary"
+                              style={tableBtnStyle}
+                              onClick={() => onToggleUserStatus(user.id)}
+                            >
+                              <RefreshCw size={12} /> {user.status === 'active' ? 'Suspend' : 'Approve'}
+                            </button>
+                            <button
+                              className="btn btn-danger"
+                              style={tableBtnStyle}
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete owner ${user.name}?`)) {
+                                  onDeleteUser(user.id);
+                                }
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {owners.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ ...tdStyle, textAlign: 'center', color: 'var(--muted)' }}>
+                          No owners registered.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {/* Invite Section */}
       <div className="card" style={{ padding: '1.5rem' }}>
@@ -418,6 +544,59 @@ export const AdminPanel = ({
         </form>
 
         {inviteError && <p style={{ color: 'var(--danger)', fontSize: '0.875rem', marginTop: '0.5rem' }}>{inviteError}</p>}
+
+        {/* Active Invitations List */}
+        <div style={{ marginTop: '1.5rem' }}>
+          <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Generated Invitations
+          </h4>
+          {invitations.length === 0 ? (
+            <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>No invitation links generated yet.</p>
+          ) : (
+            <div style={tableContainerStyle}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr style={tableHeaderRowStyle}>
+                    <th style={thStyle}>Recipient Email</th>
+                    <th style={thStyle}>Invitation Token</th>
+                    <th style={thStyle}>Status</th>
+                    <th style={thStyle}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invitations.map((inv) => (
+                    <tr key={inv.token} style={tableRowStyle}>
+                      <td style={{ ...tdStyle, fontSize: '0.85rem' }}>{inv.email}</td>
+                      <td style={{ ...tdStyle, fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--muted)' }}>
+                        {inv.token.substring(0, 8)}...{inv.token.substring(inv.token.length - 8)}
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                          color: inv.is_used ? 'var(--muted)' : 'var(--success)'
+                        }}>
+                          {inv.is_used ? 'REVOKED / USED' : 'ACTIVE'}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        {!inv.is_used && (
+                          <button
+                            className="btn btn-danger"
+                            style={{ ...tableBtnStyle, padding: '0.25rem 0.5rem' }}
+                            onClick={() => handleRevokeInvitation(inv.token)}
+                          >
+                            Revoke
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Invite Link Modal Popup */}
@@ -428,7 +607,7 @@ export const AdminPanel = ({
             <p style={{ fontSize: '0.875rem', color: 'var(--muted)', margin: 0 }}>
               An invitation email has been sent to <strong>{invitedEmail}</strong>.
             </p>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
               <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>
                 Copy Registration Link
@@ -441,9 +620,9 @@ export const AdminPanel = ({
                   className="form-input"
                   style={{ flex: 1, backgroundColor: 'var(--secondary)', cursor: 'default' }}
                 />
-                <button 
-                  onClick={handleCopyLink} 
-                  className={`btn ${copied ? 'btn-secondary' : 'btn-primary'}`} 
+                <button
+                  onClick={handleCopyLink}
+                  className={`btn ${copied ? 'btn-secondary' : 'btn-primary'}`}
                   style={{ whiteSpace: 'nowrap', minWidth: '80px' }}
                 >
                   {copied ? 'Copied!' : 'Copy'}
@@ -483,9 +662,18 @@ export const AdminPanel = ({
               <tbody>
                 {hostels.filter(h => !h.isVerified).map((hostel) => (
                   <tr key={hostel.id} style={tableRowStyle}>
-                    <td style={tdStyle}>{hostel.name}</td>
+                    <td style={tdStyle}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedHostel(hostel)}
+                        style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', padding: 0, textDecoration: 'underline', textAlign: 'left' }}
+                        title="Click to view details"
+                      >
+                        {hostel.name}
+                      </button>
+                    </td>
                     <td style={tdStyle}>{hostel.location}</td>
-                    <td style={tdStyle}>{hostel.price.toLocaleString()}</td>
+                    <td style={tdStyle}>{getPriceRangeString(hostel)}</td>
                     <td style={tdStyle}>
                       <button
                         className="btn btn-primary"
@@ -502,6 +690,121 @@ export const AdminPanel = ({
           </div>
         )}
       </div>
+
+      {selectedHostel && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Hostel Details</h3>
+              <button
+                type="button"
+                onClick={() => setSelectedHostel(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.25rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '0.5rem' }}>
+              {selectedHostel.photo && (
+                <img
+                  src={selectedHostel.photo}
+                  alt={selectedHostel.name}
+                  onClick={() => setLightboxUrl(selectedHostel.photo)}
+                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--border)', cursor: 'zoom-in' }}
+                />
+              )}
+
+              <div>
+                <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>{selectedHostel.name}</h4>
+                <p style={{ color: 'var(--muted)', fontSize: '0.85rem', margin: 0 }}>📍 {selectedHostel.location}</p>
+              </div>
+
+              <div>
+                <h5 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>Description</h5>
+                <p style={{ color: 'var(--muted)', fontSize: '0.875rem', margin: 0, lineHeight: '1.5' }}>{selectedHostel.description || 'No description provided.'}</p>
+              </div>
+
+              <div>
+                <h5 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>Amenities</h5>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {selectedHostel.amenities.length === 0 ? (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>No amenities specified.</span>
+                  ) : (
+                    selectedHostel.amenities.map((a, i) => (
+                      <span key={i} className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                        ✓ {a}
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h5 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>Available Rooms ({selectedHostel.rooms?.length || 0})</h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                  {!selectedHostel.rooms || selectedHostel.rooms.length === 0 ? (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>No rooms listed yet.</span>
+                  ) : (
+                    selectedHostel.rooms.map((room, idx) => (
+                      <div key={idx} style={{ padding: '0.75rem', backgroundColor: 'var(--secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.875rem', textTransform: 'capitalize' }}>
+                          <span>{room.sharingType} Sharing ({room.floor})</span>
+                          <span style={{ color: 'var(--primary)' }}>PKR {room.price.toLocaleString()} / mo</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.375rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
+                          <span>🛋️ {room.furniture === 'nothing' ? 'Unfurnished' : room.furniture === 'mattress' ? 'Mattress Provided' : 'Furnished (Bed)'}</span>
+                          <span>• 🚿 {room.hasAttachedBathroom ? 'Attached Bath' : 'Shared Bath'}</span>
+                          <span>• 🛏️ {room.seatsAvailable} bed(s) available</span>
+                        </div>
+                        {room.description && (
+                          <p style={{ margin: '0.375rem 0 0 0', fontSize: '0.8rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                            "{room.description}"
+                          </p>
+                        )}
+                        {room.images && room.images.length > 0 && (
+                          <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', overflowX: 'auto' }}>
+                            {room.images.filter(img => img.trim().length > 0).map((img, i) => (
+                              <img
+                                key={i}
+                                src={img}
+                                alt=""
+                                onClick={() => setLightboxUrl(img)}
+                                style={{ width: '60px', height: '45px', objectFit: 'cover', borderRadius: '4px', cursor: 'zoom-in' }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                {!selectedHostel.isVerified && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ flex: 1 }}
+                    onClick={() => {
+                      onVerifyHostel(selectedHostel.id);
+                      setSelectedHostel(null);
+                    }}
+                  >
+                    Verify & Approve Listing
+                  </button>
+                )}
+                <button type="button" className="btn btn-secondary" style={{ flex: !selectedHostel.isVerified ? 0.3 : 1 }} onClick={() => setSelectedHostel(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   );
 };

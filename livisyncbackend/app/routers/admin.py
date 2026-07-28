@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from ..database import get_db
-from ..models import User, Profile, Hostel, InviteToken, Report, MatchRequest
+from ..models import Admin, Student, Owner, Hostel, InviteToken, Report, MatchRequest
 from ..auth import get_current_user
 from ..email_utils import send_invitation_email
 from pydantic import BaseModel, EmailStr
@@ -18,52 +18,7 @@ class InviteRequest(BaseModel):
     email: EmailStr
 
 class StatusToggleRequest(BaseModel):
-    status: str  # 'active' or 'suspended'
-
-# Pydantic schemas for response serialization
-class UserPreferencesOut(BaseModel):
-    sleep_schedule: str
-    cleanliness: str
-    smoking: str
-    pets: str
-    guest_tolerance: str
-
-    class Config:
-        from_attributes = True
-
-class ProfileOut(BaseModel):
-    name: str
-    age: int
-    gender: str
-    photo: Optional[str] = None
-    bio: Optional[str] = None
-    budget: int
-    location: str
-    role: str
     status: str
-
-    class Config:
-        from_attributes = True
-
-class UserAdminOut(BaseModel):
-    id: uuid.UUID
-    email: str
-    role: str
-    status: str
-    name: str
-    age: int
-    gender: str
-    photo: Optional[str] = None
-    bio: Optional[str] = None
-    budget: int
-    location: str
-    created_at: datetime
-    occupation: Optional[str] = None
-    institution: Optional[str] = None
-    company: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 class ReportOut(BaseModel):
     id: uuid.UUID
@@ -102,8 +57,8 @@ class MatchRequestOut(BaseModel):
         from_attributes = True
 
 
-def require_admin(current_user: User = Depends(get_current_user)):
-    if not current_user.profile or current_user.profile.role != "admin":
+def require_admin(current_user = Depends(get_current_user)):
+    if not isinstance(current_user, Admin):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin privileges required"
@@ -111,11 +66,8 @@ def require_admin(current_user: User = Depends(get_current_user)):
     return current_user
 
 @router.post("/invite")
-def create_invite(req: InviteRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    # Generate unique token
+def create_invite(req: InviteRequest, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
     token = str(uuid.uuid4())
-    
-    # Store token in database
     db_invite = InviteToken(
         token=token,
         email=req.email,
@@ -126,8 +78,6 @@ def create_invite(req: InviteRequest, db: Session = Depends(get_db), admin: User
     db.refresh(db_invite)
     
     invite_link = f"http://localhost:5173/register-owner/{token}"
-    
-    # Send email asynchronously via background thread
     send_invitation_email(req.email, invite_link)
     
     return {
@@ -136,48 +86,67 @@ def create_invite(req: InviteRequest, db: Session = Depends(get_db), admin: User
         "invite_link": invite_link
     }
 
-@router.get("/users", response_model=List[UserAdminOut])
-def get_all_users(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    # Join users with profiles to return flattened data
-    users = db.query(User).options(joinedload(User.profile)).all()
+@router.get("/users")
+def get_all_users(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    students = db.query(Student).all()
+    owners = db.query(Owner).all()
     results = []
-    for u in users:
-        # Default fallback values if profile doesn't exist
-        profile_name = u.profile.name if u.profile else "New User"
-        profile_age = u.profile.age if u.profile else 18
-        profile_gender = u.profile.gender if u.profile else "male"
-        profile_photo = u.profile.photo if u.profile else ""
-        profile_bio = u.profile.bio if u.profile else ""
-        profile_budget = u.profile.budget if u.profile else 0
-        profile_location = u.profile.location if u.profile else ""
-        profile_role = u.profile.role if u.profile else "student"
-        profile_status = u.profile.status if u.profile else "active"
-        profile_occupation = u.profile.occupation if u.profile else None
-        profile_institution = u.profile.institution if u.profile else None
-        profile_company = u.profile.company if u.profile else None
-
+    
+    for s in students:
         results.append({
-            "id": u.id,
-            "email": u.email,
-            "role": profile_role,
-            "status": profile_status,
-            "name": profile_name,
-            "age": profile_age,
-            "gender": profile_gender,
-            "photo": profile_photo,
-            "bio": profile_bio,
-            "budget": profile_budget,
-            "location": profile_location,
-            "created_at": u.created_at,
-            "occupation": profile_occupation,
-            "institution": profile_institution,
-            "company": profile_company
+            "id": s.id,
+            "email": s.email,
+            "role": "student",
+            "status": s.status,
+            "name": s.name,
+            "age": s.age,
+            "gender": s.gender,
+            "photo": s.photo or "",
+            "bio": s.bio or "",
+            "budget": s.budget,
+            "location": s.location,
+            "created_at": s.created_at,
+            "occupation": s.occupation,
+            "institution": s.institution,
+            "company": s.company,
+            "hostel_id": s.hostel_id
         })
+        
+    for o in owners:
+        results.append({
+            "id": o.id,
+            "email": o.email,
+            "role": "owner",
+            "status": o.status,
+            "name": o.name,
+            "phone": o.phone,
+            "age": 18,
+            "gender": "male",
+            "photo": "",
+            "bio": "",
+            "budget": 0,
+            "location": "",
+            "created_at": o.created_at,
+            "occupation": None,
+            "institution": None,
+            "company": None,
+            "hostel_id": None
+        })
+        
     return results
 
-@router.delete("/users/{user_id}")
-def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    user = db.query(User).filter(User.id == user_id).first()
+@router.delete("/users/{role}/{user_id}")
+def delete_user(role: str, user_id: uuid.UUID, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    if role == "student":
+        user = db.query(Student).filter(Student.id == user_id).first()
+    elif role == "owner":
+        user = db.query(Owner).filter(Owner.id == user_id).first()
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid role"
+        )
+        
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -187,13 +156,22 @@ def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db), admin: User =
     db.commit()
     return {"message": "User deleted successfully."}
 
-@router.put("/users/{user_id}/status")
-def toggle_user_status(user_id: uuid.UUID, req: StatusToggleRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    profile = db.query(Profile).filter(Profile.id == user_id).first()
-    if not profile:
+@router.put("/users/{role}/{user_id}/status")
+def toggle_user_status(role: str, user_id: uuid.UUID, req: StatusToggleRequest, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    if role == "student":
+        user = db.query(Student).filter(Student.id == user_id).first()
+    elif role == "owner":
+        user = db.query(Owner).filter(Owner.id == user_id).first()
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid role"
+        )
+        
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User profile not found"
+            detail="User not found"
         )
     
     if req.status not in ["active", "suspended"]:
@@ -202,16 +180,16 @@ def toggle_user_status(user_id: uuid.UUID, req: StatusToggleRequest, db: Session
             detail="Status must be 'active' or 'suspended'"
         )
         
-    profile.status = req.status
+    user.status = req.status
     db.commit()
     return {"message": f"User status updated to {req.status} successfully."}
 
-@router.get("/hostels", response_model=List[HostelOut])
-def get_all_hostels(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    return db.query(Hostel).all()
+@router.get("/hostels")
+def get_all_hostels(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    return db.query(Hostel).options(joinedload(Hostel.rooms), joinedload(Hostel.amenities)).all()
 
 @router.put("/hostels/{hostel_id}/verify")
-def verify_hostel(hostel_id: uuid.UUID, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+def verify_hostel(hostel_id: uuid.UUID, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
     hostel = db.query(Hostel).filter(Hostel.id == hostel_id).first()
     if not hostel:
         raise HTTPException(
@@ -224,11 +202,11 @@ def verify_hostel(hostel_id: uuid.UUID, db: Session = Depends(get_db), admin: Us
     return {"message": "Hostel verified successfully."}
 
 @router.get("/reports", response_model=List[ReportOut])
-def get_all_reports(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+def get_all_reports(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
     return db.query(Report).all()
 
 @router.put("/reports/{report_id}/resolve")
-def resolve_report(report_id: uuid.UUID, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+def resolve_report(report_id: uuid.UUID, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
         raise HTTPException(
@@ -239,6 +217,18 @@ def resolve_report(report_id: uuid.UUID, db: Session = Depends(get_db), admin: U
     db.commit()
     return {"message": "Report resolved successfully."}
 
-@router.get("/matches", response_model=List[MatchRequestOut])
-def get_all_matches(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    return db.query(MatchRequest).all()
+@router.get("/invitations")
+def get_all_invitations(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    return db.query(InviteToken).order_by(InviteToken.created_at.desc()).all()
+
+@router.put("/invitations/{token}/revoke")
+def revoke_invitation(token: str, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    invite = db.query(InviteToken).filter(InviteToken.token == token).first()
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invitation not found"
+        )
+    invite.is_used = True
+    db.commit()
+    return {"message": "Invitation revoked successfully."}

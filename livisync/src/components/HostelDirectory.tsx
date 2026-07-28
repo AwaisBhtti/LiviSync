@@ -1,26 +1,56 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import type { Hostel, User } from '../types';
-import { Search, MapPin, Check, Users, ArrowLeft } from 'lucide-react';
-import { calculateCompatibility } from '../utils';
+import { Search, MapPin, Check, ArrowLeft } from 'lucide-react';
+import { ImageLightbox } from './ImageLightbox';
 
 interface HostelDirectoryProps {
   hostels: Hostel[];
-  users: User[];
   currentUser: User;
-  onBookRoom: (hostelId: string, sharingType: 'single' | 'double' | 'triple') => void;
+  token: string | null;
 }
 
 export const HostelDirectory = ({
   hostels,
-  users,
   currentUser,
-  onBookRoom,
+  token,
 }: HostelDirectoryProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
   const [maxPrice, setMaxPrice] = useState<number>(25000);
   const [selectedSharing, setSelectedSharing] = useState<string>('all');
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [selectedAmenity, setSelectedAmenity] = useState<string>('all');
+  const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
+  const [loadingPhone, setLoadingPhone] = useState<boolean>(false);
+
+  const selectHostel = (hostel: Hostel | null) => {
+    setSelectedHostel(hostel);
+    setOwnerPhone(null);
+  };
+
+  const handleShowPhone = async () => {
+    if (!token || !selectedHostel) return;
+    setLoadingPhone(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/hostels/${selectedHostel.id}/view-phone`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to fetch phone number');
+      }
+      setOwnerPhone(data.phone);
+    } catch (err: any) {
+      alert(err.message || 'Error fetching phone number');
+    } finally {
+      setLoadingPhone(false);
+    }
+  };
 
   // Find all unique amenities for filters
   const allAmenities = Array.from(
@@ -32,14 +62,16 @@ export const HostelDirectory = ({
     const matchesSearch =
       hostel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       hostel.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesPrice = hostel.price <= maxPrice;
-    
+
+    const matchesPrice = hostel.rooms && hostel.rooms.length > 0
+      ? hostel.rooms.some(r => r.price <= maxPrice)
+      : true;
+
     const matchesSharing =
       selectedSharing === 'all' ||
-      hostel.rooms.some(
-        (r) => r.sharingType === selectedSharing && r.available > 0
-      );
+      (hostel.rooms && hostel.rooms.some(
+        (r) => r.sharingType === selectedSharing && r.seatsAvailable > 0
+      ));
 
     const matchesAmenity =
       selectedAmenity === 'all' ||
@@ -50,15 +82,7 @@ export const HostelDirectory = ({
     return matchesSearch && matchesPrice && matchesSharing && matchesAmenity && isVisible;
   });
 
-  const getOccupantDetails = (occupantId: string) => {
-    return users.find((u) => u.id === occupantId);
-  };
 
-  const renderCompatibilityBadge = (score: number) => {
-    if (score >= 80) return <span className="compatibility-ring compatibility-high">{score}%</span>;
-    if (score >= 50) return <span className="compatibility-ring compatibility-mid">{score}%</span>;
-    return <span className="compatibility-ring compatibility-low">{score}%</span>;
-  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -67,7 +91,7 @@ export const HostelDirectory = ({
         <div style={detailsPageStyle}>
           <button
             className="btn btn-secondary"
-            onClick={() => setSelectedHostel(null)}
+            onClick={() => selectHostel(null)}
             style={{ marginBottom: '1rem', width: 'fit-content' }}
           >
             <ArrowLeft size={16} />
@@ -79,9 +103,10 @@ export const HostelDirectory = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={mainImageContainerStyle}>
                 <img
-                  src={selectedHostel.images[0]}
+                  src={selectedHostel.photo}
                   alt={selectedHostel.name}
-                  style={mainImageStyle}
+                  onClick={() => setLightboxUrl(selectedHostel.photo)}
+                  style={{ ...mainImageStyle, cursor: 'zoom-in' }}
                 />
               </div>
 
@@ -117,78 +142,102 @@ export const HostelDirectory = ({
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '1.25rem', fontWeight: '700' }}>PKR {selectedHostel.price.toLocaleString()}</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>
+                      {(() => {
+                        if (!selectedHostel.rooms || selectedHostel.rooms.length === 0) return 'Rooms N/A';
+                        const prices = selectedHostel.rooms.map(r => r.price);
+                        const min = Math.min(...prices);
+                        const max = Math.max(...prices);
+                        return min === max ? `PKR ${min.toLocaleString()}` : `PKR ${min.toLocaleString()} - ${max.toLocaleString()}`;
+                      })()}
+                    </span>
                     <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--muted)' }}>/ month</span>
                   </div>
                 </div>
 
                 <hr style={{ border: 0, borderTop: '1px solid var(--border)', margin: '1rem 0' }} />
 
-                <h4 style={{ marginBottom: '0.75rem' }}>Available Rooms</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ margin: 0 }}>Available Rooms</h4>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    backgroundColor: selectedHostel.electricityBillIncluded ? 'rgba(34, 197, 94, 0.1)' : 'var(--card-hover)',
+                    color: selectedHostel.electricityBillIncluded ? 'var(--success)' : 'var(--muted)',
+                    border: '1px solid ' + (selectedHostel.electricityBillIncluded ? 'rgba(34, 197, 94, 0.2)' : 'var(--border)'),
+                    fontWeight: 600
+                  }}>
+                    ⚡ Electricity: {selectedHostel.electricityBillIncluded ? 'Included' : 'Not Included'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {selectedHostel.rooms.map((room, idx) => (
-                    <div key={idx} style={roomRowStyle}>
-                      <span style={{ textTransform: 'capitalize', fontWeight: 500, fontSize: '0.875rem' }}>
-                        {room.sharingType} Room Sharing
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: room.available > 0 ? 'var(--success)' : 'var(--danger)' }}>
-                          {room.available > 0 ? `${room.available} left` : 'Full'}
+                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ textTransform: 'capitalize', fontWeight: 600, fontSize: '0.9rem' }}>
+                          {room.sharingType} Sharing ({room.floor})
                         </span>
-                        <button
-                          className="btn btn-primary"
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                          disabled={room.available === 0}
-                          onClick={() => onBookRoom(selectedHostel.id, room.sharingType)}
-                        >
-                          Book Now
-                        </button>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)' }}>
+                          PKR {room.price.toLocaleString()}/mo
+                        </span>
                       </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.125rem' }}>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.7rem', padding: '0.15rem 0.35rem' }}>
+                          🛋️ {room.furniture === 'nothing' ? 'Unfurnished' : room.furniture === 'mattress' ? 'Mattress Provided' : 'Furnished (Bed)'}
+                        </span>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.7rem', padding: '0.15rem 0.35rem' }}>
+                          🚿 {room.hasAttachedBathroom ? 'Attached Bath' : 'Shared Bath'}
+                        </span>
+                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: 500, color: room.seatsAvailable > 0 ? 'var(--success)' : 'var(--danger)' }}>
+                          {room.seatsAvailable > 0 ? `${room.seatsAvailable} bed(s) left` : 'Full'}
+                        </span>
+                      </div>
+                      {room.description && (
+                        <p style={{ margin: '0.25rem 0', fontSize: '0.8rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                          "{room.description}"
+                        </p>
+                      )}
+                      {room.images && room.images.length > 0 && (
+                        <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', overflowX: 'auto' }}>
+                          {room.images.filter(img => img.trim().length > 0).map((img, i) => (
+                            <img
+                              key={i}
+                              src={img}
+                              alt=""
+                              onClick={() => setLightboxUrl(img)}
+                              style={{ width: '60px', height: '45px', objectFit: 'cover', borderRadius: '4px', cursor: 'zoom-in' }}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-              </div>
 
-              {/* Occupants Compatibility Section */}
-              <div className="card" style={{ padding: '1.5rem' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontSize: '1rem' }}>
-                  <Users size={18} />
-                  Current Roommates In Hostel
-                </h3>
-
-                {selectedHostel.currentOccupants.length === 0 ? (
-                  <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>No registered students currently staying here.</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {selectedHostel.currentOccupants.map((occupantId) => {
-                      const occupant = getOccupantDetails(occupantId);
-                      if (!occupant) return null;
-                      const score = calculateCompatibility(currentUser.preferences, occupant.preferences);
-                      return (
-                        <div key={occupantId} style={occupantCardStyle}>
-                          <img
-                            src={occupant.photo}
-                            alt={occupant.name}
-                            style={occupantAvatarStyle}
-                          />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <h4 style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {occupant.name}
-                            </h4>
-                            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {occupant.age} y/o • {occupant.gender}
-                            </p>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            {renderCompatibilityBadge(score)}
-                            <span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px' }}>match</span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                {currentUser.role !== 'admin' && currentUser.role !== 'owner' && (
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                    {ownerPhone ? (
+                      <div style={{ padding: '0.75rem', backgroundColor: 'var(--card-hover)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', textAlign: 'center' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Owner's Contact Number:</p>
+                        <p style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--primary)', marginTop: '0.25rem' }}>{ownerPhone}</p>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleShowPhone}
+                        disabled={loadingPhone}
+                        className="btn btn-primary"
+                        style={{ width: '100%', padding: '0.625rem', fontSize: '0.85rem' }}
+                      >
+                        {loadingPhone ? 'Loading Contact Info...' : 'Show Owner\'s Phone Number'}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
+
+
             </div>
           </div>
         </div>
@@ -284,10 +333,10 @@ export const HostelDirectory = ({
                       key={hostel.id}
                       className="card"
                       style={hostelRowCardStyle}
-                      onClick={() => setSelectedHostel(hostel)}
+                      onClick={() => selectHostel(hostel)}
                     >
                       <img
-                        src={hostel.images[0]}
+                        src={hostel.photo}
                         alt={hostel.name}
                         style={hostelThumbnailStyle}
                       />
@@ -301,7 +350,13 @@ export const HostelDirectory = ({
                             </p>
                           </div>
                           <span style={{ fontSize: '0.95rem', fontWeight: 700 }}>
-                            PKR {hostel.price.toLocaleString()}/mo
+                            {(() => {
+                              if (!hostel.rooms || hostel.rooms.length === 0) return 'Rent N/A';
+                              const prices = hostel.rooms.map(r => r.price);
+                              const min = Math.min(...prices);
+                              const max = Math.max(...prices);
+                              return min === max ? `PKR ${min.toLocaleString()}/mo` : `PKR ${min.toLocaleString()} - ${max.toLocaleString()}/mo`;
+                            })()}
                           </span>
                         </div>
 
@@ -322,10 +377,6 @@ export const HostelDirectory = ({
                               </span>
                             )}
                           </div>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <Users size={14} />
-                            {hostel.currentOccupants.length} students
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -336,6 +387,8 @@ export const HostelDirectory = ({
           </div>
         </>
       )}
+
+      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   );
 };
@@ -384,29 +437,7 @@ const amenityBadgeStyle: React.CSSProperties = {
   borderRadius: 'var(--radius)',
 };
 
-const roomRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '0.5rem 0',
-  borderBottom: '1px solid var(--border)',
-};
 
-const occupantCardStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-  padding: '0.5rem',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-};
-
-const occupantAvatarStyle: React.CSSProperties = {
-  width: '36px',
-  height: '36px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-};
 
 const heroHeaderStyle: React.CSSProperties = {
   backgroundColor: 'var(--card)',

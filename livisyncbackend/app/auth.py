@@ -37,14 +37,15 @@ def decode_access_token(token: str) -> Optional[dict]:
         return None
 
 from fastapi import Depends, HTTPException, status
+from typing import Optional, Union
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from .database import get_db
-from .models import User
+from .models import Student, Owner, Admin
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Union[Student, Owner, Admin]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -54,10 +55,19 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if payload is None:
         raise credentials_exception
     user_id: str = payload.get("sub")
-    if user_id is None:
+    role: str = payload.get("role")
+    if user_id is None or role is None:
         raise credentials_exception
     
-    user = db.query(User).filter(User.id == user_id).first()
+    if role == "student":
+        user = db.query(Student).filter(Student.id == user_id).first()
+    elif role == "owner":
+        user = db.query(Owner).filter(Owner.id == user_id).first()
+    elif role == "admin":
+        user = db.query(Admin).filter(Admin.id == user_id).first()
+    else:
+        raise credentials_exception
+
     if user is None:
         raise credentials_exception
     return user

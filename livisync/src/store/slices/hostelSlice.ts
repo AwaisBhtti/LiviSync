@@ -1,4 +1,5 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { API_BASE_URL } from '../../config';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { Hostel } from '../../types';
 
 interface HostelState {
@@ -18,16 +19,41 @@ export const fetchHostels = createAsyncThunk(
   async ({ token, role }: { token: string; role: string }, { rejectWithValue }) => {
     try {
       const endpoint = role === 'admin'
-        ? 'http://127.0.0.1:8000/admin/hostels'
-        : 'http://127.0.0.1:8000/hostels';
-        
+        ? `${API_BASE_URL}/admin/hostels`
+        : `${API_BASE_URL}/hostels`;
+
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
         throw new Error('Failed to fetch hostels');
       }
-      return await response.json() as Hostel[];
+      const data = await response.json();
+      const mappedHostels = data.map((h: any) => ({
+        id: h.id,
+        name: h.name,
+        location: h.location,
+        description: h.description || '',
+        photo: h.photo || '',
+        electricityBillIncluded: h.electricity_bill_included,
+        amenities: h.amenities ? h.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
+        ownerId: h.owner_id,
+        isVerified: h.is_verified,
+        currentOccupants: h.current_occupants || [],
+        rooms: h.rooms ? h.rooms.map((r: any) => ({
+          id: r.id,
+          hostelId: r.hostel_id,
+          sharingType: r.sharing_type,
+          price: r.price,
+          seatsAvailable: r.seats_available,
+          floor: r.floor,
+          hasAttachedBathroom: r.has_attached_bathroom,
+          furniture: r.furniture,
+          images: r.images || [],
+          description: r.description || ''
+        })) : []
+      }));
+      return mappedHostels as Hostel[];
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error fetching hostels');
     }
@@ -38,7 +64,7 @@ export const verifyHostel = createAsyncThunk(
   'hostels/verifyHostel',
   async ({ hostelId, token }: { hostelId: string; token: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/admin/hostels/${hostelId}/verify`, {
+      const response = await fetch(`${API_BASE_URL}/admin/hostels/${hostelId}/verify`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -53,41 +79,129 @@ export const verifyHostel = createAsyncThunk(
   }
 );
 
+export const addHostel = createAsyncThunk(
+  'hostels/addHostel',
+  async ({ newHostel, token }: { newHostel: Omit<Hostel, 'id' | 'isVerified'>; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/owners/hostels`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: newHostel.name,
+          location: newHostel.location,
+          description: newHostel.description,
+          photo: newHostel.photo,
+          electricity_bill_included: newHostel.electricityBillIncluded,
+          amenities: newHostel.amenities
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        const errMsg = Array.isArray(data.detail)
+          ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+          : data.detail || 'Failed to list hostel';
+        throw new Error(errMsg);
+      }
+      return {
+        id: data.id,
+        name: data.name,
+        location: data.location,
+        description: data.description || '',
+        photo: data.photo || '',
+        electricityBillIncluded: data.electricity_bill_included,
+        amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
+        ownerId: data.owner_id,
+        isVerified: data.is_verified,
+        currentOccupants: [],
+        rooms: []
+      } as Hostel;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error listing hostel');
+    }
+  }
+);
+
+export const editHostel = createAsyncThunk(
+  'hostels/editHostel',
+  async ({ updatedHostel, token }: { updatedHostel: Hostel; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/owners/hostels/${updatedHostel.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: updatedHostel.name,
+          location: updatedHostel.location,
+          description: updatedHostel.description,
+          photo: updatedHostel.photo,
+          electricity_bill_included: updatedHostel.electricityBillIncluded,
+          amenities: updatedHostel.amenities
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to update hostel listing');
+      }
+      return {
+        id: data.id,
+        name: data.name,
+        location: data.location,
+        description: data.description || '',
+        photo: data.photo || '',
+        electricityBillIncluded: data.electricity_bill_included,
+        amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
+        ownerId: data.owner_id,
+        isVerified: data.is_verified,
+        currentOccupants: data.current_occupants || updatedHostel.currentOccupants || [],
+        rooms: data.rooms ? data.rooms.map((r: any) => ({
+          id: r.id,
+          hostelId: r.hostel_id,
+          sharingType: r.sharing_type,
+          price: r.price,
+          seatsAvailable: r.seats_available,
+          floor: r.floor,
+          hasAttachedBathroom: r.has_attached_bathroom,
+          furniture: r.furniture,
+          images: r.images || [],
+          description: r.description || ''
+        })) : []
+      } as Hostel;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error updating hostel listing');
+    }
+  }
+);
+
+export const deleteHostel = createAsyncThunk(
+  'hostels/deleteHostel',
+  async ({ hostelId, token }: { hostelId: string; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/owners/hostels/${hostelId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to delete hostel listing');
+      }
+      return hostelId;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error deleting hostel listing');
+    }
+  }
+);
+
 const hostelSlice = createSlice({
   name: 'hostels',
   initialState,
   reducers: {
-    addHostel: (state, action: PayloadAction<Hostel>) => {
-      state.hostels.push(action.payload);
-    },
-    editHostel: (state, action: PayloadAction<Hostel>) => {
-      state.hostels = state.hostels.map((h) => h.id === action.payload.id ? action.payload : h);
-    },
-    deleteHostel: (state, action: PayloadAction<string>) => {
-      state.hostels = state.hostels.filter((h) => h.id !== action.payload);
-    },
-    bookRoom: (state, action: PayloadAction<{ hostelId: string; sharingType: 'single' | 'double' | 'triple'; currentUserId: string }>) => {
-      const { hostelId, sharingType, currentUserId } = action.payload;
-      state.hostels = state.hostels.map((h) => {
-        if (h.id === hostelId) {
-          const updatedRooms = h.rooms.map((r) => {
-            if (r.sharingType === sharingType && r.available > 0) {
-              return { ...r, available: r.available - 1 };
-            }
-            return r;
-          });
-          const currentOccupants = h.currentOccupants.includes(currentUserId)
-            ? h.currentOccupants
-            : [...h.currentOccupants, currentUserId];
-          return {
-            ...h,
-            rooms: updatedRooms,
-            currentOccupants,
-          };
-        }
-        return h;
-      });
-    },
     setHostelsState: (state, action: PayloadAction<Hostel[]>) => {
       state.hostels = action.payload;
     }
@@ -108,9 +222,18 @@ const hostelSlice = createSlice({
       })
       .addCase(verifyHostel.fulfilled, (state, action: PayloadAction<string>) => {
         state.hostels = state.hostels.map((h) => h.id === action.payload ? { ...h, isVerified: true } : h);
+      })
+      .addCase(addHostel.fulfilled, (state, action: PayloadAction<Hostel>) => {
+        state.hostels.push(action.payload);
+      })
+      .addCase(editHostel.fulfilled, (state, action: PayloadAction<Hostel>) => {
+        state.hostels = state.hostels.map((h) => h.id === action.payload.id ? action.payload : h);
+      })
+      .addCase(deleteHostel.fulfilled, (state, action: PayloadAction<string>) => {
+        state.hostels = state.hostels.filter((h) => h.id !== action.payload);
       });
   }
 });
 
-export const { addHostel, editHostel, deleteHostel, bookRoom, setHostelsState } = hostelSlice.actions;
+export const { setHostelsState } = hostelSlice.actions;
 export default hostelSlice.reducer;

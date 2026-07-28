@@ -1,6 +1,9 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import type { User, Hostel } from '../types';
-import { Plus, Edit2, Trash2, Building, MapPin, DollarSign, ListPlus, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building, MapPin, ListPlus, X, Info } from 'lucide-react';
+import { RoomListing } from './RoomListing';
+import { ImageLightbox } from './ImageLightbox';
 
 interface OwnerPortalProps {
   currentUser: User;
@@ -9,6 +12,19 @@ interface OwnerPortalProps {
   onEditHostel?: (hostel: Hostel) => void;
   onDeleteHostel?: (hostelId: string) => void;
 }
+
+const BUILTIN_AMENITIES = [
+  'Wifi',
+  'AC',
+  'Laundry',
+  'Mess/Food',
+  'Gym',
+  'Geyser/Hot Water',
+  'Security/CCTV',
+  'Power Backup',
+  'Terrace',
+  'Rooftop'
+];
 
 export const OwnerPortal = ({
   currentUser,
@@ -20,33 +36,63 @@ export const OwnerPortal = ({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingHostel, setEditingHostel] = useState<Hostel | null>(null);
 
+  // Redirection state to manage rooms
+  const [selectedHostelForRooms, setSelectedHostelForRooms] = useState<Hostel | null>(null);
+
   // Form states
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
-  const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [amenities, setAmenities] = useState('');
-  
-  // Room sharing states
-  const [singleAvail, setSingleAvail] = useState('0');
-  const [doubleAvail, setDoubleAvail] = useState('0');
-  const [tripleAvail, setTripleAvail] = useState('0');
+  const [photo, setPhoto] = useState('');
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [electricityBillIncluded, setElectricityBillIncluded] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = localStorage.getItem('livisync_token') || '';
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/owners/upload-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Upload failed');
+      }
+
+      setPhoto(data.url);
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload photo');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Filter hostels owned by this user
-  // (In mock data, we fall back to showing hostels without owner or matching ownerId)
   const myHostels = hostels.filter(
-    (h) => h.ownerId === currentUser.id || !h.ownerId
+    (h) => h.ownerId === currentUser.id
   );
 
   const resetForm = () => {
     setName('');
     setLocation('');
-    setPrice('');
     setDescription('');
-    setAmenities('');
-    setSingleAvail('0');
-    setDoubleAvail('0');
-    setTripleAvail('0');
+    setPhoto('');
+    setSelectedAmenities([]);
+    setElectricityBillIncluded(false);
     setEditingHostel(null);
   };
 
@@ -54,59 +100,95 @@ export const OwnerPortal = ({
     setEditingHostel(hostel);
     setName(hostel.name);
     setLocation(hostel.location);
-    setPrice(hostel.price.toString());
     setDescription(hostel.description);
-    setAmenities(hostel.amenities.join(', '));
-    
-    const single = hostel.rooms.find(r => r.sharingType === 'single')?.available || 0;
-    const double = hostel.rooms.find(r => r.sharingType === 'double')?.available || 0;
-    const triple = hostel.rooms.find(r => r.sharingType === 'triple')?.available || 0;
-    
-    setSingleAvail(single.toString());
-    setDoubleAvail(double.toString());
-    setTripleAvail(triple.toString());
-    
+    setPhoto(hostel.photo || '');
+    setSelectedAmenities(hostel.amenities);
+    setElectricityBillIncluded(hostel.electricityBillIncluded || false);
     setShowAddForm(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAmenityToggle = (amenity: string) => {
+    if (selectedAmenities.includes(amenity)) {
+      setSelectedAmenities(selectedAmenities.filter(a => a !== amenity));
+    } else {
+      setSelectedAmenities([...selectedAmenities, amenity]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const parsedAmenities = amenities
-      .split(',')
-      .map((a) => a.trim())
-      .filter((a) => a.length > 0);
-
-    const rooms = [
-      { sharingType: 'single' as const, available: parseInt(singleAvail) || 0 },
-      { sharingType: 'double' as const, available: parseInt(doubleAvail) || 0 },
-      { sharingType: 'triple' as const, available: parseInt(tripleAvail) || 0 },
-    ];
 
     const hostelData: Hostel = {
       id: editingHostel ? editingHostel.id : `hostel_${Date.now()}`,
       name,
       location,
-      price: parseInt(price) || 0,
       description,
-      images: editingHostel?.images || ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'],
-      amenities: parsedAmenities,
-      rooms,
+      photo,
+      electricityBillIncluded,
+      amenities: selectedAmenities,
+      rooms: editingHostel?.rooms || [],
       currentOccupants: editingHostel?.currentOccupants || [],
       ownerId: currentUser.id,
       isVerified: editingHostel ? editingHostel.isVerified : false,
     };
 
-    if (editingHostel) {
-      if (onEditHostel) onEditHostel(hostelData);
-      alert('Hostel listing updated successfully!');
-    } else {
-      if (onAddHostel) onAddHostel(hostelData);
-      alert('New hostel listing created successfully!');
-    }
+    const token = localStorage.getItem('livisync_token') || '';
 
-    resetForm();
-    setShowAddForm(false);
+    try {
+      if (editingHostel) {
+        if (onEditHostel) onEditHostel(hostelData);
+        alert('Hostel details updated successfully!');
+        resetForm();
+        setShowAddForm(false);
+      } else {
+        // Create new hostel listing
+        const response = await fetch(`${API_BASE_URL}/owners/hostels`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: hostelData.name,
+            location: hostelData.location,
+            description: hostelData.description,
+            photo: hostelData.photo,
+            electricity_bill_included: hostelData.electricityBillIncluded,
+            amenities: hostelData.amenities
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          const errMsg = Array.isArray(data.detail)
+            ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+            : data.detail || 'Failed to create hostel';
+          throw new Error(errMsg);
+        }
+
+        const createdHostel: Hostel = {
+          id: data.id,
+          name: data.name,
+          location: data.location,
+          description: data.description,
+          photo: data.photo,
+          electricityBillIncluded: data.electricity_bill_included,
+          amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
+          rooms: [],
+          isVerified: data.is_verified,
+          ownerId: data.owner_id
+        };
+
+        if (onAddHostel) onAddHostel(createdHostel);
+        resetForm();
+        setShowAddForm(false);
+
+        // Redirect to Room management view for this newly listed hostel
+        setSelectedHostelForRooms(createdHostel);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error occurred listing hostel');
+    }
   };
 
   const handleDeleteClick = (hostelId: string) => {
@@ -114,6 +196,32 @@ export const OwnerPortal = ({
       if (onDeleteHostel) onDeleteHostel(hostelId);
     }
   };
+
+  const getPriceRangeString = (hostel: Hostel) => {
+    if (!hostel.rooms || hostel.rooms.length === 0) return 'Rooms not listed yet';
+    const prices = hostel.rooms.map(r => r.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    if (minPrice === maxPrice) return `PKR ${minPrice.toLocaleString()} / month`;
+    return `PKR ${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} / month`;
+  };
+
+  const token = localStorage.getItem('livisync_token') || '';
+
+  // Render Room Listing Manager if selectedHostelForRooms is not null
+  if (selectedHostelForRooms) {
+    return (
+      <RoomListing
+        hostel={selectedHostelForRooms}
+        token={token}
+        onBack={() => {
+          setSelectedHostelForRooms(null);
+          // Simple window reload or dispatcher reload to get latest hostels with rooms
+          window.location.reload();
+        }}
+      />
+    );
+  }
 
   return (
     <div style={containerStyle}>
@@ -134,7 +242,7 @@ export const OwnerPortal = ({
       {showAddForm ? (
         <div className="card" style={{ padding: '2rem', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3>{editingHostel ? 'Edit Hostel Listing' : 'Create New Hostel Listing'}</h3>
+            <h3>{editingHostel ? 'Edit Hostel Details' : 'Create New Hostel Listing'}</h3>
             <button
               onClick={() => {
                 setShowAddForm(false);
@@ -159,7 +267,7 @@ export const OwnerPortal = ({
               />
             </div>
 
-            <div className="form-group">
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label className="form-label">Location / Address</label>
               <input
                 type="text"
@@ -171,17 +279,37 @@ export const OwnerPortal = ({
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Price (PKR / Month)</label>
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label className="form-label">Hostel Cover Photo</label>
+              <p style={{ color: 'var(--muted)', fontSize: '0.75rem', margin: '0 0 0.5rem 0' }}>
+                💡 <em>Upload a single clear photo showing the front view or main entrance of the building.</em>
+              </p>
               <input
-                type="number"
-                className="form-input"
-                placeholder="e.g. 15000"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                required
-                min={0}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                disabled={uploading}
+                required={!photo}
+                style={{ width: '100%' }}
               />
+              {uploading && <span style={{ color: 'var(--primary)', fontSize: '0.85rem', display: 'block', marginTop: '0.25rem' }}>Uploading to Cloudflare R2...</span>}
+              {photo && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <img src={photo} alt="Hostel Cover" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
+                </div>
+              )}
+            </div>
+
+            <div className="form-group" style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                type="checkbox"
+                id="electricityBillIncluded"
+                checked={electricityBillIncluded}
+                onChange={(e) => setElectricityBillIncluded(e.target.checked)}
+              />
+              <label htmlFor="electricityBillIncluded" style={{ fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
+                Electricity Bill Included in Rent (Applies to all rooms in this hostel)
+              </label>
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -198,55 +326,38 @@ export const OwnerPortal = ({
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">Amenities (Comma separated)</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="WiFi, AC, Generator, Mess, Laundry, Parking"
-                value={amenities}
-                onChange={(e) => setAmenities(e.target.value)}
-              />
-            </div>
-
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <h4 style={{ marginBottom: '0.75rem', fontSize: '0.875rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Room Types & Availability
-              </h4>
-              <div style={roomsAvailGridStyle}>
-                <div className="form-group">
-                  <label className="form-label">Single Room (Available)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={singleAvail}
-                    onChange={(e) => setSingleAvail(e.target.value)}
-                    min={0}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">2-Sharing Room (Available)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={doubleAvail}
-                    onChange={(e) => setDoubleAvail(e.target.value)}
-                    min={0}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">3-Sharing Room (Available)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={tripleAvail}
-                    onChange={(e) => setTripleAvail(e.target.value)}
-                    min={0}
-                  />
-                </div>
+              <label className="form-label" style={{ marginBottom: '0.75rem' }}>Amenities (Select all that apply)</label>
+              <div style={amenityTagsGridStyle}>
+                {BUILTIN_AMENITIES.map((amenity) => {
+                  const isChecked = selectedAmenities.includes(amenity);
+                  return (
+                    <div
+                      key={amenity}
+                      onClick={() => handleAmenityToggle(amenity)}
+                      style={amenityTagStyle(isChecked)}
+                    >
+                      <span>{amenity}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+            <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              {editingHostel && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ marginRight: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                  onClick={() => {
+                    setSelectedHostelForRooms(editingHostel);
+                    setShowAddForm(false);
+                    resetForm();
+                  }}
+                >
+                  <ListPlus size={14} /> Edit Rooms
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -258,7 +369,7 @@ export const OwnerPortal = ({
                 Cancel
               </button>
               <button type="submit" className="btn btn-primary">
-                {editingHostel ? 'Save Changes' : 'Publish Listing'}
+                {editingHostel ? 'Save Changes' : 'Next: Add Rooms'}
               </button>
             </div>
           </form>
@@ -280,15 +391,15 @@ export const OwnerPortal = ({
             <div style={gridStyle}>
               {myHostels.map((hostel) => (
                 <div key={hostel.id} className="card" style={hostelCardStyle}>
-                  <img src={hostel.images[0]} alt={hostel.name} style={imageStyle} />
-                  <div style={{ padding: '1.25rem' }}>
+                  <img src={hostel.photo} alt={hostel.name} style={imageStyle} />
+                  <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <h4 style={{ fontSize: '1.125rem' }}>{hostel.name}</h4>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
                           onClick={() => handleEditClick(hostel)}
                           style={actionButtonStyle}
-                          title="Edit Listing"
+                          title="Edit Details"
                         >
                           <Edit2 size={14} />
                         </button>
@@ -307,28 +418,47 @@ export const OwnerPortal = ({
                         <MapPin size={14} />
                         <span>{hostel.location}</span>
                       </div>
-                      <div style={metaItemStyle}>
-                        <DollarSign size={14} />
-                        <span>{hostel.price.toLocaleString()} / month</span>
-                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                      <span style={{
+                        fontSize: '0.7rem',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontWeight: 600,
+                        backgroundColor: hostel.isVerified ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                        color: hostel.isVerified ? 'var(--success)' : '#d97706',
+                        border: '1px solid ' + (hostel.isVerified ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)'),
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}>
+                        {hostel.isVerified ? '✓ Verified Listing' : '⏳ Pending Verification'}
+                      </span>
                     </div>
 
                     <p style={descStyle}>{hostel.description}</p>
 
-                    <div style={roomTypesGroupStyle}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>
-                        Availability:
-                      </span>
-                      <div style={roomBadgesStyle}>
-                        {hostel.rooms.map((room) => (
-                          <div key={room.sharingType} style={roomBadgeStyle}>
-                            <span style={{ fontWeight: 500 }}>{room.sharingType}:</span>{' '}
-                            <span style={{ color: room.available > 0 ? 'var(--success)' : 'var(--danger)' }}>
-                              {room.available} left
-                            </span>
-                          </div>
-                        ))}
+                    {hostel.rooms && hostel.rooms.length === 0 && (
+                      <div style={warningBannerStyle}>
+                        <Info size={14} />
+                        <span>Needs Rooms to be Verified</span>
                       </div>
+                    )}
+
+                    <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600 }}>Rent:</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{getPriceRangeString(hostel)}</span>
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedHostelForRooms(hostel)}
+                        className="btn btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                      >
+                        <ListPlus size={14} /> Rooms ({hostel.rooms?.length || 0})
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -337,6 +467,8 @@ export const OwnerPortal = ({
           )}
         </div>
       )}
+
+      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
   );
 };
@@ -362,12 +494,24 @@ const formGridStyle: React.CSSProperties = {
   gap: '1.25rem',
 };
 
-const roomsAvailGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: '1rem',
-  marginTop: '0.5rem',
+const amenityTagsGridStyle: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '0.5rem',
 };
+
+const amenityTagStyle = (isSelected: boolean): React.CSSProperties => ({
+  padding: '0.5rem 1rem',
+  borderRadius: 'var(--radius)',
+  border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
+  backgroundColor: isSelected ? 'var(--secondary)' : 'var(--card)',
+  color: isSelected ? 'var(--foreground)' : 'var(--muted)',
+  fontSize: '0.875rem',
+  fontWeight: 500,
+  cursor: 'pointer',
+  transition: 'var(--transition)',
+  userSelect: 'none',
+});
 
 const listContainerStyle: React.CSSProperties = {
   marginTop: '0.5rem',
@@ -439,25 +583,16 @@ const descStyle: React.CSSProperties = {
   overflow: 'hidden',
 };
 
-const roomTypesGroupStyle: React.CSSProperties = {
-  borderTop: '1px solid var(--border)',
-  paddingTop: '0.75rem',
+const warningBannerStyle: React.CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-};
-
-const roomBadgesStyle: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.5rem',
-};
-
-const roomBadgeStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  padding: '0.25rem 0.5rem',
+  alignItems: 'center',
+  gap: '0.35rem',
+  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  border: '1px solid rgba(239, 68, 68, 0.2)',
+  padding: '0.5rem',
   borderRadius: 'var(--radius)',
-  backgroundColor: 'var(--secondary)',
-  color: 'var(--secondary-foreground)',
-  border: '1px solid var(--border)',
+  color: 'var(--destructive)',
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  marginBottom: '1rem',
 };

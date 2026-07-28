@@ -1,6 +1,7 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Building, User, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react';
+import { Building, User, Lock, Mail, AlertCircle, CheckCircle, Phone } from 'lucide-react';
 
 export const RegisterOwner = () => {
   const { token } = useParams<{ token: string }>();
@@ -9,6 +10,7 @@ export const RegisterOwner = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   
   const [verifying, setVerifying] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
@@ -19,7 +21,7 @@ export const RegisterOwner = () => {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/auth/verify-invite/${token}`);
+        const response = await fetch(`${API_BASE_URL}/auth/verify-invite/${token}`);
         const data = await response.json();
         
         if (!response.ok) {
@@ -50,7 +52,7 @@ export const RegisterOwner = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/register-owner', {
+      const response = await fetch(`${API_BASE_URL}/auth/register-owner`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,6 +61,7 @@ export const RegisterOwner = () => {
           token,
           name,
           password,
+          phone,
         }),
       });
 
@@ -171,6 +174,22 @@ export const RegisterOwner = () => {
                   style={inputStyle}
                   required
                   minLength={6}
+                />
+              </div>
+            </div>
+
+            <div style={inputGroupStyle}>
+              <label style={labelStyle}>Phone Number</label>
+              <div style={inputWrapperStyle}>
+                <Phone size={18} style={iconStyle} />
+                <input
+                  type="tel"
+                  placeholder="e.g. +923001234567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="form-input auth-input"
+                  style={inputStyle}
+                  required
                 />
               </div>
             </div>

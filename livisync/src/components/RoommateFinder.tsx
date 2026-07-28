@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { User, MatchRequest } from '../types';
+import type { User, MatchRequest, Hostel } from '../types';
 import { calculateCompatibility } from '../utils';
 import { SlidersHorizontal, MessageSquarePlus, ShieldAlert, X, Check, MapPin, UserCheck } from 'lucide-react';
 
@@ -10,6 +10,7 @@ interface RoommateFinderProps {
   onSendRequest: (receiverId: string, message: string) => void;
   onBlockUser: (targetId: string) => void;
   onReportUser: (targetId: string, reason: string, description: string) => void;
+  hostels: Hostel[];
 }
 
 export const RoommateFinder = ({
@@ -19,11 +20,13 @@ export const RoommateFinder = ({
   onSendRequest,
   onBlockUser,
   onReportUser,
+  hostels,
 }: RoommateFinderProps) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [filterSleep, setFilterSleep] = useState<string>('all');
   const [filterCleanliness, setFilterCleanliness] = useState<string>('all');
   const [filterGender, setFilterGender] = useState<string>('all');
+  const [filterHostel, setFilterHostel] = useState<string>('all');
   const [maxBudget, setMaxBudget] = useState<number>(200000);
   
   // Connection and Report states
@@ -53,8 +56,9 @@ export const RoommateFinder = ({
       const matchesClean = filterCleanliness === 'all' || u.preferences.cleanliness === filterCleanliness;
       const matchesGender = filterGender === 'all' || u.gender === filterGender;
       const matchesBudget = u.budget <= maxBudget;
+      const matchesHostel = filterHostel === 'all' || u.hostelId === filterHostel;
 
-      return matchesSleep && matchesClean && matchesGender && matchesBudget;
+      return matchesSleep && matchesClean && matchesGender && matchesBudget && matchesHostel;
     })
     .map((u) => ({
       ...u,
@@ -162,6 +166,18 @@ export const RoommateFinder = ({
               <option value="meticulous">Meticulous</option>
               <option value="moderate">Moderate</option>
               <option value="relaxed">Relaxed</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '0.75rem' }}>Current Hostel</label>
+            <select className="form-select" value={filterHostel} onChange={(e) => setFilterHostel(e.target.value)}>
+              <option value="all">Any Hostel</option>
+              {hostels.map((hostel) => (
+                <option key={hostel.id} value={hostel.id}>
+                  {hostel.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>

@@ -6,7 +6,7 @@ export interface Preferences {
   guestTolerance: 'rarely' | 'weekends' | 'anytime';
 }
 
-export interface User {
+export interface Student {
   id: string;
   name: string;
   email: string;
@@ -16,30 +16,86 @@ export interface User {
   bio: string;
   budget: number; // monthly max budget
   location: string; // e.g. Lahore, Islamabad
-  role: 'student' | 'admin' | 'owner';
+  role: 'student';
   status: 'active' | 'suspended';
   preferences: Preferences;
   blockedUsers: string[]; // user IDs blocked by this user
   occupation?: 'student' | 'job';
   institution?: string;
   company?: string;
+  phone?: string;
+  hostelId?: string;
+}
+
+export interface Owner {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'owner';
+  status: 'active' | 'suspended';
+  age?: number;
+  gender?: 'male' | 'female' | 'other';
+  photo?: string;
+  bio?: string;
+  budget?: number;
+  location?: string;
+  preferences?: Preferences;
+  blockedUsers?: string[];
+  occupation?: 'student' | 'job';
+  institution?: string;
+  company?: string;
+  hostelId?: string;
+}
+
+export interface Admin {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin';
+  status?: 'active' | 'suspended';
+  age?: number;
+  gender?: 'male' | 'female' | 'other';
+  photo?: string;
+  bio?: string;
+  budget?: number;
+  location?: string;
+  preferences?: Preferences;
+  blockedUsers?: string[];
+  occupation?: 'student' | 'job';
+  institution?: string;
+  company?: string;
+  phone?: string;
+  hostelId?: string;
+}
+
+export type User = Student | Owner | Admin;
+
+export interface Room {
+  id: string;
+  hostelId: string;
+  sharingType: 'single' | 'double' | 'triple' | 'quad' | 'penta';
+  price: number;
+  seatsAvailable: number;
+  floor: string;
+  hasAttachedBathroom: boolean;
+  furniture: 'bed' | 'mattress' | 'nothing';
+  images: string[];
+  description?: string;
 }
 
 export interface Hostel {
   id: string;
   name: string;
   location: string;
-  price: number; // monthly rent
   description: string;
-  images: string[];
+  photo?: string;
+  electricityBillIncluded: boolean;
   amenities: string[];
   ownerId?: string;
   isVerified: boolean;
-  rooms: {
-    sharingType: 'single' | 'double' | 'triple';
-    available: number;
-  }[];
-  currentOccupants: string[]; // user IDs currently staying
+  rooms: Room[];
+  currentOccupants?: string[];
 }
 
 export interface MatchRequest {
@@ -48,7 +104,7 @@ export interface MatchRequest {
   receiverId: string;
   status: 'pending' | 'accepted' | 'declined';
   message: string;
-  timestamp: string;
+  created_at: string;
 }
 
 export interface Message {
@@ -66,5 +122,5 @@ export interface Report {
   reason: 'fake-profile' | 'harassment' | 'spam' | 'other';
   description: string;
   status: 'pending' | 'resolved';
-  timestamp: string;
+  created_at: string;
 }
