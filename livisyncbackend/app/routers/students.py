@@ -33,9 +33,17 @@ class BlockRequest(BaseModel):
 
 @router.get("/roommates", response_model=List[StudentOut])
 def get_roommates(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    # Find all user IDs involved in a block with current_user (either blocker or blocked)
+    blocked_ids_query = db.query(BlockedUser.blocked_user_id).filter(BlockedUser.user_id == current_user.id).all()
+    blockers_ids_query = db.query(BlockedUser.user_id).filter(BlockedUser.blocked_user_id == current_user.id).all()
+    
+    exclude_ids = [current_user.id]
+    exclude_ids.extend([b[0] for b in blocked_ids_query])
+    exclude_ids.extend([b[0] for b in blockers_ids_query])
+    
     return db.query(Student).filter(
         Student.status == "active",
-        Student.id != current_user.id
+        ~Student.id.in_(exclude_ids)
     ).all()
 
 @router.put("/profile")
