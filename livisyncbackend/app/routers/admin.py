@@ -184,7 +184,7 @@ def toggle_user_status(role: str, user_id: uuid.UUID, req: StatusToggleRequest, 
     db.commit()
     return {"message": f"User status updated to {req.status} successfully."}
 
-@router.get("/hostels", response_model=List[HostelOut])
+@router.get("/hostels")
 def get_all_hostels(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
     return db.query(Hostel).all()
 
