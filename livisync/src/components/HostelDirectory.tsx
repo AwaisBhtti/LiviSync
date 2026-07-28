@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Hostel, User } from '../types';
 import { Search, MapPin, Check, ArrowLeft } from 'lucide-react';
 import { ImageLightbox } from './ImageLightbox';
+import { BUILTIN_AMENITIES } from './Amenities';
 
 interface HostelDirectoryProps {
   hostels: Hostel[];
@@ -52,10 +53,8 @@ export const HostelDirectory = ({
     }
   };
 
-  // Find all unique amenities for filters
-  const allAmenities = Array.from(
-    new Set(hostels.flatMap((h) => h.amenities))
-  );
+  // Use all built-in amenities for filters
+  const allAmenities = BUILTIN_AMENITIES;
 
   // Filter hostels
   const filteredHostels = hostels.filter((hostel) => {
