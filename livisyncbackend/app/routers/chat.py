@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from ..database import get_db
 from ..models import Student, MatchRequest, Message
 from ..auth import get_current_user
@@ -95,3 +95,23 @@ def get_chat_history(peer_id: uuid.UUID, db: Session = Depends(get_db), current_
         }
         for m in messages
     ]
+
+
+@router.get("/unread-count")
+def get_unread_count(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    count = db.query(func.count(Message.sender_id.distinct())).filter(
+        Message.receiver_id == current_user.id,
+        Message.is_read == False
+    ).scalar()
+    return {"count": count}
+
+
+@router.post("/read/{sender_id}")
+def mark_as_read(sender_id: uuid.UUID, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    db.query(Message).filter(
+        Message.sender_id == sender_id,
+        Message.receiver_id == current_user.id,
+        Message.is_read == False
+    ).update({Message.is_read: True})
+    db.commit()
+    return {"message": "Messages marked as read"}

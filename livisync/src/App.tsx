@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import type { User, Hostel, Report, Student, Owner, Admin } from './types';
 import { Navbar } from './components/Navbar';
@@ -48,6 +48,7 @@ import {
   deleteUser,
   warnUser,
 } from './store/slices/adminSlice';
+import { supabase } from './supabase';
 import { API_BASE_URL } from './config';
 
 export default function App() {
@@ -60,6 +61,8 @@ export default function App() {
   const { matchRequests, loading: matchesLoading } = useAppSelector((state) => state.matches);
   const { users: adminUsers, reports, loading: adminLoading } = useAppSelector((state) => state.admin);
 
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+
   const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading;
 
   // Sync active user session
@@ -68,6 +71,76 @@ export default function App() {
       dispatch(fetchCurrentUser(token));
     }
   }, [token, dispatch]);
+
+  const fetchUnreadCount = async () => {
+    if (!token || !currentUser || currentUser.role !== 'student') return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/chat/unread-count`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadMessagesCount(data.count);
+      }
+    } catch (err) {
+      console.error("Error fetching unread count:", err);
+    }
+  };
+
+  // Fetch unread messages count on token/user change
+  useEffect(() => {
+    if (token && currentUser && currentUser.role === 'student') {
+      fetchUnreadCount();
+    } else {
+      setUnreadMessagesCount(0);
+    }
+  }, [token, currentUser]);
+
+  // Global Realtime listeners for connection requests AND incoming chat messages
+  useEffect(() => {
+    if (!token || !currentUser || currentUser.role !== 'student') return;
+
+    const supabaseToken = (currentUser as Student).supabaseToken;
+    if (supabaseToken) {
+      supabase.realtime.setAuth(supabaseToken);
+    }
+
+    // Subscribe to match requests changes
+    const matchChannel = supabase
+      .channel('match-requests-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'match_requests' },
+        (payload) => {
+          const row = (payload.new || payload.old) as any;
+          if (row && (row.sender_id === currentUser.id || row.receiver_id === currentUser.id)) {
+            dispatch(fetchMatches({ token, role: currentUser.role }));
+            dispatch(fetchRoommates(token));
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to messages changes to update the unread notification badge dynamically
+    const msgChannel = supabase
+      .channel('messages-realtime-badge')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
+          const newMsg = payload.new as any;
+          if (newMsg && newMsg.receiver_id === currentUser.id) {
+            fetchUnreadCount();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(matchChannel);
+      supabase.removeChannel(msgChannel);
+    };
+  }, [token, currentUser, dispatch]);
 
   // Fetch relevant directory data once authenticated
   useEffect(() => {
@@ -192,6 +265,26 @@ export default function App() {
       alert('Match request cancelled.');
     } catch (err: any) {
       alert(err.message || 'Error cancelling request');
+    }
+  };
+
+  const handleUnfriend = async (reqId: string) => {
+    if (!currentUser || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/matches/${reqId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to unfriend');
+      }
+      dispatch(setMatchesState(matchRequests.filter((r) => r.id !== reqId)));
+      alert('Roommate unfriended successfully.');
+    } catch (err: any) {
+      alert(err.message || 'Error unfriending');
     }
   };
 
@@ -427,7 +520,7 @@ export default function App() {
     </div>
   );
 
-  if (token && !currentUser) {
+  if (loadingData) {
     return <SpinnerLoader />;
   }
 
@@ -475,9 +568,12 @@ export default function App() {
                 <Navbar
                   currentUser={currentUser!}
                   onLogout={handleLogout}
-                  unreadCount={matchRequests.filter(
-                    (r) => r.receiverId === currentUser!.id && r.status === 'pending'
-                  ).length}
+                  unreadMessagesCount={unreadMessagesCount}
+                  pendingRequestsCount={
+                    matchRequests.filter(
+                      (r) => r.receiverId === currentUser!.id && r.status === 'pending'
+                    ).length
+                  }
                 />
                 <main className="main-content">
                   <Outlet />
@@ -520,6 +616,9 @@ export default function App() {
                     users={displayUsers}
                     matchRequests={matchRequests}
                     onBlockUser={handleBlockUser}
+                    onMessagesRead={fetchUnreadCount}
+                    onUnfriend={handleUnfriend}
+                    onReportUser={handleReportUser}
                   />
                 }
               />
