@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MatchRequest, User, Message } from '../types';
-import { Send, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, Clock } from 'lucide-react';
 import { supabase } from '../supabase';
 import { API_BASE_URL } from '../config';
 
@@ -32,6 +32,33 @@ export const ChatModule = ({
   const [reportReason, setReportReason] = useState('other');
   const [reportDescription, setReportDescription] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const appendOrMergeMessage = (peerId: string, newMessage: Message & { status?: string }) => {
+    setMessages((prev) => {
+      const list = prev[peerId] || [];
+      if (list.some((m) => m.id === newMessage.id)) {
+        return prev;
+      }
+      const tempIndex = list.findIndex(
+        (m) =>
+          m.id.startsWith('temp-') &&
+          m.text === newMessage.text &&
+          m.senderId === newMessage.senderId
+      );
+      if (tempIndex !== -1) {
+        const newList = [...list];
+        newList[tempIndex] = newMessage;
+        return {
+          ...prev,
+          [peerId]: newList,
+        };
+      }
+      return {
+        ...prev,
+        [peerId]: [...list, newMessage],
+      };
+    });
+  };
 
   // Filter out users who are active matches (accepted status), sorted by latest message
   const activeMatches = matchRequests
@@ -147,16 +174,7 @@ export const ChatModule = ({
               timestamp: newMsg.created_at,
               read: newMsg.is_read
             };
-            setMessages((prev) => {
-              const currentChatMsgs = prev[peerId] || [];
-              if (currentChatMsgs.some(m => m.id === mappedMsg.id)) {
-                return prev;
-              }
-              return {
-                ...prev,
-                [peerId]: [...currentChatMsgs, mappedMsg]
-              };
-            });
+            appendOrMergeMessage(peerId, mappedMsg);
 
             // If we are currently inside the active chat with the sender, mark as read immediately!
             if (activeChatUserId === peerId && newMsg.receiver_id === currentUser.id) {
@@ -230,6 +248,25 @@ export const ChatModule = ({
     const textToSend = typedMessage;
     setTypedMessage('');
 
+    // Optimistic Update: append local temporary message
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: Message & { status?: string } = {
+      id: tempId,
+      senderId: currentUser.id,
+      text: textToSend,
+      timestamp: new Date().toISOString(),
+      read: false,
+      status: 'sending'
+    };
+
+    setMessages((prev) => {
+      const currentChatMsgs = prev[activeChatUserId] || [];
+      return {
+        ...prev,
+        [activeChatUserId]: [...currentChatMsgs, optimisticMsg]
+      };
+    });
+
     try {
       const response = await fetch(`${API_BASE_URL}/chat/messages`, {
         method: 'POST',
@@ -246,8 +283,27 @@ export const ChatModule = ({
         const errData = await response.json();
         throw new Error(errData.detail || 'Failed to send message');
       }
+      const data = await response.json();
+      const realMsg: Message & { status?: string } = {
+        id: data.id,
+        senderId: data.senderId,
+        text: data.text,
+        timestamp: data.timestamp,
+        read: data.read || false,
+        status: 'sent'
+      };
+      // Merge: Replace optimistic message with the delivered one
+      appendOrMergeMessage(activeChatUserId, realMsg);
     } catch (err: any) {
       alert(err.message || 'Error sending message');
+      // If error occurs, remove optimistic message
+      setMessages((prev) => {
+        const currentChatMsgs = prev[activeChatUserId] || [];
+        return {
+          ...prev,
+          [activeChatUserId]: currentChatMsgs.filter(m => m.id !== tempId)
+        };
+      });
     }
   };
 
@@ -372,6 +428,9 @@ export const ChatModule = ({
                               hour: '2-digit',
                               minute: '2-digit',
                             })}
+                            {(msg as any).status === 'sending' && (
+                              <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
+                            )}
                           </span>
                         </div>
                       </div>
