@@ -159,6 +159,14 @@ export const ChatModule = ({
                 }
               }).then(() => {
                 onMessagesRead();
+                setMessages((prev) => {
+                  const peerChatMsgs = prev[activeChatUserId] || [];
+                  const updated = peerChatMsgs.map(m => m.senderId === activeChatUserId ? { ...m, read: true } : m);
+                  return {
+                    ...prev,
+                    [activeChatUserId]: updated
+                  };
+                });
               }).catch(err => console.error(err));
             }
           }
@@ -185,6 +193,14 @@ export const ChatModule = ({
         });
         if (res.ok) {
           onMessagesRead();
+          setMessages((prev) => {
+            const peerChatMsgs = prev[activeChatUserId] || [];
+            const updated = peerChatMsgs.map(m => m.senderId === activeChatUserId ? { ...m, read: true } : m);
+            return {
+              ...prev,
+              [activeChatUserId]: updated
+            };
+          });
         }
       } catch (err) {
         console.error("Error marking messages as read:", err);
