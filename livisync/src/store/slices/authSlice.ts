@@ -66,7 +66,8 @@ export const fetchCurrentUser = createAsyncThunk(
             pets: data.preferences?.pets || 'no',
             guestTolerance: data.preferences?.guest_tolerance || 'weekends'
           },
-          blockedUsers: blockedUsers
+          blockedUsers: blockedUsers,
+          supabaseToken: data.supabase_token
         };
         return mappedUser;
       } else if (role === 'owner') {

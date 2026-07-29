@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Student, Owner, Admin, Preferences, InviteToken
 from ..schemas import StudentCreate, StudentOut, Token, OwnerRegister, OwnerOut, AdminOut
-from ..auth import get_password_hash, verify_password, create_access_token, get_current_user
+from ..auth import get_password_hash, verify_password, create_access_token, get_current_user, create_supabase_token
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Union
 
@@ -98,9 +98,11 @@ def login(login_in: LoginRequest, db: Session = Depends(get_db)):
 def get_me(current_user: Union[Student, Owner, Admin] = Depends(get_current_user)):
     # Return formatted profile based on type
     if isinstance(current_user, Student):
+        sb_token = create_supabase_token(str(current_user.id), current_user.email)
         return {
             "id": current_user.id,
             "email": current_user.email,
+            "supabase_token": sb_token,
             "profile": {
                 "id": current_user.id,
                 "name": current_user.name,

@@ -23,4 +23,9 @@ class Settings:
     R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "")
     R2_PUBLIC_CUSTOM_DOMAIN: str = os.getenv("R2_PUBLIC_CUSTOM_DOMAIN", "")
 
+    # Supabase Realtime Configurations
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
+    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
+
 settings = Settings()

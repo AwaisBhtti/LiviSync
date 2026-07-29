@@ -32,3 +32,4 @@ livisync/*.local
 
 #env
 livisyncbackend/.env
+livisync/.env
