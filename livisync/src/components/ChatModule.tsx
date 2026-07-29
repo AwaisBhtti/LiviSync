@@ -312,9 +312,9 @@ export const ChatModule = ({
   };
 
   return (
-    <div style={containerStyle}>
-      {/* Wrap everything in a single unified dashboard card */}
-      <div className="card" style={{ ...chatGridStyle, height: '100%' }}>
+    <div style={containerStyle} className="auth-chat-container">
+      {/* Wrap everything in a single unified dashboard */}
+      <div style={{ ...chatGridStyle, height: '100%' }}>
         {/* Left Side: Inbox Lists (Active Chats Only) */}
         <div style={inboxListStyle(!!activeChatUserId)}>
           {/* Section: Active Chats */}
@@ -721,7 +721,8 @@ export const ChatModule = ({
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  height: 'calc(100vh - 120px)',
+  height: 'calc(100vh - 74px)',
+  width: '100%',
 };
 
 const chatGridStyle: React.CSSProperties = {

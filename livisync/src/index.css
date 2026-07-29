@@ -319,3 +319,11 @@ a {
     display: none !important;
   }
 }
+
+/* Full screen chat layout breakout */
+.main-content:has(.auth-chat-container) {
+  padding: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
