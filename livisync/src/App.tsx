@@ -596,6 +596,7 @@ export default function App() {
                     matchRequests={matchRequests}
                     onBlockUser={handleBlockUser}
                     onMessagesRead={fetchUnreadCount}
+                    onUnfriend={handleDeclineRequest}
                   />
                 }
               />
