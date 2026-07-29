@@ -22,16 +22,26 @@ export const ChatModule = ({
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [typedMessage, setTypedMessage] = useState('');
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Filter out users who are active matches (accepted status)
+  // Filter out users who are active matches (accepted status), sorted by latest message
   const activeMatches = matchRequests
     .filter((r) => r.status === 'accepted' && (r.senderId === currentUser.id || r.receiverId === currentUser.id))
     .map((r) => {
       const matchId = r.senderId === currentUser.id ? r.receiverId : r.senderId;
       return users.find((u) => u.id === matchId);
     })
-    .filter((u): u is User => !!u && !currentUser.blockedUsers.includes(u.id));
+    .filter((u): u is User => !!u && !currentUser.blockedUsers.includes(u.id))
+    .sort((a, b) => {
+      const msgsA = messages[a.id] || [];
+      const msgsB = messages[b.id] || [];
+      const lastMsgA = msgsA[msgsA.length - 1];
+      const lastMsgB = msgsB[msgsB.length - 1];
+      const timeA = lastMsgA ? new Date(lastMsgA.timestamp).getTime() : 0;
+      const timeB = lastMsgB ? new Date(lastMsgB.timestamp).getTime() : 0;
+      return timeB - timeA;
+    });
 
   // Set Auth token for Supabase Realtime connection
   useEffect(() => {
@@ -69,10 +79,20 @@ export const ChatModule = ({
   const activeMatchesIds = activeMatches.map(m => m.id).join(',');
   // Load initial chat history for all active matches so last message preview works
   useEffect(() => {
-    if (activeMatches.length === 0) return;
+    if (activeMatches.length === 0) {
+      setLoadingHistory(false);
+      return;
+    }
     
+    let loadedCount = 0;
     activeMatches.forEach(matchUser => {
-      if (messages[matchUser.id]) return; // already loaded
+      if (messages[matchUser.id]) {
+        loadedCount++;
+        if (loadedCount === activeMatches.length) {
+          setLoadingHistory(false);
+        }
+        return; // already loaded
+      }
       
       const fetchMatchHistory = async () => {
         try {
@@ -90,6 +110,11 @@ export const ChatModule = ({
           }
         } catch (err) {
           console.error("Error pre-fetching chat history:", err);
+        } finally {
+          loadedCount++;
+          if (loadedCount === activeMatches.length) {
+            setLoadingHistory(false);
+          }
         }
       };
       fetchMatchHistory();
@@ -249,7 +274,9 @@ export const ChatModule = ({
                           fontWeight: hasUnread ? 600 : 400,
                           color: hasUnread ? 'var(--foreground)' : 'var(--muted)'
                         }}>
-                          {messages[matchUser.id]?.[messages[matchUser.id].length - 1]?.text || 'No messages yet. Say hi!'}
+                          {loadingHistory
+                            ? 'Loading messages...'
+                            : (messages[matchUser.id]?.[messages[matchUser.id].length - 1]?.text || 'No messages yet. Say hi!')}
                         </p>
                       </div>
                     </div>

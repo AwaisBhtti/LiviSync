@@ -500,7 +500,7 @@ export default function App() {
     </div>
   );
 
-  if (token && !currentUser) {
+  if (loadingData) {
     return <SpinnerLoader />;
   }
 

@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from ..database import get_db
 from ..models import Student, MatchRequest, Message
 from ..auth import get_current_user
@@ -99,10 +99,10 @@ def get_chat_history(peer_id: uuid.UUID, db: Session = Depends(get_db), current_
 
 @router.get("/unread-count")
 def get_unread_count(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
-    count = db.query(Message.sender_id).filter(
+    count = db.query(func.count(Message.sender_id.distinct())).filter(
         Message.receiver_id == current_user.id,
         Message.is_read == False
-    ).distinct().count()
+    ).scalar()
     return {"count": count}
 
 
