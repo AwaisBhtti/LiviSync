@@ -5,13 +5,15 @@ import type { User as UserType } from '../types';
 interface NavbarProps {
   currentUser: UserType;
   onLogout: () => void;
-  unreadCount: number;
+  unreadMessagesCount: number;
+  pendingRequestsCount: number;
 }
 
 export const Navbar = ({
   currentUser,
   onLogout,
-  unreadCount,
+  unreadMessagesCount,
+  pendingRequestsCount,
 }: NavbarProps) => {
   const location = useLocation();
   const currentPath = location.pathname;
@@ -42,6 +44,7 @@ export const Navbar = ({
                 >
                   <Users size={16} />
                   Roommates
+                  {pendingRequestsCount > 0 && <span style={unreadBadgeStyle}>{pendingRequestsCount}</span>}
                 </Link>
                 <Link
                   to="/chats"
@@ -49,7 +52,7 @@ export const Navbar = ({
                 >
                   <MessageSquare size={16} />
                   Inbox
-                  {unreadCount > 0 && <span style={unreadBadgeStyle}>{unreadCount}</span>}
+                  {unreadMessagesCount > 0 && <span style={unreadBadgeStyle}>{unreadMessagesCount}</span>}
                 </Link>
               </>
             )}
@@ -109,7 +112,10 @@ export const Navbar = ({
               to="/roommates"
               style={mobileTabButtonStyle(currentPath === '/roommates')}
             >
-              <Users size={20} />
+              <div style={{ position: 'relative' }}>
+                <Users size={20} />
+                {pendingRequestsCount > 0 && <span style={mobileUnreadBadgeStyle}>{pendingRequestsCount}</span>}
+              </div>
               <span style={mobileTabTextStyle}>Roommates</span>
             </Link>
             <Link
@@ -118,7 +124,7 @@ export const Navbar = ({
             >
               <div style={{ position: 'relative' }}>
                 <MessageSquare size={20} />
-                {unreadCount > 0 && <span style={mobileUnreadBadgeStyle}>{unreadCount}</span>}
+                {unreadMessagesCount > 0 && <span style={mobileUnreadBadgeStyle}>{unreadMessagesCount}</span>}
               </div>
               <span style={mobileTabTextStyle}>Inbox</span>
             </Link>

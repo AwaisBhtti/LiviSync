@@ -568,10 +568,11 @@ export default function App() {
                 <Navbar
                   currentUser={currentUser!}
                   onLogout={handleLogout}
-                  unreadCount={
+                  unreadMessagesCount={unreadMessagesCount}
+                  pendingRequestsCount={
                     matchRequests.filter(
                       (r) => r.receiverId === currentUser!.id && r.status === 'pending'
-                    ).length + unreadMessagesCount
+                    ).length
                   }
                 />
                 <main className="main-content">
