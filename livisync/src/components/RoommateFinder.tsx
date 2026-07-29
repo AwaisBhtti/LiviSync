@@ -599,31 +599,39 @@ const headerStyle: React.CSSProperties = {
   backgroundColor: 'var(--card)',
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius)',
-  padding: '2rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-};
-
-const candidateCardStyle: React.CSSProperties = {
-  padding: '1.25rem',
-  cursor: 'pointer',
+  padding: '2.5rem 2rem',
   display: 'flex',
   flexDirection: 'column',
   gap: '0.75rem',
+};
+
+const candidateCardStyle: React.CSSProperties = {
+  padding: '1.5rem',
+  cursor: 'pointer',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1rem',
+  background: 'var(--gradient-card)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  boxShadow: 'var(--shadow)',
+  transition: 'var(--transition)',
 };
 
 const cardHeaderStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
   gap: '0.75rem',
 };
 
 const avatarStyle: React.CSSProperties = {
-  width: '44px',
-  height: '44px',
+  width: '52px',
+  height: '52px',
   borderRadius: '50%',
   objectFit: 'cover',
+  boxShadow: '0 4px 10px rgba(99, 102, 241, 0.1)',
+  border: '2px solid white',
 };
 
 const scoreCircleStyle = (score: number): React.CSSProperties => {
@@ -634,23 +642,26 @@ const scoreCircleStyle = (score: number): React.CSSProperties => {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '48px',
-    height: '48px',
+    width: '52px',
+    height: '52px',
     borderRadius: '50%',
-    border: `2px solid ${isHigh ? 'var(--success)' : isMid ? '#fef3c7' : 'var(--border)'}`,
+    border: `3px solid ${isHigh ? 'var(--success)' : isMid ? '#fbbf24' : 'var(--border)'}`,
     color: isHigh ? 'var(--success)' : isMid ? '#d97706' : 'var(--muted)',
     backgroundColor: isHigh ? 'var(--success-bg)' : isMid ? '#fffbeb' : 'var(--muted-bg)',
+    fontWeight: 700,
+    fontSize: '0.9rem',
+    boxShadow: isHigh ? '0 0 12px rgba(16, 185, 129, 0.1)' : isMid ? '0 0 12px rgba(251, 191, 36, 0.1)' : 'none',
   };
 };
 
 const bioTextStyle: React.CSSProperties = {
-  fontSize: '0.85rem',
+  fontSize: '0.875rem',
   color: 'var(--muted)',
   overflow: 'hidden',
   display: '-webkit-box',
   WebkitLineClamp: 2,
   WebkitBoxOrient: 'vertical',
-  lineHeight: '1.45',
+  lineHeight: '1.5',
 };
 
 const cardFooterStyle: React.CSSProperties = {
@@ -659,8 +670,8 @@ const cardFooterStyle: React.CSSProperties = {
   alignItems: 'center',
   marginTop: '0.5rem',
   borderTop: '1px solid var(--border)',
-  paddingTop: '0.75rem',
- };
+  paddingTop: '1rem',
+};
 
 // Modal styles
 const modalOverlayStyle: React.CSSProperties = {
@@ -669,7 +680,7 @@ const modalOverlayStyle: React.CSSProperties = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  backgroundColor: 'rgba(15, 23, 42, 0.4)',
   backdropFilter: 'blur(8px)',
   display: 'flex',
   alignItems: 'center',
@@ -683,26 +694,38 @@ const modalContentStyle: React.CSSProperties = {
   width: '100%',
   maxHeight: '90vh',
   overflowY: 'auto',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+  boxShadow: 'var(--shadow-lg)',
+  borderRadius: 'var(--radius)',
+  border: '1px solid var(--border)',
+  background: 'var(--gradient-card)',
+  backdropFilter: 'blur(16px)',
 };
 
 const connectModalContentStyle: React.CSSProperties = {
   maxWidth: '450px',
   width: '100%',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+  boxShadow: 'var(--shadow-lg)',
+  borderRadius: 'var(--radius)',
+  border: '1px solid var(--border)',
+  background: 'var(--gradient-card)',
+  backdropFilter: 'blur(16px)',
 };
 
 const reportModalContentStyle: React.CSSProperties = {
   maxWidth: '450px',
   width: '100%',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+  boxShadow: 'var(--shadow-lg)',
+  borderRadius: 'var(--radius)',
+  border: '1px solid var(--border)',
+  background: 'var(--gradient-card)',
+  backdropFilter: 'blur(16px)',
 };
 
 const modalHeaderStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  padding: '1.25rem 1.5rem',
+  padding: '1.5rem 1.75rem',
   borderBottom: '1px solid var(--border)',
 };
 
@@ -711,27 +734,33 @@ const closeBtnStyle: React.CSSProperties = {
   border: 'none',
   cursor: 'pointer',
   color: 'var(--muted)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'var(--transition)',
 };
 
 const modalBodyStyle: React.CSSProperties = {
-  padding: '1.5rem',
+  padding: '1.75rem',
 };
 
 const profileSummaryCardStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1rem',
-  backgroundColor: 'var(--background)',
+  gap: '1.25rem',
+  backgroundColor: 'rgba(248, 250, 252, 0.6)',
   border: '1px solid var(--border)',
-  padding: '1rem',
-  borderRadius: 'var(--radius)',
+  padding: '1.25rem',
+  borderRadius: 'var(--radius-sm)',
 };
 
 const modalAvatarStyle: React.CSSProperties = {
-  width: '64px',
-  height: '64px',
+  width: '72px',
+  height: '72px',
   borderRadius: '50%',
   objectFit: 'cover',
+  border: '2px solid white',
+  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.1)',
 };
 
 const modalScoreStyle = (score: number): React.CSSProperties => {
@@ -739,47 +768,48 @@ const modalScoreStyle = (score: number): React.CSSProperties => {
   const isMid = score >= 50;
   return {
     textAlign: 'center',
-    padding: '0.5rem 1rem',
-    borderRadius: 'var(--radius)',
+    padding: '0.625rem 1.25rem',
+    borderRadius: 'var(--radius-sm)',
     border: `1px solid ${isHigh ? 'var(--success)' : isMid ? '#fbbf24' : 'var(--border)'}`,
     color: isHigh ? 'var(--success)' : isMid ? '#d97706' : 'var(--muted)',
     backgroundColor: isHigh ? 'var(--success-bg)' : isMid ? '#fffbeb' : 'var(--muted-bg)',
+    fontWeight: 700,
   };
 };
 
 const prefGridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-  gap: '0.75rem',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+  gap: '0.875rem',
   marginTop: '0.5rem',
 };
 
 const prefTagStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
-  padding: '0.5rem 0.75rem',
+  padding: '0.625rem 1rem',
   border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  fontSize: '0.8rem',
-  backgroundColor: 'var(--background)',
+  borderRadius: 'var(--radius-sm)',
+  fontSize: '0.85rem',
+  backgroundColor: 'rgba(255, 255, 255, 0.8)',
 };
 
 const alertSuccessStyle: React.CSSProperties = {
   backgroundColor: 'var(--success-bg)',
   color: 'var(--success)',
-  padding: '0.875rem 1rem',
-  borderRadius: 'var(--radius)',
-  fontSize: '0.85rem',
-  fontWeight: 500,
+  padding: '1rem 1.25rem',
+  borderRadius: 'var(--radius-sm)',
+  fontSize: '0.875rem',
+  fontWeight: 600,
   border: '1px solid rgba(16, 185, 129, 0.2)',
 };
 
 const alertPendingStyle: React.CSSProperties = {
   backgroundColor: '#fffbeb',
   color: '#d97706',
-  padding: '0.875rem 1rem',
-  borderRadius: 'var(--radius)',
-  fontSize: '0.85rem',
-  fontWeight: 500,
-  border: '1px solid rgba(217, 119, 6, 0.2)',
+  padding: '1rem 1.25rem',
+  borderRadius: 'var(--radius-sm)',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  border: '1px solid rgba(251, 191, 36, 0.2)',
 };

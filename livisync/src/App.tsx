@@ -63,7 +63,7 @@ export default function App() {
 
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
-  const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading;
+  const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading || (token !== null && currentUser === null);
 
   // Sync active user session
   useEffect(() => {
