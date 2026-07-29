@@ -268,6 +268,26 @@ export default function App() {
     }
   };
 
+  const handleUnfriend = async (reqId: string) => {
+    if (!currentUser || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/matches/${reqId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to unfriend');
+      }
+      dispatch(setMatchesState(matchRequests.filter((r) => r.id !== reqId)));
+      alert('Roommate unfriended successfully.');
+    } catch (err: any) {
+      alert(err.message || 'Error unfriending');
+    }
+  };
+
   // Handler: Block User
   const handleBlockUser = async (targetId: string) => {
     if (!currentUser || currentUser.role !== 'student' || !token) return;
@@ -596,7 +616,8 @@ export default function App() {
                     matchRequests={matchRequests}
                     onBlockUser={handleBlockUser}
                     onMessagesRead={fetchUnreadCount}
-                    onUnfriend={handleDeclineRequest}
+                    onUnfriend={handleUnfriend}
+                    onReportUser={handleReportUser}
                   />
                 }
               />
