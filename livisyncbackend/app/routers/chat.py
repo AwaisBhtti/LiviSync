@@ -95,3 +95,23 @@ def get_chat_history(peer_id: uuid.UUID, db: Session = Depends(get_db), current_
         }
         for m in messages
     ]
+
+
+@router.get("/unread-count")
+def get_unread_count(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    count = db.query(Message).filter(
+        Message.receiver_id == current_user.id,
+        Message.is_read == False
+    ).count()
+    return {"count": count}
+
+
+@router.post("/read/{sender_id}")
+def mark_as_read(sender_id: uuid.UUID, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    db.query(Message).filter(
+        Message.sender_id == sender_id,
+        Message.receiver_id == current_user.id,
+        Message.is_read == False
+    ).update({Message.is_read: True})
+    db.commit()
+    return {"message": "Messages marked as read"}

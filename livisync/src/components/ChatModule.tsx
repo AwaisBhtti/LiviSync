@@ -1,19 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MatchRequest, User, Message } from '../types';
 import { Send, ArrowLeft, MessageSquare } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../supabase';
 import { API_BASE_URL } from '../config';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface ChatModuleProps {
   currentUser: User;
   users: User[];
   matchRequests: MatchRequest[];
   onBlockUser: (targetId: string) => void;
+  onMessagesRead: () => void;
 }
 
 export const ChatModule = ({
@@ -21,11 +17,21 @@ export const ChatModule = ({
   users,
   matchRequests,
   onBlockUser,
+  onMessagesRead,
 }: ChatModuleProps) => {
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [typedMessage, setTypedMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Filter out users who are active matches (accepted status)
+  const activeMatches = matchRequests
+    .filter((r) => r.status === 'accepted' && (r.senderId === currentUser.id || r.receiverId === currentUser.id))
+    .map((r) => {
+      const matchId = r.senderId === currentUser.id ? r.receiverId : r.senderId;
+      return users.find((u) => u.id === matchId);
+    })
+    .filter((u): u is User => !!u && !currentUser.blockedUsers.includes(u.id));
 
   // Set Auth token for Supabase Realtime connection
   useEffect(() => {
@@ -60,21 +66,47 @@ export const ChatModule = ({
     fetchHistory();
   }, [activeChatUserId]);
 
-  // Subscribe to realtime message insert broadcasts from Supabase
+  const activeMatchesIds = activeMatches.map(m => m.id).join(',');
+  // Load initial chat history for all active matches so last message preview works
   useEffect(() => {
-    if (!activeChatUserId) return;
+    if (activeMatches.length === 0) return;
+    
+    activeMatches.forEach(matchUser => {
+      if (messages[matchUser.id]) return; // already loaded
+      
+      const fetchMatchHistory = async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/chat/history/${matchUser.id}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('livisync_token')}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setMessages((prev) => ({
+              ...prev,
+              [matchUser.id]: data
+            }));
+          }
+        } catch (err) {
+          console.error("Error pre-fetching chat history:", err);
+        }
+      };
+      fetchMatchHistory();
+    });
+  }, [activeMatchesIds]);
 
+  // Subscribe to realtime message insert broadcasts globally for all our chats
+  useEffect(() => {
     const channel = supabase
-      .channel(`chat:${activeChatUserId}`)
+      .channel('chat-global-module')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
         (payload) => {
-          const newMsg = payload.new;
-          if (
-            (newMsg.sender_id === currentUser.id && newMsg.receiver_id === activeChatUserId) ||
-            (newMsg.sender_id === activeChatUserId && newMsg.receiver_id === currentUser.id)
-          ) {
+          const newMsg = payload.new as any;
+          if (newMsg && (newMsg.sender_id === currentUser.id || newMsg.receiver_id === currentUser.id)) {
+            const peerId = newMsg.sender_id === currentUser.id ? newMsg.receiver_id : newMsg.sender_id;
             const mappedMsg: Message = {
               id: newMsg.id,
               senderId: newMsg.sender_id,
@@ -83,15 +115,27 @@ export const ChatModule = ({
               read: newMsg.is_read
             };
             setMessages((prev) => {
-              const currentChatMsgs = prev[activeChatUserId] || [];
+              const currentChatMsgs = prev[peerId] || [];
               if (currentChatMsgs.some(m => m.id === mappedMsg.id)) {
                 return prev;
               }
               return {
                 ...prev,
-                [activeChatUserId]: [...currentChatMsgs, mappedMsg]
+                [peerId]: [...currentChatMsgs, mappedMsg]
               };
             });
+            
+            // If we are currently inside the active chat with the sender, mark as read immediately!
+            if (activeChatUserId === peerId && newMsg.receiver_id === currentUser.id) {
+              fetch(`${API_BASE_URL}/chat/read/${activeChatUserId}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('livisync_token')}`
+                }
+              }).then(() => {
+                onMessagesRead();
+              }).catch(err => console.error(err));
+            }
           }
         }
       )
@@ -100,21 +144,35 @@ export const ChatModule = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeChatUserId, currentUser.id]);
+  }, [currentUser.id, activeChatUserId, onMessagesRead]);
+
+  // Mark messages as read when opening a conversation
+  useEffect(() => {
+    if (!activeChatUserId) return;
+    
+    const markRead = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/chat/read/${activeChatUserId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('livisync_token')}`
+          }
+        });
+        if (res.ok) {
+          onMessagesRead();
+        }
+      } catch (err) {
+        console.error("Error marking messages as read:", err);
+      }
+    };
+    
+    markRead();
+  }, [activeChatUserId]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, activeChatUserId]);
-
-  // Filter out users who are active matches (accepted status)
-  const activeMatches = matchRequests
-    .filter((r) => r.status === 'accepted' && (r.senderId === currentUser.id || r.receiverId === currentUser.id))
-    .map((r) => {
-      const matchId = r.senderId === currentUser.id ? r.receiverId : r.senderId;
-      return users.find((u) => u.id === matchId);
-    })
-    .filter((u): u is User => !!u && !currentUser.blockedUsers.includes(u.id));
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,21 +219,42 @@ export const ChatModule = ({
               <p style={emptyTextStyle}>No confirmed roommate matches yet. Connect with roommates from the roommate directory!</p>
             ) : (
               <div style={listStyle}>
-                {activeMatches.map((matchUser) => (
-                  <div
-                    key={matchUser.id}
-                    onClick={() => setActiveChatUserId(matchUser.id)}
-                    style={chatRowStyle(activeChatUserId === matchUser.id)}
-                  >
-                    <img src={matchUser.photo} alt={matchUser.name} style={avatarStyle} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ fontSize: '0.875rem' }}>{matchUser.name}</h4>
-                      <p style={chatPreviewTextStyle}>
-                        {messages[matchUser.id]?.[messages[matchUser.id].length - 1]?.text || 'No messages yet. Say hi!'}
-                      </p>
+                {activeMatches.map((matchUser) => {
+                  const hasUnread = messages[matchUser.id]?.some(m => !m.read && m.senderId === matchUser.id);
+                  return (
+                    <div
+                      key={matchUser.id}
+                      onClick={() => setActiveChatUserId(matchUser.id)}
+                      style={{
+                        ...chatRowStyle(activeChatUserId === matchUser.id),
+                        position: 'relative'
+                      }}
+                    >
+                      <img src={matchUser.photo} alt={matchUser.name} style={avatarStyle} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h4 style={{ fontSize: '0.875rem', fontWeight: hasUnread ? 700 : 500 }}>{matchUser.name}</h4>
+                          {hasUnread && (
+                            <span style={{
+                              width: '8px',
+                              height: '8px',
+                              backgroundColor: 'var(--primary)',
+                              borderRadius: '50%',
+                              display: 'inline-block'
+                            }} />
+                          )}
+                        </div>
+                        <p style={{
+                          ...chatPreviewTextStyle,
+                          fontWeight: hasUnread ? 600 : 400,
+                          color: hasUnread ? 'var(--foreground)' : 'var(--muted)'
+                        }}>
+                          {messages[matchUser.id]?.[messages[matchUser.id].length - 1]?.text || 'No messages yet. Say hi!'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
