@@ -257,10 +257,10 @@ export const ChatModule = ({
 
   return (
     <div style={containerStyle}>
-      {/* If screen is mobile and chat is open, hide chat lists and only show active conversation */}
-      <div style={chatGridStyle}>
+      {/* Wrap everything in a single unified dashboard card */}
+      <div className="card" style={{ ...chatGridStyle, height: '100%' }}>
         {/* Left Side: Inbox Lists (Active Chats Only) */}
-        <div style={inboxListStyle(!!activeChatUserId)} className="card">
+        <div style={inboxListStyle(!!activeChatUserId)}>
           {/* Section: Active Chats */}
           <div style={sectionStyle}>
             <h3 style={sectionHeaderStyle}>Roommate Chats ({activeMatches.length})</h3>
@@ -312,7 +312,7 @@ export const ChatModule = ({
         </div>
 
         {/* Right Side: Active Chat Window */}
-        <div style={chatWindowStyle(!!activeChatUserId)} className="card">
+        <div style={chatWindowStyle(!!activeChatUserId)}>
           {activeChatUserId ? (
             <>
               {/* Chat Header */}
@@ -668,7 +668,7 @@ const containerStyle: React.CSSProperties = {
 const chatGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '320px 1fr',
-  gap: '1.5rem',
+  gap: 0,
   height: '100%',
 };
 
@@ -678,6 +678,8 @@ const inboxListStyle = (isChatActive: boolean): React.CSSProperties => {
     flexDirection: 'column',
     overflowY: 'auto',
     height: '100%',
+    borderRight: '1px solid var(--border)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
   };
   // Responsive check
   if (isChatActive && window.innerWidth <= 768) {
@@ -692,6 +694,7 @@ const chatWindowStyle = (isChatActive: boolean): React.CSSProperties => {
     flexDirection: 'column',
     height: '100%',
     overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   };
   // Responsive check
   if (!isChatActive && window.innerWidth <= 768) {
@@ -727,23 +730,26 @@ const listStyle: React.CSSProperties = {
 
 
 const avatarStyle: React.CSSProperties = {
-  width: '32px',
-  height: '32px',
+  width: '40px',
+  height: '40px',
   borderRadius: '50%',
   objectFit: 'cover',
+  border: '2px solid white',
+  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
 };
-
-
 
 const chatRowStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '0.75rem',
-  padding: '0.625rem 0.75rem',
-  borderRadius: 'var(--radius)',
+  gap: '0.875rem',
+  padding: '0.75rem 1rem',
+  borderRadius: 'var(--radius-sm)',
   cursor: 'pointer',
   transition: 'var(--transition)',
-  backgroundColor: isActive ? 'var(--secondary)' : 'transparent',
+  backgroundColor: isActive ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255, 255, 255, 0.45)',
+  border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid var(--border)',
+  boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.05)' : 'none',
+  marginBottom: '0.25rem',
 });
 
 const chatPreviewTextStyle: React.CSSProperties = {
@@ -761,6 +767,8 @@ const chatHeaderStyle: React.CSSProperties = {
   gap: '0.75rem',
   padding: '0.875rem 1.25rem',
   borderBottom: '1px solid var(--border)',
+  backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  backdropFilter: 'blur(8px)',
 };
 
 const backButtonStyle: React.CSSProperties = {
@@ -773,12 +781,12 @@ const backButtonStyle: React.CSSProperties = {
 
 const chatMessagesStyle: React.CSSProperties = {
   flex: 1,
-  padding: '1.25rem',
+  padding: '1.5rem',
   overflowY: 'auto',
-  backgroundColor: 'var(--background)',
+  backgroundColor: 'rgba(248, 250, 252, 0.35)',
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.75rem',
+  gap: '1rem',
 };
 
 const chatEmptyFeedStyle: React.CSSProperties = {
@@ -797,11 +805,11 @@ const msgRowStyle = (isSelf: boolean): React.CSSProperties => ({
 
 const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
   maxWidth: '70%',
-  padding: '0.625rem 0.875rem',
-  borderRadius: 'var(--radius)',
-  backgroundColor: isSelf ? 'var(--primary)' : 'var(--card)',
+  padding: '0.75rem 1rem',
+  borderRadius: isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+  background: isSelf ? 'var(--gradient-brand)' : '#ffffff',
   color: isSelf ? 'var(--primary-foreground)' : 'var(--foreground)',
-  boxShadow: 'var(--shadow-sm)',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
   border: isSelf ? 'none' : '1px solid var(--border)',
 });
 
@@ -810,7 +818,7 @@ const msgTimeStyle = (isSelf: boolean): React.CSSProperties => ({
   fontSize: '0.65rem',
   textAlign: 'right',
   marginTop: '0.25rem',
-  color: isSelf ? 'rgba(255, 255, 255, 0.7)' : 'var(--muted)',
+  color: isSelf ? 'rgba(255, 255, 255, 0.75)' : 'var(--muted)',
 });
 
 const chatInputAreaStyle: React.CSSProperties = {
