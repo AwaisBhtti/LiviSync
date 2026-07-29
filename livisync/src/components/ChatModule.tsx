@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MatchRequest, User, Message } from '../types';
 import { Send, ArrowLeft, MessageSquare } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+import { API_BASE_URL } from '../config';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface ChatModuleProps {
   currentUser: User;
@@ -16,22 +23,89 @@ export const ChatModule = ({
   onBlockUser,
 }: ChatModuleProps) => {
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Record<string, Message[]>>({
-    // Initial pre-loaded messages for Zayn <-> Hamza
-    'user_2': [
-      { id: 'm1', senderId: 'user_2', text: 'Hey Zayn! Did you check out the Pine Breeze hostel? Let me know if you want to book.', timestamp: new Date(Date.now() - 3600000).toISOString(), read: true },
-      { id: 'm2', senderId: 'user_current', text: 'Hey Hamza! Yes, I saw it, looks like a great spot. Let\'s coordinate.', timestamp: new Date(Date.now() - 1800000).toISOString(), read: true }
-    ]
-  });
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [typedMessage, setTypedMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Set Auth token for Supabase Realtime connection
+  useEffect(() => {
+    if (currentUser && 'supabaseToken' in currentUser && currentUser.supabaseToken) {
+      supabase.realtime.setAuth(currentUser.supabaseToken);
+    }
+  }, [currentUser]);
+
+  // Load chat history from backend REST API
+  useEffect(() => {
+    if (!activeChatUserId) return;
+    
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/chat/history/${activeChatUserId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('livisync_token')}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMessages((prev) => ({
+            ...prev,
+            [activeChatUserId]: data
+          }));
+        }
+      } catch (err) {
+        console.error("Error loading chat history:", err);
+      }
+    };
+
+    fetchHistory();
+  }, [activeChatUserId]);
+
+  // Subscribe to realtime message insert broadcasts from Supabase
+  useEffect(() => {
+    if (!activeChatUserId) return;
+
+    const channel = supabase
+      .channel(`chat:${activeChatUserId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
+          const newMsg = payload.new;
+          if (
+            (newMsg.sender_id === currentUser.id && newMsg.receiver_id === activeChatUserId) ||
+            (newMsg.sender_id === activeChatUserId && newMsg.receiver_id === currentUser.id)
+          ) {
+            const mappedMsg: Message = {
+              id: newMsg.id,
+              senderId: newMsg.sender_id,
+              text: newMsg.text,
+              timestamp: newMsg.created_at,
+              read: newMsg.is_read
+            };
+            setMessages((prev) => {
+              const currentChatMsgs = prev[activeChatUserId] || [];
+              if (currentChatMsgs.some(m => m.id === mappedMsg.id)) {
+                return prev;
+              }
+              return {
+                ...prev,
+                [activeChatUserId]: [...currentChatMsgs, mappedMsg]
+              };
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeChatUserId, currentUser.id]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, activeChatUserId]);
-
-
 
   // Filter out users who are active matches (accepted status)
   const activeMatches = matchRequests
@@ -42,47 +116,32 @@ export const ChatModule = ({
     })
     .filter((u): u is User => !!u && !currentUser.blockedUsers.includes(u.id));
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!typedMessage.trim() || !activeChatUserId) return;
 
-    const newMsg: Message = {
-      id: `m_${Date.now()}`,
-      senderId: currentUser.id,
-      text: typedMessage,
-      timestamp: new Date().toISOString(),
-      read: true,
-    };
-
-    setMessages((prev) => ({
-      ...prev,
-      [activeChatUserId]: [...(prev[activeChatUserId] || []), newMsg],
-    }));
+    const textToSend = typedMessage;
     setTypedMessage('');
 
-    // Trigger mock auto-reply after 2 seconds
-    setTimeout(() => {
-      const replies = [
-        `That sounds perfect! Let's get in touch with the warden soon.`,
-        `Nice! I think our daily schedules line up really well.`,
-        `Awesome. I will check my schedule and we can meet up this week!`,
-        `Perfect, thanks for getting back to me. Let's make this work!`
-      ];
-      const randomReply = replies[Math.floor(Math.random() * replies.length)];
-      
-      const replyMsg: Message = {
-        id: `m_${Date.now() + 1}`,
-        senderId: activeChatUserId,
-        text: `${randomReply}`,
-        timestamp: new Date().toISOString(),
-        read: false,
-      };
-
-      setMessages((prev) => ({
-        ...prev,
-        [activeChatUserId]: [...(prev[activeChatUserId] || []), replyMsg],
-      }));
-    }, 2000);
+    try {
+      const response = await fetch(`${API_BASE_URL}/chat/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('livisync_token')}`
+        },
+        body: JSON.stringify({
+          receiver_id: activeChatUserId,
+          text: textToSend
+        })
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || 'Failed to send message');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error sending message');
+    }
   };
 
   const getRespondent = () => {

@@ -30,6 +30,18 @@ export const fetchCurrentUser = createAsyncThunk(
       const role = data.profile?.role;
 
       if (role === 'student') {
+        let blockedUsers: string[] = [];
+        try {
+          const blocksRes = await fetch(`${API_BASE_URL}/students/blocks`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (blocksRes.ok) {
+            blockedUsers = await blocksRes.json();
+          }
+        } catch (e) {
+          console.error("Error fetching blocks:", e);
+        }
+
         const mappedUser: Student = {
           id: data.id,
           email: data.email,
@@ -54,7 +66,8 @@ export const fetchCurrentUser = createAsyncThunk(
             pets: data.preferences?.pets || 'no',
             guestTolerance: data.preferences?.guest_tolerance || 'weekends'
           },
-          blockedUsers: []
+          blockedUsers: blockedUsers,
+          supabaseToken: data.supabase_token
         };
         return mappedUser;
       } else if (role === 'owner') {

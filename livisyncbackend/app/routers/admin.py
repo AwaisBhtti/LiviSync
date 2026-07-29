@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 from ..database import get_db
 from ..models import Admin, Student, Owner, Hostel, InviteToken, Report, MatchRequest
 from ..auth import get_current_user
-from ..email_utils import send_invitation_email
+from ..email_utils import send_invitation_email, send_warning_email, send_suspension_email, send_reactivation_email
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
@@ -184,6 +184,10 @@ def toggle_user_status(role: str, user_id: uuid.UUID, req: StatusToggleRequest, 
         
     user.status = req.status
     db.commit()
+    if req.status == "suspended":
+        send_suspension_email(user.email, user.name)
+    elif req.status == "active":
+        send_reactivation_email(user.email, user.name)
     return {"message": f"User status updated to {req.status} successfully."}
 
 @router.get("/hostels")
@@ -218,6 +222,21 @@ def resolve_report(report_id: uuid.UUID, db: Session = Depends(get_db), admin: A
     report.status = "resolved"
     db.commit()
     return {"message": "Report resolved successfully."}
+
+@router.post("/reports/{report_id}/warn")
+def warn_user(report_id: uuid.UUID, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
+        
+    reported_user = db.query(Student).filter(Student.id == report.reported_id).first()
+    if not reported_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reported user not found or not a student")
+        
+    send_warning_email(reported_user.email, reported_user.name, report.reason, report.description or "No details provided.")
+    report.status = "resolved"
+    db.commit()
+    return {"message": "Warning email sent and report resolved."}
 
 @router.get("/invitations")
 def get_all_invitations(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):

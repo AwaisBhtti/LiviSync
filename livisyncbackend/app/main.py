@@ -2,8 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from . import models  # Ensure models are loaded so they are created in the database
-from .routers import auth, admin, students, owners, hostels
+from .routers import auth, admin, students, owners, hostels, chat
 
 # Create tables in database
 Base.metadata.create_all(bind=engine)
@@ -20,6 +19,7 @@ app.include_router(students.router)
 app.include_router(owners.router)
 app.include_router(hostels.router)
 app.include_router(admin.router)
+app.include_router(chat.router)
 
 
 # Configure CORS

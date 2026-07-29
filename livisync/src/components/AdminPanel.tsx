@@ -10,6 +10,7 @@ interface AdminPanelProps {
   hostels: Hostel[];
   onToggleUserStatus: (userId: string) => void;
   onResolveReport: (reportId: string) => void;
+  onWarnUser: (reportId: string) => void;
   onDeleteUser: (userId: string) => void;
   onVerifyHostel: (hostelId: string) => void;
 }
@@ -144,6 +145,7 @@ export const AdminPanel = ({
   hostels,
   onToggleUserStatus,
   onResolveReport,
+  onWarnUser,
   onDeleteUser,
   onVerifyHostel,
 }: AdminPanelProps) => {
@@ -168,6 +170,7 @@ export const AdminPanel = ({
   const [copied, setCopied] = useState(false);
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [selectedUserDetail, setSelectedUserDetail] = useState<User | null>(null);
 
   const fetchInvitations = async () => {
     try {
@@ -320,12 +323,27 @@ export const AdminPanel = ({
                   const reported = getReportedUser(report.reportedId);
                   return (
                     <tr key={report.id} style={tableRowStyle}>
-                      <td style={tdStyle}>{getReporterName(report.reporterId)}</td>
                       <td style={tdStyle}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <img src={reported?.photo} style={smallAvatarStyle} alt="" />
+                        <span 
+                          style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }} 
+                          onClick={() => {
+                            const repUser = users.find(u => u.id === report.reporterId);
+                            if (repUser) setSelectedUserDetail(repUser);
+                          }}
+                        >
+                          {getReporterName(report.reporterId)}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <div 
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                          onClick={() => {
+                            if (reported) setSelectedUserDetail(reported);
+                          }}
+                        >
+                          <img src={reported?.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} style={smallAvatarStyle} alt="" />
                           <div>
-                            <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>{reported?.name}</span>
+                            <span style={{ fontWeight: 500, fontSize: '0.85rem', color: 'var(--primary)', textDecoration: 'underline' }}>{reported?.name}</span>
                             <span style={{ display: 'block', fontSize: '0.7rem', color: reported?.status === 'suspended' ? 'var(--danger)' : 'var(--success)' }}>
                               {reported?.status}
                             </span>
@@ -348,6 +366,13 @@ export const AdminPanel = ({
                             onClick={() => onResolveReport(report.id)}
                           >
                             <CheckCircle size={12} /> Resolve
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            style={tableBtnStyle}
+                            onClick={() => onWarnUser(report.id)}
+                          >
+                            ✉ Warn
                           </button>
                           {reported && (
                             <button
@@ -817,6 +842,92 @@ export const AdminPanel = ({
                   </button>
                 )}
                 <button type="button" className="btn btn-secondary" style={{ flex: !selectedHostel.isVerified ? 0.3 : 1 }} onClick={() => setSelectedHostel(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedUserDetail && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Student Profile Details</h3>
+              <button
+                type="button"
+                onClick={() => setSelectedUserDetail(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.25rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <img
+                  src={selectedUserDetail.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'}
+                  alt=""
+                  style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }}
+                />
+                <div>
+                  <h4 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{selectedUserDetail.name}</h4>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+                    {selectedUserDetail.age} y/o • {selectedUserDetail.gender}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>Contact Information</h5>
+                <p style={{ margin: 0, fontSize: '0.875rem' }}>📧 Email: {selectedUserDetail.email}</p>
+                {selectedUserDetail.phone && <p style={{ margin: 0, fontSize: '0.875rem' }}>📞 Phone: {selectedUserDetail.phone}</p>}
+              </div>
+
+              {selectedUserDetail.bio && (
+                <div>
+                  <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>Biography</h5>
+                  <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.4', color: 'var(--muted)' }}>{selectedUserDetail.bio}</p>
+                </div>
+              )}
+
+              <div>
+                <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>Living & Study Details</h5>
+                <p style={{ margin: 0, fontSize: '0.875rem' }}>📍 Preferred Location: {selectedUserDetail.location}</p>
+                <p style={{ margin: 0, fontSize: '0.875rem' }}>💰 Max Budget: PKR {selectedUserDetail.budget?.toLocaleString()} / mo</p>
+                <p style={{ margin: 0, fontSize: '0.875rem', textTransform: 'capitalize' }}>
+                  💼 Occupation: {selectedUserDetail.occupation} 
+                  {selectedUserDetail.institution && ` at ${selectedUserDetail.institution}`}
+                  {selectedUserDetail.company && ` at ${selectedUserDetail.company}`}
+                </p>
+              </div>
+
+              {selectedUserDetail.preferences && (
+                <div>
+                  <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.5rem 0', color: 'var(--muted)' }}>Lifestyle Habits</h5>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                      🛌 Sleep: {selectedUserDetail.preferences.sleepSchedule || 'flexible'}
+                    </span>
+                    <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                      🧹 Cleanliness: {selectedUserDetail.preferences.cleanliness || 'moderate'}
+                    </span>
+                    <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                      🚬 Smoking: {selectedUserDetail.preferences.smoking || 'no'}
+                    </span>
+                    <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                      🐾 Pets: {selectedUserDetail.preferences.pets || 'no'}
+                    </span>
+                    <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                      👥 Guests: {selectedUserDetail.preferences.guestTolerance || 'weekends'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setSelectedUserDetail(null)}>
                   Close
                 </button>
               </div>

@@ -46,6 +46,7 @@ import {
   fetchUsers,
   toggleUserStatus,
   deleteUser,
+  warnUser,
 } from './store/slices/adminSlice';
 import { API_BASE_URL } from './config';
 
@@ -195,33 +196,105 @@ export default function App() {
   };
 
   // Handler: Block User
-  const handleBlockUser = (targetId: string) => {
-    if (!currentUser || currentUser.role !== 'student') return;
-    const updatedBlocked = currentUser.blockedUsers.includes(targetId)
-      ? currentUser.blockedUsers
-      : [...currentUser.blockedUsers, targetId];
+  const handleBlockUser = async (targetId: string) => {
+    if (!currentUser || currentUser.role !== 'student' || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/blocks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ blocked_user_id: targetId })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to block user');
+      }
 
-    dispatch(setBlockedUsers(updatedBlocked));
-    const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
-    dispatch(updateUserInList(updatedUser));
+      const updatedBlocked = currentUser.blockedUsers.includes(targetId)
+        ? currentUser.blockedUsers
+        : [...currentUser.blockedUsers, targetId];
+
+      dispatch(setBlockedUsers(updatedBlocked));
+      const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
+      dispatch(updateUserInList(updatedUser));
+      dispatch(removeMatchesForUser(targetId));
+      alert('User blocked successfully.');
+    } catch (err: any) {
+      alert(err.message || 'Error blocking user');
+    }
   };
 
-  // Handler: Report User
-  const handleReportUser = (reportedId: string, reason: string, description: string) => {
-    if (!currentUser) return;
+  // Handler: Unblock User
+  const handleUnblockUser = async (targetId: string) => {
+    if (!currentUser || currentUser.role !== 'student' || !token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/blocks/${targetId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to unblock user');
+      }
 
-    const newReport: Report = {
-      id: `rep_${Date.now()}`,
-      reporterId: currentUser.id,
-      reportedId,
-      reason: reason as any,
-      description,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-    };
+      const updatedBlocked = currentUser.blockedUsers.filter(id => id !== targetId);
 
-    dispatch(addLocalReport(newReport));
-    alert('Thank you. The report has been filed and sent to administrators for review.');
+      dispatch(setBlockedUsers(updatedBlocked));
+      const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
+      dispatch(updateUserInList(updatedUser));
+      alert('User unblocked successfully.');
+    } catch (err: any) {
+      alert(err.message || 'Error unblocking user');
+    }
+  };
+
+  const handleReportUser = async (reportedId: string, reason: string, description: string) => {
+    if (!currentUser || !token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/reports`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          reported_id: reportedId,
+          reason,
+          description
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to submit safety report');
+      }
+
+      const newReport: Report = {
+        id: `rep_${Date.now()}`,
+        reporterId: currentUser.id,
+        reportedId,
+        reason: reason as any,
+        description,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+
+      dispatch(addLocalReport(newReport));
+      
+      const confirmBlock = window.confirm(
+        'Thank you. The safety report has been filed and sent to administrators for review.\n\n' +
+        'Would you like to block this user as well to prevent them from contacting or matching with you?'
+      );
+      if (confirmBlock) {
+        await handleBlockUser(reportedId);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error submitting safety report');
+    }
   };
 
   // Handler Admin: Toggle User Status (Suspend/Activate)
@@ -234,6 +307,17 @@ export default function App() {
       await dispatch(toggleUserStatus({ userId, token, currentStatus: user.status, role: user.role as 'student' | 'owner' })).unwrap();
     } catch (err: any) {
       alert(err || 'Error occurred updating status.');
+    }
+  };
+
+  // Handler Admin: Warn User
+  const handleWarnUser = async (reportId: string) => {
+    if (!token) return;
+    try {
+      await dispatch(warnUser({ reportId, token })).unwrap();
+      alert('Warning email sent successfully and report resolved.');
+    } catch (err: any) {
+      alert(err || 'Error sending warning email.');
     }
   };
 
@@ -443,7 +527,13 @@ export default function App() {
                 path="/profile"
                 element={
                   currentUser?.role === 'student' ? (
-                    <StudentProfile currentUser={currentUser as Student} onSave={handleSaveProfile} hostels={hostels} />
+                    <StudentProfile
+                      currentUser={currentUser as Student}
+                      onSave={handleSaveProfile}
+                      hostels={hostels}
+                      users={studentRoommates}
+                      onUnblockUser={handleUnblockUser}
+                    />
                   ) : currentUser?.role === 'owner' ? (
                     <OwnerProfile currentUser={currentUser as Owner} />
                   ) : (
@@ -463,6 +553,7 @@ export default function App() {
                       onResolveReport={handleResolveReport}
                       onDeleteUser={handleDeleteUser}
                       onVerifyHostel={handleVerifyHostel}
+                      onWarnUser={handleWarnUser}
                     />
                   ) : (
                     <Navigate to="/hostels" replace />

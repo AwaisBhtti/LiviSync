@@ -62,6 +62,25 @@ export const resolveReport = createAsyncThunk(
   }
 );
 
+export const warnUser = createAsyncThunk(
+  'admin/warnUser',
+  async ({ reportId, token }: { reportId: string; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/reports/${reportId}/warn`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to send warning email');
+      }
+      return reportId;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error sending warning');
+    }
+  }
+);
+
 export const fetchUsers = createAsyncThunk(
   'admin/fetchUsers',
   async (token: string, { rejectWithValue }) => {
@@ -151,6 +170,9 @@ const adminSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(resolveReport.fulfilled, (state, action: PayloadAction<string>) => {
+        state.reports = state.reports.map((r) => r.id === action.payload ? { ...r, status: 'resolved' as const } : r);
+      })
+      .addCase(warnUser.fulfilled, (state, action: PayloadAction<string>) => {
         state.reports = state.reports.map((r) => r.id === action.payload ? { ...r, status: 'resolved' as const } : r);
       })
       .addCase(fetchUsers.pending, (state) => {

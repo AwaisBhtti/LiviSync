@@ -72,3 +72,23 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
+
+def create_supabase_token(user_id: str, email: str) -> str:
+    if not settings.SUPABASE_JWT_SECRET or settings.SUPABASE_JWT_SECRET == "YOUR_SUPABASE_JWT_SECRET_HERE":
+        secret = settings.JWT_SECRET
+    else:
+        secret = settings.SUPABASE_JWT_SECRET
+        
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {
+        "aud": "authenticated",
+        "exp": int(expire.timestamp()),
+        "sub": user_id,
+        "email": email,
+        "role": "authenticated",
+        "app_metadata": {"provider": "email", "providers": ["email"]},
+        "user_metadata": {"email": email}
+    }
+    encoded_jwt = jwt.encode(payload, secret, algorithm="HS256")
+    return encoded_jwt
+

@@ -27,6 +27,7 @@ export interface Student {
   hostelId?: string;
   isEmailVerified?: boolean;
   is_email_verified?: boolean;
+  supabaseToken?: string;
 }
 
 export interface Owner {
