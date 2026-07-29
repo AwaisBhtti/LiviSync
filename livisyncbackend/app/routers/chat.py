@@ -99,10 +99,10 @@ def get_chat_history(peer_id: uuid.UUID, db: Session = Depends(get_db), current_
 
 @router.get("/unread-count")
 def get_unread_count(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
-    count = db.query(Message).filter(
+    count = db.query(Message.sender_id).filter(
         Message.receiver_id == current_user.id,
         Message.is_read == False
-    ).count()
+    ).distinct().count()
     return {"count": count}
 
 

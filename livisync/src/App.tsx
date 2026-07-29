@@ -130,7 +130,7 @@ export default function App() {
         (payload) => {
           const newMsg = payload.new as any;
           if (newMsg && newMsg.receiver_id === currentUser.id) {
-            setUnreadMessagesCount((prev) => prev + 1);
+            fetchUnreadCount();
           }
         }
       )
