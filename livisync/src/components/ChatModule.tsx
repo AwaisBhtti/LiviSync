@@ -39,15 +39,15 @@ export const ChatModule = ({
       if (list.some((m) => m.id === newMessage.id)) {
         return prev;
       }
-      const tempIndex = list.findIndex(
+      const reversedTempIndex = [...list].reverse().findIndex(
         (m) =>
           m.id.startsWith('temp-') &&
-          m.text === newMessage.text &&
-          m.senderId === newMessage.senderId
+          String(m.senderId).toLowerCase() === String(newMessage.senderId).toLowerCase()
       );
-      if (tempIndex !== -1) {
+      if (reversedTempIndex !== -1) {
+        const actualIndex = list.length - 1 - reversedTempIndex;
         const newList = [...list];
-        newList[tempIndex] = newMessage;
+        newList[actualIndex] = newMessage;
         return {
           ...prev,
           [peerId]: newList,
