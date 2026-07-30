@@ -6,6 +6,7 @@ import hostelReducer from './slices/hostelSlice';
 import roommateReducer from './slices/roommateSlice';
 import matchReducer from './slices/matchSlice';
 import adminReducer from './slices/adminSlice';
+import toastReducer from './slices/toastSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     roommates: roommateReducer,
     matches: matchReducer,
     admin: adminReducer,
+    toast: toastReducer,
   },
   // Redux Toolkit configureStore includes redux-thunk automatically.
 });

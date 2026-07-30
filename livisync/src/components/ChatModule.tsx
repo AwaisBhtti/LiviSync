@@ -1,19 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MatchRequest, User, Message } from '../types';
-import { Send, ArrowLeft, MessageSquare } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { Send, ArrowLeft, MessageSquare, Clock } from 'lucide-react';
+import { supabase } from '../supabase';
 import { API_BASE_URL } from '../config';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { ConfirmationModal } from './ConfirmationModal';
+import { FriendProfileModal } from './profile/FriendProfileModal';
+import { showToast } from '../store/slices/toastSlice';
+import { useAppDispatch } from '../store/store';
 
 interface ChatModuleProps {
   currentUser: User;
   users: User[];
   matchRequests: MatchRequest[];
   onBlockUser: (targetId: string) => void;
+  onMessagesRead: () => void;
+  onUnfriend: (matchRequestId: string) => Promise<void>;
+  onReportUser: (reportedId: string, reason: string, description: string) => Promise<void>;
 }
 
 export const ChatModule = ({
@@ -21,11 +23,76 @@ export const ChatModule = ({
   users,
   matchRequests,
   onBlockUser,
+  onMessagesRead,
+  onUnfriend,
+  onReportUser,
 }: ChatModuleProps) => {
+  const dispatch = useAppDispatch();
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [typedMessage, setTypedMessage] = useState('');
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [showRespondentProfile, setShowRespondentProfile] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void | Promise<void>;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  const appendOrMergeMessage = (peerId: string, newMessage: Message & { status?: string }) => {
+    setMessages((prev) => {
+      const list = prev[peerId] || [];
+      if (list.some((m) => m.id === newMessage.id)) {
+        return prev;
+      }
+      const reversedTempIndex = [...list].reverse().findIndex(
+        (m) =>
+          m.id.startsWith('temp-') &&
+          String(m.senderId).toLowerCase() === String(newMessage.senderId).toLowerCase()
+      );
+      if (reversedTempIndex !== -1) {
+        const actualIndex = list.length - 1 - reversedTempIndex;
+        const newList = [...list];
+        newList[actualIndex] = newMessage;
+        return {
+          ...prev,
+          [peerId]: newList,
+        };
+      }
+      return {
+        ...prev,
+        [peerId]: [...list, newMessage],
+      };
+    });
+  };
+
+  // Filter out users who are active matches (accepted status), sorted by latest message
+  const activeMatches = matchRequests
+    .filter((r) => r.status === 'accepted' && (r.senderId === currentUser.id || r.receiverId === currentUser.id))
+    .map((r) => {
+      const matchId = r.senderId === currentUser.id ? r.receiverId : r.senderId;
+      return users.find((u) => u.id === matchId);
+    })
+    .filter((u): u is User => !!u && !currentUser.blockedUsers.includes(u.id))
+    .sort((a, b) => {
+      const msgsA = messages[a.id] || [];
+      const msgsB = messages[b.id] || [];
+      const lastMsgA = msgsA[msgsA.length - 1];
+      const lastMsgB = msgsB[msgsB.length - 1];
+      const timeA = lastMsgA ? new Date(lastMsgA.timestamp).getTime() : 0;
+      const timeB = lastMsgB ? new Date(lastMsgB.timestamp).getTime() : 0;
+      return timeB - timeA;
+    });
 
   // Set Auth token for Supabase Realtime connection
   useEffect(() => {
@@ -37,7 +104,7 @@ export const ChatModule = ({
   // Load chat history from backend REST API
   useEffect(() => {
     if (!activeChatUserId) return;
-    
+
     const fetchHistory = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/chat/history/${activeChatUserId}`, {
@@ -60,21 +127,62 @@ export const ChatModule = ({
     fetchHistory();
   }, [activeChatUserId]);
 
-  // Subscribe to realtime message insert broadcasts from Supabase
+  const activeMatchesIds = activeMatches.map(m => m.id).join(',');
+  // Load initial chat history for all active matches so last message preview works
   useEffect(() => {
-    if (!activeChatUserId) return;
+    if (activeMatches.length === 0) {
+      setLoadingHistory(false);
+      return;
+    }
 
+    let loadedCount = 0;
+    activeMatches.forEach(matchUser => {
+      if (messages[matchUser.id]) {
+        loadedCount++;
+        if (loadedCount === activeMatches.length) {
+          setLoadingHistory(false);
+        }
+        return; // already loaded
+      }
+
+      const fetchMatchHistory = async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/chat/history/${matchUser.id}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('livisync_token')}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setMessages((prev) => ({
+              ...prev,
+              [matchUser.id]: data
+            }));
+          }
+        } catch (err) {
+          console.error("Error pre-fetching chat history:", err);
+        } finally {
+          loadedCount++;
+          if (loadedCount === activeMatches.length) {
+            setLoadingHistory(false);
+          }
+        }
+      };
+      fetchMatchHistory();
+    });
+  }, [activeMatchesIds]);
+
+  // Subscribe to realtime message insert broadcasts globally for all our chats
+  useEffect(() => {
     const channel = supabase
-      .channel(`chat:${activeChatUserId}`)
+      .channel('chat-global-module')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
         (payload) => {
-          const newMsg = payload.new;
-          if (
-            (newMsg.sender_id === currentUser.id && newMsg.receiver_id === activeChatUserId) ||
-            (newMsg.sender_id === activeChatUserId && newMsg.receiver_id === currentUser.id)
-          ) {
+          const newMsg = payload.new as any;
+          if (newMsg && (newMsg.sender_id === currentUser.id || newMsg.receiver_id === currentUser.id)) {
+            const peerId = newMsg.sender_id === currentUser.id ? newMsg.receiver_id : newMsg.sender_id;
             const mappedMsg: Message = {
               id: newMsg.id,
               senderId: newMsg.sender_id,
@@ -82,16 +190,27 @@ export const ChatModule = ({
               timestamp: newMsg.created_at,
               read: newMsg.is_read
             };
-            setMessages((prev) => {
-              const currentChatMsgs = prev[activeChatUserId] || [];
-              if (currentChatMsgs.some(m => m.id === mappedMsg.id)) {
-                return prev;
-              }
-              return {
-                ...prev,
-                [activeChatUserId]: [...currentChatMsgs, mappedMsg]
-              };
-            });
+            appendOrMergeMessage(peerId, mappedMsg);
+
+            // If we are currently inside the active chat with the sender, mark as read immediately!
+            if (activeChatUserId === peerId && newMsg.receiver_id === currentUser.id) {
+              fetch(`${API_BASE_URL}/chat/read/${activeChatUserId}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('livisync_token')}`
+                }
+              }).then(() => {
+                onMessagesRead();
+                setMessages((prev) => {
+                  const peerChatMsgs = prev[activeChatUserId] || [];
+                  const updated = peerChatMsgs.map(m => m.senderId === activeChatUserId ? { ...m, read: true } : m);
+                  return {
+                    ...prev,
+                    [activeChatUserId]: updated
+                  };
+                });
+              }).catch(err => console.error(err));
+            }
           }
         }
       )
@@ -100,21 +219,43 @@ export const ChatModule = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeChatUserId, currentUser.id]);
+  }, [currentUser.id, activeChatUserId, onMessagesRead]);
+
+  // Mark messages as read when opening a conversation
+  useEffect(() => {
+    if (!activeChatUserId) return;
+
+    const markRead = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/chat/read/${activeChatUserId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('livisync_token')}`
+          }
+        });
+        if (res.ok) {
+          onMessagesRead();
+          setMessages((prev) => {
+            const peerChatMsgs = prev[activeChatUserId] || [];
+            const updated = peerChatMsgs.map(m => m.senderId === activeChatUserId ? { ...m, read: true } : m);
+            return {
+              ...prev,
+              [activeChatUserId]: updated
+            };
+          });
+        }
+      } catch (err) {
+        console.error("Error marking messages as read:", err);
+      }
+    };
+
+    markRead();
+  }, [activeChatUserId]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, activeChatUserId]);
-
-  // Filter out users who are active matches (accepted status)
-  const activeMatches = matchRequests
-    .filter((r) => r.status === 'accepted' && (r.senderId === currentUser.id || r.receiverId === currentUser.id))
-    .map((r) => {
-      const matchId = r.senderId === currentUser.id ? r.receiverId : r.senderId;
-      return users.find((u) => u.id === matchId);
-    })
-    .filter((u): u is User => !!u && !currentUser.blockedUsers.includes(u.id));
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +263,25 @@ export const ChatModule = ({
 
     const textToSend = typedMessage;
     setTypedMessage('');
+
+    // Optimistic Update: append local temporary message
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: Message & { status?: string } = {
+      id: tempId,
+      senderId: currentUser.id,
+      text: textToSend,
+      timestamp: new Date().toISOString(),
+      read: false,
+      status: 'sending'
+    };
+
+    setMessages((prev) => {
+      const currentChatMsgs = prev[activeChatUserId] || [];
+      return {
+        ...prev,
+        [activeChatUserId]: [...currentChatMsgs, optimisticMsg]
+      };
+    });
 
     try {
       const response = await fetch(`${API_BASE_URL}/chat/messages`, {
@@ -139,8 +299,27 @@ export const ChatModule = ({
         const errData = await response.json();
         throw new Error(errData.detail || 'Failed to send message');
       }
+      const data = await response.json();
+      const realMsg: Message & { status?: string } = {
+        id: data.id,
+        senderId: data.senderId,
+        text: data.text,
+        timestamp: data.timestamp,
+        read: data.read || false,
+        status: 'sent'
+      };
+      // Merge: Replace optimistic message with the delivered one
+      appendOrMergeMessage(activeChatUserId, realMsg);
     } catch (err: any) {
       alert(err.message || 'Error sending message');
+      // If error occurs, remove optimistic message
+      setMessages((prev) => {
+        const currentChatMsgs = prev[activeChatUserId] || [];
+        return {
+          ...prev,
+          [activeChatUserId]: currentChatMsgs.filter(m => m.id !== tempId)
+        };
+      });
     }
   };
 
@@ -149,11 +328,11 @@ export const ChatModule = ({
   };
 
   return (
-    <div style={containerStyle}>
-      {/* If screen is mobile and chat is open, hide chat lists and only show active conversation */}
-      <div style={chatGridStyle}>
+    <div style={containerStyle} className="auth-chat-container">
+      {/* Wrap everything in a single unified dashboard */}
+      <div style={{ ...chatGridStyle, height: '100%' }}>
         {/* Left Side: Inbox Lists (Active Chats Only) */}
-        <div style={inboxListStyle(!!activeChatUserId)} className="card">
+        <div style={inboxListStyle(!!activeChatUserId)}>
           {/* Section: Active Chats */}
           <div style={sectionStyle}>
             <h3 style={sectionHeaderStyle}>Roommate Chats ({activeMatches.length})</h3>
@@ -161,28 +340,51 @@ export const ChatModule = ({
               <p style={emptyTextStyle}>No confirmed roommate matches yet. Connect with roommates from the roommate directory!</p>
             ) : (
               <div style={listStyle}>
-                {activeMatches.map((matchUser) => (
-                  <div
-                    key={matchUser.id}
-                    onClick={() => setActiveChatUserId(matchUser.id)}
-                    style={chatRowStyle(activeChatUserId === matchUser.id)}
-                  >
-                    <img src={matchUser.photo} alt={matchUser.name} style={avatarStyle} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ fontSize: '0.875rem' }}>{matchUser.name}</h4>
-                      <p style={chatPreviewTextStyle}>
-                        {messages[matchUser.id]?.[messages[matchUser.id].length - 1]?.text || 'No messages yet. Say hi!'}
-                      </p>
+                {activeMatches.map((matchUser) => {
+                  const hasUnread = messages[matchUser.id]?.some(m => !m.read && m.senderId === matchUser.id);
+                  return (
+                    <div
+                      key={matchUser.id}
+                      onClick={() => setActiveChatUserId(matchUser.id)}
+                      style={{
+                        ...chatRowStyle(activeChatUserId === matchUser.id),
+                        position: 'relative'
+                      }}
+                    >
+                      <img src={matchUser.photo} alt={matchUser.name} style={avatarStyle} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h4 style={{ fontSize: '0.875rem', fontWeight: hasUnread ? 700 : 500 }}>{matchUser.name}</h4>
+                          {hasUnread && (
+                            <span style={{
+                              width: '8px',
+                              height: '8px',
+                              backgroundColor: 'var(--primary)',
+                              borderRadius: '50%',
+                              display: 'inline-block'
+                            }} />
+                          )}
+                        </div>
+                        <p style={{
+                          ...chatPreviewTextStyle,
+                          fontWeight: hasUnread ? 600 : 400,
+                          color: hasUnread ? 'var(--foreground)' : 'var(--muted)'
+                        }}>
+                          {loadingHistory
+                            ? 'Loading messages...'
+                            : (messages[matchUser.id]?.[messages[matchUser.id].length - 1]?.text || 'No messages yet. Say hi!')}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
 
         {/* Right Side: Active Chat Window */}
-        <div style={chatWindowStyle(!!activeChatUserId)} className="card">
+        <div style={chatWindowStyle(!!activeChatUserId)}>
           {activeChatUserId ? (
             <>
               {/* Chat Header */}
@@ -193,23 +395,41 @@ export const ChatModule = ({
                 >
                   <ArrowLeft size={18} />
                 </button>
-                <img
-                  src={getRespondent()?.photo}
-                  alt={getRespondent()?.name}
-                  style={avatarStyle}
-                />
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ fontSize: '0.95rem' }}>{getRespondent()?.name}</h4>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--success)' }}>Online</p>
+                <div
+                  onClick={() => setShowRespondentProfile(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flex: 1, minWidth: 0 }}
+                >
+                  <img
+                    src={getRespondent()?.photo}
+                    alt={getRespondent()?.name}
+                    style={avatarStyle}
+                  />
+                  <div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: 600 }}>{getRespondent()?.name}</h4>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--success)' }}>Click to view profile.</p>
+                  </div>
                 </div>
                 <button
                   className="btn btn-secondary"
                   style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
                   onClick={() => {
-                    if (confirm(`Block ${getRespondent()?.name}?`)) {
-                      onBlockUser(activeChatUserId);
-                      setActiveChatUserId(null);
-                    }
+                    const name = getRespondent()?.name || 'this user';
+                    setConfirmModal({
+                      isOpen: true,
+                      title: 'Block User',
+                      message: `Are you sure you want to block ${name}?`,
+                      confirmText: 'Block',
+                      isDanger: true,
+                      onConfirm: async () => {
+                        try {
+                          await onBlockUser(activeChatUserId!);
+                          setActiveChatUserId(null);
+                          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                        } catch (err: any) {
+                          alert(err.message || 'Error blocking user.');
+                        }
+                      }
+                    });
                   }}
                 >
                   Block
@@ -237,6 +457,9 @@ export const ChatModule = ({
                               hour: '2-digit',
                               minute: '2-digit',
                             })}
+                            {(msg as any).status === 'sending' && (
+                              <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
+                            )}
                           </span>
                         </div>
                       </div>
@@ -271,6 +494,62 @@ export const ChatModule = ({
           )}
         </div>
       </div>
+
+      {showRespondentProfile && getRespondent() && (
+        <FriendProfileModal
+          selectedUser={getRespondent()!}
+          currentUser={currentUser}
+          matchRequests={matchRequests}
+          onClose={() => {
+            setShowRespondentProfile(false);
+          }}
+          onUnfriend={async (id) => {
+            try {
+              await onUnfriend(id);
+              setShowRespondentProfile(false);
+              setActiveChatUserId(null);
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error unfriending.', type: 'error' }));
+            }
+          }}
+          onBlockUser={async (id) => {
+            try {
+              await onBlockUser(id);
+              setShowRespondentProfile(false);
+              setActiveChatUserId(null);
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error blocking user.', type: 'error' }));
+            }
+          }}
+          onReportUser={async (reportedId, reason, desc) => {
+            try {
+              await onReportUser(reportedId, reason, desc);
+              const stillConnected = matchRequests.some(
+                (r) => r.status === 'accepted' &&
+                  ((r.senderId === currentUser.id && r.receiverId === reportedId) ||
+                    (r.senderId === reportedId && r.receiverId === currentUser.id))
+              );
+              if (!stillConnected) {
+                setShowRespondentProfile(false);
+                setActiveChatUserId(null);
+              }
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error submitting report', type: 'error' }));
+            }
+          }}
+          showSafetyActions={true}
+        />
+      )}
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 };
@@ -279,13 +558,14 @@ export const ChatModule = ({
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  height: 'calc(100vh - 120px)',
+  height: 'calc(100vh - 74px)',
+  width: '100%',
 };
 
 const chatGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '320px 1fr',
-  gap: '1.5rem',
+  gap: 0,
   height: '100%',
 };
 
@@ -295,6 +575,8 @@ const inboxListStyle = (isChatActive: boolean): React.CSSProperties => {
     flexDirection: 'column',
     overflowY: 'auto',
     height: '100%',
+    borderRight: '1px solid var(--border)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
   };
   // Responsive check
   if (isChatActive && window.innerWidth <= 768) {
@@ -309,6 +591,7 @@ const chatWindowStyle = (isChatActive: boolean): React.CSSProperties => {
     flexDirection: 'column',
     height: '100%',
     overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   };
   // Responsive check
   if (!isChatActive && window.innerWidth <= 768) {
@@ -344,23 +627,26 @@ const listStyle: React.CSSProperties = {
 
 
 const avatarStyle: React.CSSProperties = {
-  width: '32px',
-  height: '32px',
+  width: '40px',
+  height: '40px',
   borderRadius: '50%',
   objectFit: 'cover',
+  border: '2px solid white',
+  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
 };
-
-
 
 const chatRowStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '0.75rem',
-  padding: '0.625rem 0.75rem',
-  borderRadius: 'var(--radius)',
+  gap: '0.875rem',
+  padding: '0.75rem 1rem',
+  borderRadius: 'var(--radius-sm)',
   cursor: 'pointer',
   transition: 'var(--transition)',
-  backgroundColor: isActive ? 'var(--secondary)' : 'transparent',
+  backgroundColor: isActive ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255, 255, 255, 0.45)',
+  border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid var(--border)',
+  boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.05)' : 'none',
+  marginBottom: '0.25rem',
 });
 
 const chatPreviewTextStyle: React.CSSProperties = {
@@ -378,6 +664,8 @@ const chatHeaderStyle: React.CSSProperties = {
   gap: '0.75rem',
   padding: '0.875rem 1.25rem',
   borderBottom: '1px solid var(--border)',
+  backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  backdropFilter: 'blur(8px)',
 };
 
 const backButtonStyle: React.CSSProperties = {
@@ -390,12 +678,12 @@ const backButtonStyle: React.CSSProperties = {
 
 const chatMessagesStyle: React.CSSProperties = {
   flex: 1,
-  padding: '1.25rem',
+  padding: '1.5rem',
   overflowY: 'auto',
-  backgroundColor: 'var(--background)',
+  backgroundColor: 'rgba(248, 250, 252, 0.35)',
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.75rem',
+  gap: '1rem',
 };
 
 const chatEmptyFeedStyle: React.CSSProperties = {
@@ -414,11 +702,11 @@ const msgRowStyle = (isSelf: boolean): React.CSSProperties => ({
 
 const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
   maxWidth: '70%',
-  padding: '0.625rem 0.875rem',
-  borderRadius: 'var(--radius)',
-  backgroundColor: isSelf ? 'var(--primary)' : 'var(--card)',
+  padding: '0.75rem 1rem',
+  borderRadius: isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+  background: isSelf ? 'var(--gradient-brand)' : '#ffffff',
   color: isSelf ? 'var(--primary-foreground)' : 'var(--foreground)',
-  boxShadow: 'var(--shadow-sm)',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
   border: isSelf ? 'none' : '1px solid var(--border)',
 });
 
@@ -427,7 +715,7 @@ const msgTimeStyle = (isSelf: boolean): React.CSSProperties => ({
   fontSize: '0.65rem',
   textAlign: 'right',
   marginTop: '0.25rem',
-  color: isSelf ? 'rgba(255, 255, 255, 0.7)' : 'var(--muted)',
+  color: isSelf ? 'rgba(255, 255, 255, 0.75)' : 'var(--muted)',
 });
 
 const chatInputAreaStyle: React.CSSProperties = {

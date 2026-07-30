@@ -1,7 +1,16 @@
+/**
+ * RoommateFinder — orchestrates filters, grid, request panel, and modals.
+ * Full dark navy theme scoped to this page only.
+ */
 import { useState } from 'react';
 import type { User, MatchRequest, Hostel } from '../types';
 import { calculateCompatibility } from '../utils';
-import { SlidersHorizontal, MessageSquarePlus, ShieldAlert, X, Check, MapPin, UserCheck } from 'lucide-react';
+import { RoommateFilters } from './roommate/RoommateFilters';
+import { RoommateGrid } from './roommate/RoommateGrid';
+import { RoommateModals } from './roommate/RoommateModals';
+import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
+import { Users, Search, ChevronLeft, Inbox } from 'lucide-react';
+import { colors } from '../styles/colors';
 
 interface RoommateFinderProps {
   currentUser: User;
@@ -28,758 +37,380 @@ export const RoommateFinder = ({
   onAcceptRequest,
   onDeclineRequest,
 }: RoommateFinderProps) => {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [filterSleep, setFilterSleep] = useState<string>('all');
-  const [filterCleanliness, setFilterCleanliness] = useState<string>('all');
-  const [filterGender, setFilterGender] = useState<string>('all');
-  const [filterHostel, setFilterHostel] = useState<string>('all');
-  const [maxBudget, setMaxBudget] = useState<number>(200000);
-  const [activeTab, setActiveTab] = useState<'find' | 'requests'>('find');
-  
-  // Connection and Report states
-  const [showConnectModal, setShowConnectModal] = useState(false);
-  const [reqMessage, setReqMessage] = useState('Hey! Let\'s match up and search for rooms together!');
-  
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportReason, setReportReason] = useState<string>('fake-profile');
-  const [reportDesc, setReportDesc] = useState('');
+  const [filterSleep, setFilterSleep] = useState('all');
+  const [filterCleanliness, setFilterCleanliness] = useState('all');
+  const [filterGender, setFilterGender] = useState('all');
+  const [filterHostel, setFilterHostel] = useState('all');
+  const [maxBudget, setMaxBudget] = useState(200000);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(true);
 
-  // Filter & sort candidates
-  const candidates = users
-    .filter((u) => {
-      // Don't show current user
-      if (u.id === currentUser.id) return false;
-      // Don't show admins
-      if (u.role === 'admin') return false;
-      // Don't show hostel owners
-      if (u.role === 'owner') return false;
-      // Don't show suspended users
-      if (u.status === 'suspended') return false;
-      // Don't show blocked users
-      if (currentUser.blockedUsers?.includes(u.id)) return false;
+  const [activeTab, setActiveTab] = useState<'find' | 'requests'>(() => {
+    return (sessionStorage.getItem('livisync_roommate_tab') as 'find' | 'requests') || 'find';
+  });
 
-      // Don't show already connected (accepted match) users
-      const hasConnection = matchRequests.some(
-        (r) => r.status === 'accepted' &&
-               ((r.senderId === currentUser.id && r.receiverId === u.id) ||
-                (r.senderId === u.id && r.receiverId === currentUser.id))
-      );
-      if (hasConnection) return false;
-
-      // Apply Filters
-      const matchesSleep = filterSleep === 'all' || u.preferences.sleepSchedule === filterSleep;
-      const matchesClean = filterCleanliness === 'all' || u.preferences.cleanliness === filterCleanliness;
-      const matchesGender = filterGender === 'all' || u.gender === filterGender;
-      const matchesBudget = u.budget <= maxBudget;
-      const matchesHostel = filterHostel === 'all' || u.hostelId === filterHostel;
-
-      return matchesSleep && matchesClean && matchesGender && matchesBudget && matchesHostel;
-    })
-    .map((u) => ({
-      ...u,
-      score: calculateCompatibility(currentUser.preferences, u.preferences),
-    }))
-    // Sort by compatibility score in descending order
-    .sort((a, b) => b.score - a.score);
-
-  const getRequestStatus = (userId: string) => {
-    const req = matchRequests.find(
-      (r) =>
-        (r.senderId === currentUser.id && r.receiverId === userId) ||
-        (r.senderId === userId && r.receiverId === currentUser.id)
-    );
-    return req ? req.status : null;
+  const handleTabChange = (tab: 'find' | 'requests') => {
+    setActiveTab(tab);
+    sessionStorage.setItem('livisync_roommate_tab', tab);
   };
 
-  const handleSendRequestSubmit = (e: React.FormEvent) => {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [reqMessage, setReqMessage] = useState("Hey! Let's match up and search for rooms together!");
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('fake-profile');
+  const [reportDesc, setReportDesc] = useState('');
+
+  const candidates = users
+    .filter((u) => {
+      if (u.id === currentUser.id) return false;
+      if (u.role === 'admin' || u.role === 'owner') return false;
+      if (u.status === 'suspended') return false;
+      if (currentUser.blockedUsers?.includes(u.id)) return false;
+      const hasConnection = matchRequests.some(
+        (r) =>
+          r.status === 'accepted' &&
+          ((r.senderId === currentUser.id && r.receiverId === u.id) ||
+            (r.senderId === u.id && r.receiverId === currentUser.id))
+      );
+      if (hasConnection) return false;
+      const matchesSleep = filterSleep === 'all' || u.preferences?.sleepSchedule === filterSleep;
+      const matchesClean = filterCleanliness === 'all' || u.preferences?.cleanliness === filterCleanliness;
+      const matchesGender = filterGender === 'all' || u.gender === filterGender;
+      const matchesBudget = (u.budget ?? 0) <= maxBudget;
+      const matchesHostel = filterHostel === 'all' || u.hostelId === filterHostel;
+      const matchesSearch = !searchQuery.trim() || u.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSleep && matchesClean && matchesGender && matchesBudget && matchesHostel && matchesSearch;
+    })
+    .map((u) => ({ ...u, score: calculateCompatibility(currentUser.preferences, u.preferences) }))
+    .sort((a, b) => b.score - a.score);
+
+  const pendingReceivedCount = matchRequests.filter(
+    (r) =>
+      r.receiverId === currentUser.id &&
+      r.status === 'pending' &&
+      !(currentUser.blockedUsers ?? []).includes(r.senderId)
+  ).length;
+
+  const handleSubmitConnect = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
     onSendRequest(selectedUser.id, reqMessage);
     setShowConnectModal(false);
     setSelectedUser(null);
-    setReqMessage('Hey! Let\'s match up and search for rooms together!');
+    setReqMessage("Hey! Let's match up and search for rooms together!");
   };
 
-  const handleReport = (e: React.FormEvent) => {
+  const handleSubmitReport = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
-    
-    // Validate report description is at least 8 words
     const wordCount = reportDesc.trim().split(/\s+/).filter(Boolean).length;
     if (wordCount < 8) {
       alert('Please provide a detailed description (at least 8 words).');
       return;
     }
-    
     onReportUser(selectedUser.id, reportReason, reportDesc);
     setShowReportModal(false);
     setSelectedUser(null);
     setReportDesc('');
   };
 
-  const renderPrefLabel = (key: string, val: string) => {
-    return (
-      <div style={prefTagStyle} key={key}>
-        <span style={{ color: 'var(--muted)', textTransform: 'capitalize' }}>{key.replace(/([A-Z])/g, ' $1')}:</span>
-        <span style={{ fontWeight: 500 }}>{val}</span>
-      </div>
-    );
-  };
-
-  const sentRequests = matchRequests.filter(r => r.senderId === currentUser.id);
-  const receivedRequests = matchRequests.filter(r => r.receiverId === currentUser.id && r.status === 'pending' && !currentUser.blockedUsers?.includes(r.senderId));
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={pageWrapStyle}>
+      <style>{`
+        .rm-input::placeholder { color: rgba(148,163,184,0.6); }
+        .rm-select option { background: #1e293b; color: #e2e8f0; }
+        .rm-card-hover:hover {
+          border-color: rgba(99,102,241,0.5) !important;
+          box-shadow: 0 8px 32px rgba(99,102,241,0.2) !important;
+          transform: translateY(-2px);
+        }
+        .rm-filter-toggle:hover { background: rgba(99,102,241,0.2) !important; }
+        .rm-tab-btn:hover { color: rgba(255,255,255,0.9) !important; }
+      `}</style>
+
+      {/* ── Header ── */}
       <div style={headerStyle}>
-        <h1>Find Roommates</h1>
-        <p style={{ color: 'var(--muted)' }}>Browse students, compare lifestyle compatibility scores, and start team ups.</p>
-      </div>
-
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
-        <button
-          onClick={() => setActiveTab('find')}
-          style={{
-            background: 'none',
-            border: 'none',
-            borderBottom: activeTab === 'find' ? '2px solid var(--primary)' : 'none',
-            color: activeTab === 'find' ? 'var(--primary)' : 'var(--muted)',
-            fontWeight: 600,
-            padding: '0.5rem 1rem',
-            cursor: 'pointer',
-            fontSize: '0.95rem'
-          }}
-        >
-          Find Roommates
-        </button>
-        <button
-          onClick={() => setActiveTab('requests')}
-          style={{
-            background: 'none',
-            border: 'none',
-            borderBottom: activeTab === 'requests' ? '2px solid var(--primary)' : 'none',
-            color: activeTab === 'requests' ? 'var(--primary)' : 'var(--muted)',
-            fontWeight: 600,
-            padding: '0.5rem 1rem',
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem'
-          }}
-        >
-          My Requests 
-          {receivedRequests.length > 0 && (
-            <span style={{
-              backgroundColor: 'var(--primary)',
-              color: 'white',
-              fontSize: '0.7rem',
-              borderRadius: '50%',
-              width: '18px',
-              height: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 'bold'
-            }}>
-              {receivedRequests.length}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {activeTab === 'find' ? (
-        <>
-          <div className="split-layout">
-        {/* Filter Bar */}
-        <div className="card" style={{ padding: '1.25rem', height: 'fit-content' }}>
-          <h3 style={{ fontSize: '0.95rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <SlidersHorizontal size={14} />
-            Filters
-          </h3>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontSize: '0.75rem' }}>Max Roommate Budget: {maxBudget.toLocaleString()}</label>
-            <input
-              type="range"
-              min="20000"
-              max="200000"
-              step="5000"
-              value={maxBudget}
-              onChange={(e) => setMaxBudget(Number(e.target.value))}
-              style={{ width: '100%', accentColor: 'var(--primary)' }}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontSize: '0.75rem' }}>Gender</label>
-            <select className="form-select" value={filterGender} onChange={(e) => setFilterGender(e.target.value)}>
-              <option value="all">Any Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontSize: '0.75rem' }}>Sleep Schedule</label>
-            <select className="form-select" value={filterSleep} onChange={(e) => setFilterSleep(e.target.value)}>
-              <option value="all">Any Sleep Cycle</option>
-              <option value="early-bird">Early Bird</option>
-              <option value="night-owl">Night Owl</option>
-              <option value="flexible">Flexible</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontSize: '0.75rem' }}>Cleanliness</label>
-            <select className="form-select" value={filterCleanliness} onChange={(e) => setFilterCleanliness(e.target.value)}>
-              <option value="all">Any Cleanliness</option>
-              <option value="meticulous">Meticulous</option>
-              <option value="moderate">Moderate</option>
-              <option value="relaxed">Relaxed</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontSize: '0.75rem' }}>Current Hostel</label>
-            <select className="form-select" value={filterHostel} onChange={(e) => setFilterHostel(e.target.value)}>
-              <option value="all">Any Hostel</option>
-              {hostels.map((hostel) => (
-                <option key={hostel.id} value={hostel.id}>
-                  {hostel.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Roommates Grid */}
-        <div>
-          {candidates.length === 0 ? (
-            <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--muted)' }}>
-              No potential roommates match your filter criteria.
-            </div>
-          ) : (
-            <div className="grid-2">
-              {candidates.map((candidate) => {
-                const reqStatus = getRequestStatus(candidate.id);
-                // Display Student or Job status
-                const occupationDisplay = candidate.occupation === 'student' ? 'Student' : candidate.occupation === 'job' ? 'Job Holder' : 'Student';
-                
-                return (
-                  <div
-                    key={candidate.id}
-                    className="card"
-                    style={candidateCardStyle}
-                    onClick={() => setSelectedUser(candidate)}
-                  >
-                    <div style={cardHeaderStyle}>
-                      <img src={candidate.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} alt={candidate.name} style={avatarStyle} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <h3 style={{ fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {candidate.name}
-                        </h3>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-                          {candidate.age} y/o • {candidate.gender} • <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.7rem' }}>{occupationDisplay}</span>
-                        </p>
-                      </div>
-                      <div style={scoreCircleStyle(candidate.score)}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{candidate.score}%</span>
-                        <span style={{ fontSize: '0.55rem', textTransform: 'uppercase', opacity: 0.8 }}>Match</span>
-                      </div>
-                    </div>
-
-                    <p style={bioTextStyle}>{candidate.bio || "No biography provided."}</p>
-
-                    <div style={cardFooterStyle}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <MapPin size={12} />
-                        {candidate.location || "Islamabad"} • PKR {candidate.budget.toLocaleString()}/mo
-                      </span>
-
-                      {reqStatus === 'accepted' && (
-                        <span style={{ color: 'var(--success)', fontSize: '0.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                          <Check size={12} />
-                          Matched
-                        </span>
-                      )}
-                      {reqStatus === 'pending' && (
-                        <span style={{ color: '#d97706', fontSize: '0.75rem', fontWeight: 500 }}>
-                          Pending
-                        </span>
-                      )}
-                      {!reqStatus && (
-                        <span style={{ color: 'var(--primary)', fontSize: '0.75rem', fontWeight: 500 }}>
-                          View Details →
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Detail Modal Overlay */}
-      {selectedUser && !showConnectModal && !showReportModal && (
-        <div style={modalOverlayStyle}>
-          <div className="card" style={modalContentStyle}>
-            <div style={modalHeaderStyle}>
-              <h3>Compatibility Profile</h3>
-              <button style={closeBtnStyle} onClick={() => setSelectedUser(null)}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <div style={modalBodyStyle}>
-              {/* Profile Card Summary */}
-              <div style={profileSummaryCardStyle}>
-                <img src={selectedUser.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} alt={selectedUser.name} style={modalAvatarStyle} />
-                <div style={{ flex: 1 }}>
-                  <h2>{selectedUser.name}</h2>
-                  <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
-                    {selectedUser.age} years old • {selectedUser.gender} • {selectedUser.location || "Islamabad"}
-                  </p>
-                  
-                  {/* Student vs Job specific details */}
-                  {selectedUser.occupation === 'job' ? (
-                    selectedUser.company && (
-                      <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', marginTop: '0.25rem' }}>
-                        💼 Working at: <strong>{selectedUser.company}</strong>
-                      </p>
-                    )
-                  ) : (
-                    selectedUser.institution && (
-                      <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', marginTop: '0.25rem' }}>
-                        🎓 Studying at: <strong>{selectedUser.institution}</strong>
-                      </p>
-                    )
-                  )}
-                  
-                  <p style={{ fontWeight: 600, fontSize: '0.9rem', marginTop: '0.25rem' }}>
-                    Max Budget: PKR {selectedUser.budget.toLocaleString()}/mo
-                  </p>
+        <div style={headerInnerWrapStyle}>
+          <div style={headerInnerStyle}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem' }}>
+                <div style={iconBoxStyle}>
+                  <Users size={16} color="white" strokeWidth={2.5} />
                 </div>
-                <div style={modalScoreStyle(calculateCompatibility(currentUser.preferences, selectedUser.preferences))}>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>
-                    {calculateCompatibility(currentUser.preferences, selectedUser.preferences)}%
-                  </h3>
-                  <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 600 }}>Compatibility</span>
-                </div>
+                <h1 style={pageTitleStyle}>Find Roommates</h1>
               </div>
-
-              {/* Bio & Preferences */}
-              <div style={{ marginTop: '1.5rem' }}>
-                <h4>About</h4>
-                <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginTop: '0.25rem', lineHeight: '1.5' }}>
-                  {selectedUser.bio || "No bio added."}
-                </p>
-              </div>
-
-              <div style={{ marginTop: '1.5rem' }}>
-                <h4>Habits & Routine</h4>
-                <div style={prefGridStyle}>
-                  {renderPrefLabel('sleepSchedule', selectedUser.preferences.sleepSchedule)}
-                  {renderPrefLabel('cleanliness', selectedUser.preferences.cleanliness)}
-                  {renderPrefLabel('smoking', selectedUser.preferences.smoking)}
-                  {renderPrefLabel('pets', selectedUser.preferences.pets)}
-                  {renderPrefLabel('guestTolerance', selectedUser.preferences.guestTolerance)}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-                {getRequestStatus(selectedUser.id) === 'accepted' ? (
-                  <div style={alertSuccessStyle}>
-                    You and {selectedUser.name} are matched roommates. Go to the Inbox tab to chat!
-                  </div>
-                ) : getRequestStatus(selectedUser.id) === 'pending' ? (
-                  <div style={alertPendingStyle}>
-                    Your match request is currently pending review by {selectedUser.name}.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <button className="btn btn-primary" onClick={() => setShowConnectModal(true)}>
-                      <MessageSquarePlus size={16} />
-                      Connect
-                    </button>
-                    <button className="btn btn-danger" onClick={() => setShowReportModal(true)}>
-                      <ShieldAlert size={16} />
-                      Report
-                    </button>
-                    <button className="btn btn-secondary" onClick={() => { onBlockUser(selectedUser.id); setSelectedUser(null); }}>
-                      Block
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Connect Popup Modal */}
-      {showConnectModal && selectedUser && (
-        <div style={modalOverlayStyle}>
-          <form className="card" style={connectModalContentStyle} onSubmit={handleSendRequestSubmit}>
-            <div style={modalHeaderStyle}>
-              <h3>Connect with {selectedUser.name}</h3>
-              <button type="button" style={closeBtnStyle} onClick={() => setShowConnectModal(false)}>
-                <X size={18} />
-              </button>
-            </div>
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <p style={{ fontSize: '0.875rem', color: 'var(--muted)', margin: 0 }}>
-                You are sending a connection match request. You can add an optional friendly note below:
+              <p style={pageSubtitleStyle}>
+                {candidates.length} compatible students · sorted by lifestyle match
               </p>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <textarea
-                  className="form-textarea"
-                  rows={4}
-                  value={reqMessage}
-                  onChange={(e) => setReqMessage(e.target.value)}
-                  placeholder="Tell them a bit about yourself or why you want to connect..."
+            </div>
+
+            {/* Search */}
+            <div style={searchWrapStyle}>
+              <Search size={15} color="rgba(148,163,184,0.7)" style={{ flexShrink: 0 }} />
+              <input
+                className="rm-input"
+                type="text"
+                placeholder="Search by name…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={searchInputStyle}
+              />
+            </div>
+          </div>
+
+          {/* Tab bar */}
+          <div style={tabBarStyle}>
+          <button
+            onClick={() => handleTabChange('find')}
+            className="rm-tab-btn"
+            style={tabBtnStyle(activeTab === 'find')}
+          >
+            <Users size={14} />
+            Browse
+          </button>
+          <button
+            onClick={() => handleTabChange('requests')}
+            className="rm-tab-btn"
+            style={tabBtnStyle(activeTab === 'requests')}
+          >
+            <Inbox size={14} />
+            Requests
+            {pendingReceivedCount > 0 && (
+              <span style={tabPillStyle}>{pendingReceivedCount}</span>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+
+      {/* ── Body ── */}
+      <div style={bodyStyle}>
+        {activeTab === 'find' ? (
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            {/* Sidebar */}
+            {showFilters && (
+              <div style={{ width: '220px', flexShrink: 0 }}>
+                <RoommateFilters
+                  maxBudget={maxBudget}
+                  filterGender={filterGender}
+                  filterSleep={filterSleep}
+                  filterCleanliness={filterCleanliness}
+                  filterHostel={filterHostel}
+                  hostels={hostels}
+                  onMaxBudgetChange={setMaxBudget}
+                  onGenderChange={setFilterGender}
+                  onSleepChange={setFilterSleep}
+                  onCleanlinessChange={setFilterCleanliness}
+                  onHostelChange={setFilterHostel}
                 />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowConnectModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <UserCheck size={16} />
-                  Send Request
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      )}
+            )}
 
-      {/* Report Modal */}
-      {showReportModal && selectedUser && (
-        <div style={modalOverlayStyle}>
-          <form className="card" style={reportModalContentStyle} onSubmit={handleReport}>
-            <div style={modalHeaderStyle}>
-              <h3>Report {selectedUser.name}</h3>
-              <button type="button" style={closeBtnStyle} onClick={() => setShowReportModal(false)}>
-                <X size={18} />
+            {/* Main grid area */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Filter toggle */}
+              <button
+                onClick={() => setShowFilters((v) => !v)}
+                className="rm-filter-toggle"
+                style={filterToggleStyle}
+              >
+                <ChevronLeft
+                  size={13}
+                  style={{
+                    transition: 'transform 0.25s',
+                    transform: showFilters ? 'rotate(0deg)' : 'rotate(180deg)',
+                  }}
+                />
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
               </button>
-            </div>
-            <div style={{ padding: '1.5rem' }}>
-              <div className="form-group">
-                <label className="form-label">Reason</label>
-                <select className="form-select" value={reportReason} onChange={(e) => setReportReason(e.target.value)}>
-                  <option value="fake-profile">Fake Profile</option>
-                  <option value="harassment">Harassment</option>
-                  <option value="spam">Spam / Advertising</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Details</label>
-                <textarea
-                  className="form-textarea"
-                  rows={4}
-                  required
-                  value={reportDesc}
-                  onChange={(e) => setReportDesc(e.target.value)}
-                  placeholder="Provide details. Description must be at least 8 words long..."
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.5rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowReportModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Submit Report
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      )}
-      </>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-          {/* Received Requests column */}
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
-              Received Requests ({receivedRequests.length})
-            </h3>
-            {receivedRequests.length === 0 ? (
-              <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>No pending received requests.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {receivedRequests.map((req) => {
-                  const sender = users.find(u => u.id === req.senderId);
-                  if (!sender) return null;
-                  return (
-                    <div key={req.id} style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius)', backgroundColor: 'var(--secondary)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                        <img src={sender.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
-                        <div>
-                          <h4 style={{ fontSize: '0.9rem', fontWeight: 600 }}>{sender.name}</h4>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Budget: PKR {sender.budget.toLocaleString()}/mo</span>
-                        </div>
-                      </div>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--foreground)', margin: '0.5rem 0', fontStyle: 'italic' }}>
-                        "{req.message}"
-                      </p>
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                        <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => onAcceptRequest(req.id)}>
-                          Accept
-                        </button>
-                        <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => onDeclineRequest(req.id)}>
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
 
-          {/* Sent Requests column */}
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
-              Sent Requests ({sentRequests.length})
-            </h3>
-            {sentRequests.length === 0 ? (
-              <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>No sent requests.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {sentRequests.map((req) => {
-                  const receiver = users.find(u => u.id === req.receiverId);
-                  if (!receiver) return null;
-                  return (
-                    <div key={req.id} style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius)', backgroundColor: 'var(--secondary)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                        <img src={receiver.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
-                        <div>
-                          <h4 style={{ fontSize: '0.9rem', fontWeight: 600 }}>{receiver.name}</h4>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Budget: PKR {receiver.budget.toLocaleString()}/mo</span>
-                        </div>
-                      </div>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--foreground)', margin: '0.5rem 0', fontStyle: 'italic' }}>
-                        "{req.message}"
-                      </p>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
-                        <span style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          color: req.status === 'accepted' ? 'var(--success)' : req.status === 'declined' ? 'var(--danger)' : 'var(--muted)',
-                          textTransform: 'uppercase'
-                        }}>
-                          Status: {req.status}
-                        </span>
-                        {req.status === 'pending' && (
-                          <button className="btn btn-danger" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => onCancelRequest(req.id)}>
-                            Cancel Request
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+              <RoommateGrid
+                candidates={candidates}
+                matchRequests={matchRequests}
+                currentUserId={currentUser.id}
+                onSelectCandidate={setSelectedUser}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <RoommateRequestsPanel
+            users={users}
+            currentUser={currentUser}
+            matchRequests={matchRequests}
+            onAcceptRequest={onAcceptRequest}
+            onDeclineRequest={onDeclineRequest}
+            onCancelRequest={onCancelRequest}
+          />
+        )}
+      </div>
+
+      <RoommateModals
+        selectedUser={selectedUser}
+        currentUser={currentUser}
+        matchRequests={matchRequests}
+        showConnectModal={showConnectModal}
+        showReportModal={showReportModal}
+        reqMessage={reqMessage}
+        reportReason={reportReason}
+        reportDesc={reportDesc}
+        onCloseDetail={() => setSelectedUser(null)}
+        onOpenConnect={() => setShowConnectModal(true)}
+        onCloseConnect={() => setShowConnectModal(false)}
+        onOpenReport={() => setShowReportModal(true)}
+        onCloseReport={() => setShowReportModal(false)}
+        onBlockUser={onBlockUser}
+        onReqMessageChange={setReqMessage}
+        onReportReasonChange={setReportReason}
+        onReportDescChange={setReportDesc}
+        onSubmitConnect={handleSubmitConnect}
+        onSubmitReport={handleSubmitReport}
+      />
     </div>
   );
 };
 
-// Styles
+// ─── Dark-navy page theme ─────────────────────────────────────────────────────
+
+const pageWrapStyle: React.CSSProperties = {
+  minHeight: 'calc(100vh - 64px)',
+  background: colors.dark.bgGradient,
+  backgroundAttachment: 'fixed',
+  /* Full-bleed escape from centered max-width container */
+  width: '100vw',
+  marginLeft: 'calc(-50vw + 50%)',
+  marginTop: '-2.5rem',
+  padding: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  overflowX: 'hidden',
+};
+
 const headerStyle: React.CSSProperties = {
-  backgroundColor: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  padding: '2rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
+  background: 'rgba(15,23,42,0.9)',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  borderBottom: '1px solid rgba(255,255,255,0.07)',
+  padding: '0',
 };
 
-const candidateCardStyle: React.CSSProperties = {
-  padding: '1.25rem',
-  cursor: 'pointer',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.75rem',
+const headerInnerWrapStyle: React.CSSProperties = {
+  maxWidth: '1200px',
+  margin: '0 auto',
+  padding: '1.5rem 2rem 0',
 };
 
-const cardHeaderStyle: React.CSSProperties = {
+const headerInnerStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.75rem',
-};
-
-const avatarStyle: React.CSSProperties = {
-  width: '44px',
-  height: '44px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-};
-
-const scoreCircleStyle = (score: number): React.CSSProperties => {
-  const isHigh = score >= 80;
-  const isMid = score >= 50;
-  return {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    border: `2px solid ${isHigh ? 'var(--success)' : isMid ? '#fef3c7' : 'var(--border)'}`,
-    color: isHigh ? 'var(--success)' : isMid ? '#d97706' : 'var(--muted)',
-    backgroundColor: isHigh ? 'var(--success-bg)' : isMid ? '#fffbeb' : 'var(--muted-bg)',
-  };
-};
-
-const bioTextStyle: React.CSSProperties = {
-  fontSize: '0.85rem',
-  color: 'var(--muted)',
-  overflow: 'hidden',
-  display: '-webkit-box',
-  WebkitLineClamp: 2,
-  WebkitBoxOrient: 'vertical',
-  lineHeight: '1.45',
-};
-
-const cardFooterStyle: React.CSSProperties = {
-  display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: '0.5rem',
-  borderTop: '1px solid var(--border)',
-  paddingTop: '0.75rem',
- };
+  flexWrap: 'wrap',
+  gap: '1rem',
+  marginBottom: '1.25rem',
+};
 
-// Modal styles
-const modalOverlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(15, 23, 42, 0.6)',
-  backdropFilter: 'blur(8px)',
+const iconBoxStyle: React.CSSProperties = {
+  width: '28px',
+  height: '28px',
+  borderRadius: '8px',
+  background: colors.gradientBrand,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 9999,
-  padding: '1rem',
+  boxShadow: '0 4px 12px rgba(99,102,241,0.4)',
 };
 
-const modalContentStyle: React.CSSProperties = {
-  maxWidth: '600px',
-  width: '100%',
-  maxHeight: '90vh',
-  overflowY: 'auto',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+const pageTitleStyle: React.CSSProperties = {
+  fontSize: '1.35rem',
+  fontWeight: 800,
+  color: colors.dark.text,
+  letterSpacing: '-0.03em',
 };
 
-const connectModalContentStyle: React.CSSProperties = {
-  maxWidth: '450px',
-  width: '100%',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+const pageSubtitleStyle: React.CSSProperties = {
+  fontSize: '0.8rem',
+  color: colors.dark.muted,
+  marginLeft: '36px',
 };
 
-const reportModalContentStyle: React.CSSProperties = {
-  maxWidth: '450px',
-  width: '100%',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-};
-
-const modalHeaderStyle: React.CSSProperties = {
+const searchWrapStyle: React.CSSProperties = {
   display: 'flex',
-  justifyContent: 'space-between',
   alignItems: 'center',
-  padding: '1.25rem 1.5rem',
-  borderBottom: '1px solid var(--border)',
+  gap: '0.5rem',
+  background: colors.dark.surface,
+  border: `1px solid ${colors.dark.border}`,
+  borderRadius: '10px',
+  padding: '0.5rem 0.875rem',
+  minWidth: '220px',
+  flex: '0 1 260px',
 };
 
-const closeBtnStyle: React.CSSProperties = {
+const searchInputStyle: React.CSSProperties = {
   background: 'none',
   border: 'none',
-  cursor: 'pointer',
-  color: 'var(--muted)',
+  outline: 'none',
+  color: colors.dark.text,
+  fontSize: '0.85rem',
+  flex: 1,
 };
 
-const modalBodyStyle: React.CSSProperties = {
-  padding: '1.5rem',
-};
-
-const profileSummaryCardStyle: React.CSSProperties = {
+const tabBarStyle: React.CSSProperties = {
   display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-  backgroundColor: 'var(--background)',
-  border: '1px solid var(--border)',
-  padding: '1rem',
-  borderRadius: 'var(--radius)',
-};
-
-const modalAvatarStyle: React.CSSProperties = {
-  width: '64px',
-  height: '64px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-};
-
-const modalScoreStyle = (score: number): React.CSSProperties => {
-  const isHigh = score >= 80;
-  const isMid = score >= 50;
-  return {
-    textAlign: 'center',
-    padding: '0.5rem 1rem',
-    borderRadius: 'var(--radius)',
-    border: `1px solid ${isHigh ? 'var(--success)' : isMid ? '#fbbf24' : 'var(--border)'}`,
-    color: isHigh ? 'var(--success)' : isMid ? '#d97706' : 'var(--muted)',
-    backgroundColor: isHigh ? 'var(--success-bg)' : isMid ? '#fffbeb' : 'var(--muted-bg)',
-  };
-};
-
-const prefGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-  gap: '0.75rem',
+  gap: '0',
+  borderTop: '1px solid rgba(255,255,255,0.05)',
   marginTop: '0.5rem',
 };
 
-const prefTagStyle: React.CSSProperties = {
+const tabBtnStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
-  justifyContent: 'space-between',
-  padding: '0.5rem 0.75rem',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  fontSize: '0.8rem',
-  backgroundColor: 'var(--background)',
+  alignItems: 'center',
+  gap: '0.4rem',
+  padding: '0.75rem 1.25rem',
+  fontSize: '0.85rem',
+  fontWeight: isActive ? 700 : 500,
+  color: isActive ? '#ffffff' : colors.dark.muted,
+  background: 'none',
+  border: 'none',
+  borderBottom: isActive ? '2px solid var(--primary)' : '2px solid transparent',
+  cursor: 'pointer',
+  transition: 'var(--transition)',
+  whiteSpace: 'nowrap' as const,
+});
+
+const tabPillStyle: React.CSSProperties = {
+  backgroundColor: 'var(--primary)',
+  color: 'white',
+  fontSize: '0.65rem',
+  fontWeight: 700,
+  borderRadius: '9999px',
+  minWidth: '18px',
+  height: '18px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0 4px',
 };
 
-const alertSuccessStyle: React.CSSProperties = {
-  backgroundColor: 'var(--success-bg)',
-  color: 'var(--success)',
-  padding: '0.875rem 1rem',
-  borderRadius: 'var(--radius)',
-  fontSize: '0.85rem',
-  fontWeight: 500,
-  border: '1px solid rgba(16, 185, 129, 0.2)',
+const bodyStyle: React.CSSProperties = {
+  flex: 1,
+  maxWidth: '1200px',
+  width: '100%',
+  margin: '0 auto',
+  padding: '1.5rem 2rem',
 };
 
-const alertPendingStyle: React.CSSProperties = {
-  backgroundColor: '#fffbeb',
-  color: '#d97706',
-  padding: '0.875rem 1rem',
-  borderRadius: 'var(--radius)',
-  fontSize: '0.85rem',
-  fontWeight: 500,
-  border: '1px solid rgba(217, 119, 6, 0.2)',
+const filterToggleStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.3rem',
+  marginBottom: '0.875rem',
+  padding: '0.3rem 0.7rem',
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  color: colors.dark.muted,
+  background: colors.dark.surface,
+  border: `1px solid ${colors.dark.border}`,
+  borderRadius: '9999px',
+  cursor: 'pointer',
+  transition: 'var(--transition)',
 };

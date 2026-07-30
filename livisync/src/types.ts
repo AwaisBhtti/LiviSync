@@ -4,6 +4,7 @@ export interface Preferences {
   smoking: 'no' | 'yes' | 'outside-only';
   pets: 'no' | 'yes' | 'likes-but-no-own';
   guestTolerance: 'rarely' | 'weekends' | 'anytime';
+  noiseTolerance: 'silent' | 'moderate' | 'lively';
 }
 
 export interface Student {

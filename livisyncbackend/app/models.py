@@ -76,6 +76,7 @@ class Preferences(Base):
     smoking = Column(String(20), nullable=False)
     pets = Column(String(20), nullable=False)
     guest_tolerance = Column(String(20), nullable=False)
+    noise_tolerance = Column(String(20), nullable=False, default='moderate')
 
     __table_args__ = (
         CheckConstraint("sleep_schedule IN ('early-bird', 'night-owl', 'flexible')", name="sleep_schedule_check"),
@@ -83,6 +84,7 @@ class Preferences(Base):
         CheckConstraint("smoking IN ('no', 'yes', 'outside-only')", name="smoking_check"),
         CheckConstraint("pets IN ('no', 'yes', 'likes-but-no-own')", name="pets_check"),
         CheckConstraint("guest_tolerance IN ('rarely', 'weekends', 'anytime')", name="guest_tolerance_check"),
+        CheckConstraint("noise_tolerance IN ('silent', 'moderate', 'lively')", name="noise_tolerance_check"),
     )
 
     student = relationship("Student", back_populates="preferences")
