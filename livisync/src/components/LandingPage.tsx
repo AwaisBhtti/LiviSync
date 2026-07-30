@@ -5,7 +5,7 @@ import studentMale from '../assets/student-male.jpg';
 import hostelOrchard from '../assets/hostel-orchard.jpg';
 import hostelStudio from '../assets/hostel-studio.jpg';
 import hostelHeritage from '../assets/hostel-heritage.jpg';
-import logo from '../assets/logo2.png';
+import logo from '../assets/logo.png';
 
 interface LandingPageProps {
   isAuthenticated: boolean;
