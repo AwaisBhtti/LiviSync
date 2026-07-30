@@ -34,7 +34,14 @@ export const RoommateFinder = ({
   const [filterGender, setFilterGender] = useState<string>('all');
   const [filterHostel, setFilterHostel] = useState<string>('all');
   const [maxBudget, setMaxBudget] = useState<number>(200000);
-  const [activeTab, setActiveTab] = useState<'find' | 'requests'>('find');
+  const [activeTab, setActiveTab] = useState<'find' | 'requests'>(() => {
+    return (sessionStorage.getItem('livisync_roommate_tab') as 'find' | 'requests') || 'find';
+  });
+
+  const handleTabChange = (tab: 'find' | 'requests') => {
+    setActiveTab(tab);
+    sessionStorage.setItem('livisync_roommate_tab', tab);
+  };
   
   // Connection and Report states
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -138,7 +145,7 @@ export const RoommateFinder = ({
 
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
         <button
-          onClick={() => setActiveTab('find')}
+          onClick={() => handleTabChange('find')}
           style={{
             background: 'none',
             border: 'none',
@@ -153,7 +160,7 @@ export const RoommateFinder = ({
           Find Roommates
         </button>
         <button
-          onClick={() => setActiveTab('requests')}
+          onClick={() => handleTabChange('requests')}
           style={{
             background: 'none',
             border: 'none',
