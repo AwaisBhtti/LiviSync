@@ -25,7 +25,14 @@ export const StudentProfile = ({ currentUser, onSave, hostels, users, onUnblockU
   const [preferences, setPreferences] = useState<Preferences>({ ...currentUser.preferences });
   const [showSavedMsg, setShowSavedMsg] = useState(false);
   const [hostelId, setHostelId] = useState(currentUser.hostelId || '');
-  const [activeSection, setActiveSection] = useState<'profile' | 'blocklist'>('profile');
+  const [activeSection, setActiveSection] = useState<'profile' | 'blocklist'>(() => {
+    return (sessionStorage.getItem('livisync_profile_section') as 'profile' | 'blocklist') || 'profile';
+  });
+
+  const handleSectionChange = (section: 'profile' | 'blocklist') => {
+    setActiveSection(section);
+    sessionStorage.setItem('livisync_profile_section', section);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,11 +68,11 @@ export const StudentProfile = ({ currentUser, onSave, hostels, users, onUnblockU
           <UserIcon size={18} />
           <h4>Your Account</h4>
         </div>
-        <div style={sidebarItemStyle(activeSection === 'profile')} onClick={() => setActiveSection('profile')} className="sidebar-tab">
+        <div style={sidebarItemStyle(activeSection === 'profile')} onClick={() => handleSectionChange('profile')} className="sidebar-tab">
           <Settings size={14} />
           Profile & Preferences
         </div>
-        <div style={sidebarItemStyle(activeSection === 'blocklist')} onClick={() => setActiveSection('blocklist')} className="sidebar-tab">
+        <div style={sidebarItemStyle(activeSection === 'blocklist')} onClick={() => handleSectionChange('blocklist')} className="sidebar-tab">
           <ShieldAlert size={14} />
           Blocked Users
         </div>
@@ -248,6 +255,15 @@ export const StudentProfile = ({ currentUser, onSave, hostels, users, onUnblockU
                   <option value="weekends">Weekends Only</option>
                   <option value="rarely">Rarely</option>
                   <option value="anytime">Anytime</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Noise Tolerance</label>
+                <select className="form-select" value={preferences.noiseTolerance || 'moderate'} onChange={(e) => handlePrefChange('noiseTolerance', e.target.value)}>
+                  <option value="moderate">Moderate</option>
+                  <option value="silent">Silent</option>
+                  <option value="lively">Lively</option>
                 </select>
               </div>
             </div>

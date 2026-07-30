@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MatchRequest, User, Message } from '../types';
-import { Send, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, Clock } from 'lucide-react';
 import { supabase } from '../supabase';
 import { API_BASE_URL } from '../config';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface ChatModuleProps {
   currentUser: User;
@@ -32,6 +33,47 @@ export const ChatModule = ({
   const [reportReason, setReportReason] = useState('other');
   const [reportDescription, setReportDescription] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void | Promise<void>;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  const appendOrMergeMessage = (peerId: string, newMessage: Message & { status?: string }) => {
+    setMessages((prev) => {
+      const list = prev[peerId] || [];
+      if (list.some((m) => m.id === newMessage.id)) {
+        return prev;
+      }
+      const reversedTempIndex = [...list].reverse().findIndex(
+        (m) =>
+          m.id.startsWith('temp-') &&
+          String(m.senderId).toLowerCase() === String(newMessage.senderId).toLowerCase()
+      );
+      if (reversedTempIndex !== -1) {
+        const actualIndex = list.length - 1 - reversedTempIndex;
+        const newList = [...list];
+        newList[actualIndex] = newMessage;
+        return {
+          ...prev,
+          [peerId]: newList,
+        };
+      }
+      return {
+        ...prev,
+        [peerId]: [...list, newMessage],
+      };
+    });
+  };
 
   // Filter out users who are active matches (accepted status), sorted by latest message
   const activeMatches = matchRequests
@@ -147,16 +189,7 @@ export const ChatModule = ({
               timestamp: newMsg.created_at,
               read: newMsg.is_read
             };
-            setMessages((prev) => {
-              const currentChatMsgs = prev[peerId] || [];
-              if (currentChatMsgs.some(m => m.id === mappedMsg.id)) {
-                return prev;
-              }
-              return {
-                ...prev,
-                [peerId]: [...currentChatMsgs, mappedMsg]
-              };
-            });
+            appendOrMergeMessage(peerId, mappedMsg);
 
             // If we are currently inside the active chat with the sender, mark as read immediately!
             if (activeChatUserId === peerId && newMsg.receiver_id === currentUser.id) {
@@ -230,6 +263,25 @@ export const ChatModule = ({
     const textToSend = typedMessage;
     setTypedMessage('');
 
+    // Optimistic Update: append local temporary message
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: Message & { status?: string } = {
+      id: tempId,
+      senderId: currentUser.id,
+      text: textToSend,
+      timestamp: new Date().toISOString(),
+      read: false,
+      status: 'sending'
+    };
+
+    setMessages((prev) => {
+      const currentChatMsgs = prev[activeChatUserId] || [];
+      return {
+        ...prev,
+        [activeChatUserId]: [...currentChatMsgs, optimisticMsg]
+      };
+    });
+
     try {
       const response = await fetch(`${API_BASE_URL}/chat/messages`, {
         method: 'POST',
@@ -246,8 +298,27 @@ export const ChatModule = ({
         const errData = await response.json();
         throw new Error(errData.detail || 'Failed to send message');
       }
+      const data = await response.json();
+      const realMsg: Message & { status?: string } = {
+        id: data.id,
+        senderId: data.senderId,
+        text: data.text,
+        timestamp: data.timestamp,
+        read: data.read || false,
+        status: 'sent'
+      };
+      // Merge: Replace optimistic message with the delivered one
+      appendOrMergeMessage(activeChatUserId, realMsg);
     } catch (err: any) {
       alert(err.message || 'Error sending message');
+      // If error occurs, remove optimistic message
+      setMessages((prev) => {
+        const currentChatMsgs = prev[activeChatUserId] || [];
+        return {
+          ...prev,
+          [activeChatUserId]: currentChatMsgs.filter(m => m.id !== tempId)
+        };
+      });
     }
   };
 
@@ -256,11 +327,11 @@ export const ChatModule = ({
   };
 
   return (
-    <div style={containerStyle}>
-      {/* If screen is mobile and chat is open, hide chat lists and only show active conversation */}
-      <div style={chatGridStyle}>
+    <div style={containerStyle} className="auth-chat-container">
+      {/* Wrap everything in a single unified dashboard */}
+      <div style={{ ...chatGridStyle, height: '100%' }}>
         {/* Left Side: Inbox Lists (Active Chats Only) */}
-        <div style={inboxListStyle(!!activeChatUserId)} className="card">
+        <div style={inboxListStyle(!!activeChatUserId)}>
           {/* Section: Active Chats */}
           <div style={sectionStyle}>
             <h3 style={sectionHeaderStyle}>Roommate Chats ({activeMatches.length})</h3>
@@ -312,7 +383,7 @@ export const ChatModule = ({
         </div>
 
         {/* Right Side: Active Chat Window */}
-        <div style={chatWindowStyle(!!activeChatUserId)} className="card">
+        <div style={chatWindowStyle(!!activeChatUserId)}>
           {activeChatUserId ? (
             <>
               {/* Chat Header */}
@@ -341,10 +412,23 @@ export const ChatModule = ({
                   className="btn btn-secondary"
                   style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
                   onClick={() => {
-                    if (confirm(`Block ${getRespondent()?.name}?`)) {
-                      onBlockUser(activeChatUserId);
-                      setActiveChatUserId(null);
-                    }
+                    const name = getRespondent()?.name || 'this user';
+                    setConfirmModal({
+                      isOpen: true,
+                      title: 'Block User',
+                      message: `Are you sure you want to block ${name}?`,
+                      confirmText: 'Block',
+                      isDanger: true,
+                      onConfirm: async () => {
+                        try {
+                          await onBlockUser(activeChatUserId!);
+                          setActiveChatUserId(null);
+                          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                        } catch (err: any) {
+                          alert(err.message || 'Error blocking user.');
+                        }
+                      }
+                    });
                   }}
                 >
                   Block
@@ -372,6 +456,9 @@ export const ChatModule = ({
                               hour: '2-digit',
                               minute: '2-digit',
                             })}
+                            {(msg as any).status === 'sending' && (
+                              <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
+                            )}
                           </span>
                         </div>
                       </div>
@@ -579,7 +666,7 @@ export const ChatModule = ({
                     type="button"
                     className="btn btn-danger"
                     style={{ flex: '1 1 100%' }}
-                    onClick={async () => {
+                    onClick={() => {
                       const respondent = getRespondent();
                       if (!respondent) return;
 
@@ -590,15 +677,23 @@ export const ChatModule = ({
                       );
 
                       if (connection) {
-                        if (confirm(`Are you sure you want to unfriend ${respondent.name}? You will no longer be connected.`)) {
-                          try {
-                            await onUnfriend(connection.id);
-                            setShowRespondentProfile(false);
-                            setActiveChatUserId(null);
-                          } catch (err: any) {
-                            alert(err.message || 'Error unfriending.');
+                        setConfirmModal({
+                          isOpen: true,
+                          title: 'Unfriend Roommate',
+                          message: `Are you sure you want to unfriend ${respondent.name}? You will no longer be connected.`,
+                          confirmText: 'Unfriend',
+                          isDanger: true,
+                          onConfirm: async () => {
+                            try {
+                              await onUnfriend(connection.id);
+                              setShowRespondentProfile(false);
+                              setActiveChatUserId(null);
+                              setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                            } catch (err: any) {
+                              alert(err.message || 'Error unfriending.');
+                            }
                           }
-                        }
+                        });
                       } else {
                         alert('Could not find active match request to delete.');
                       }
@@ -611,18 +706,26 @@ export const ChatModule = ({
                     type="button"
                     className="btn btn-secondary"
                     style={{ flex: '1', border: '1px solid var(--danger)', color: 'var(--danger)' }}
-                    onClick={async () => {
+                    onClick={() => {
                       const respondent = getRespondent();
                       if (!respondent) return;
-                      if (confirm(`Are you sure you want to block ${respondent.name}? You will no longer be connected.`)) {
-                        try {
-                          await onBlockUser(respondent.id);
-                          setShowRespondentProfile(false);
-                          setActiveChatUserId(null);
-                        } catch (err: any) {
-                          alert(err.message || 'Error blocking user.');
+                      setConfirmModal({
+                        isOpen: true,
+                        title: 'Block User',
+                        message: `Are you sure you want to block ${respondent.name}? You will no longer be connected.`,
+                        confirmText: 'Block',
+                        isDanger: true,
+                        onConfirm: async () => {
+                          try {
+                            await onBlockUser(respondent.id);
+                            setShowRespondentProfile(false);
+                            setActiveChatUserId(null);
+                            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                          } catch (err: any) {
+                            alert(err.message || 'Error blocking user.');
+                          }
                         }
-                      }
+                      });
                     }}
                   >
                     Block
@@ -654,6 +757,16 @@ export const ChatModule = ({
           </div>
         </div>
       )}
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 };
@@ -662,13 +775,14 @@ export const ChatModule = ({
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  height: 'calc(100vh - 120px)',
+  height: 'calc(100vh - 74px)',
+  width: '100%',
 };
 
 const chatGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '320px 1fr',
-  gap: '1.5rem',
+  gap: 0,
   height: '100%',
 };
 
@@ -678,6 +792,8 @@ const inboxListStyle = (isChatActive: boolean): React.CSSProperties => {
     flexDirection: 'column',
     overflowY: 'auto',
     height: '100%',
+    borderRight: '1px solid var(--border)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
   };
   // Responsive check
   if (isChatActive && window.innerWidth <= 768) {
@@ -692,6 +808,7 @@ const chatWindowStyle = (isChatActive: boolean): React.CSSProperties => {
     flexDirection: 'column',
     height: '100%',
     overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   };
   // Responsive check
   if (!isChatActive && window.innerWidth <= 768) {
@@ -727,23 +844,26 @@ const listStyle: React.CSSProperties = {
 
 
 const avatarStyle: React.CSSProperties = {
-  width: '32px',
-  height: '32px',
+  width: '40px',
+  height: '40px',
   borderRadius: '50%',
   objectFit: 'cover',
+  border: '2px solid white',
+  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
 };
-
-
 
 const chatRowStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '0.75rem',
-  padding: '0.625rem 0.75rem',
-  borderRadius: 'var(--radius)',
+  gap: '0.875rem',
+  padding: '0.75rem 1rem',
+  borderRadius: 'var(--radius-sm)',
   cursor: 'pointer',
   transition: 'var(--transition)',
-  backgroundColor: isActive ? 'var(--secondary)' : 'transparent',
+  backgroundColor: isActive ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255, 255, 255, 0.45)',
+  border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid var(--border)',
+  boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.05)' : 'none',
+  marginBottom: '0.25rem',
 });
 
 const chatPreviewTextStyle: React.CSSProperties = {
@@ -761,6 +881,8 @@ const chatHeaderStyle: React.CSSProperties = {
   gap: '0.75rem',
   padding: '0.875rem 1.25rem',
   borderBottom: '1px solid var(--border)',
+  backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  backdropFilter: 'blur(8px)',
 };
 
 const backButtonStyle: React.CSSProperties = {
@@ -773,12 +895,12 @@ const backButtonStyle: React.CSSProperties = {
 
 const chatMessagesStyle: React.CSSProperties = {
   flex: 1,
-  padding: '1.25rem',
+  padding: '1.5rem',
   overflowY: 'auto',
-  backgroundColor: 'var(--background)',
+  backgroundColor: 'rgba(248, 250, 252, 0.35)',
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.75rem',
+  gap: '1rem',
 };
 
 const chatEmptyFeedStyle: React.CSSProperties = {
@@ -797,11 +919,11 @@ const msgRowStyle = (isSelf: boolean): React.CSSProperties => ({
 
 const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
   maxWidth: '70%',
-  padding: '0.625rem 0.875rem',
-  borderRadius: 'var(--radius)',
-  backgroundColor: isSelf ? 'var(--primary)' : 'var(--card)',
+  padding: '0.75rem 1rem',
+  borderRadius: isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+  background: isSelf ? 'var(--gradient-brand)' : '#ffffff',
   color: isSelf ? 'var(--primary-foreground)' : 'var(--foreground)',
-  boxShadow: 'var(--shadow-sm)',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
   border: isSelf ? 'none' : '1px solid var(--border)',
 });
 
@@ -810,7 +932,7 @@ const msgTimeStyle = (isSelf: boolean): React.CSSProperties => ({
   fontSize: '0.65rem',
   textAlign: 'right',
   marginTop: '0.25rem',
-  color: isSelf ? 'rgba(255, 255, 255, 0.7)' : 'var(--muted)',
+  color: isSelf ? 'rgba(255, 255, 255, 0.75)' : 'var(--muted)',
 });
 
 const chatInputAreaStyle: React.CSSProperties = {

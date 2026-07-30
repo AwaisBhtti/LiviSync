@@ -64,7 +64,8 @@ export const fetchCurrentUser = createAsyncThunk(
             cleanliness: data.preferences?.cleanliness || 'moderate',
             smoking: data.preferences?.smoking || 'no',
             pets: data.preferences?.pets || 'no',
-            guestTolerance: data.preferences?.guest_tolerance || 'weekends'
+            guestTolerance: data.preferences?.guest_tolerance || 'weekends',
+            noiseTolerance: data.preferences?.noise_tolerance || 'moderate'
           },
           blockedUsers: blockedUsers,
           supabaseToken: data.supabase_token
@@ -120,6 +121,7 @@ export const updateProfile = createAsyncThunk(
           smoking: updatedUser.preferences.smoking,
           pets: updatedUser.preferences.pets,
           guest_tolerance: updatedUser.preferences.guestTolerance,
+          noise_tolerance: updatedUser.preferences.noiseTolerance,
           hostel_id: updatedUser.hostelId || null,
         })
       });

@@ -5,6 +5,7 @@ import { Plus, Edit2, Trash2, Building, MapPin, ListPlus, X, Info } from 'lucide
 import { RoomListing } from './RoomListing';
 import { ImageLightbox } from './ImageLightbox';
 import { BUILTIN_AMENITIES } from './Amenities';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface OwnerPortalProps {
   currentUser: User;
@@ -38,6 +39,20 @@ export const OwnerPortal = ({
   const [electricityBillIncluded, setElectricityBillIncluded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void | Promise<void>;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -182,9 +197,17 @@ export const OwnerPortal = ({
   };
 
   const handleDeleteClick = (hostelId: string) => {
-    if (confirm('Are you sure you want to delete this listing?')) {
-      if (onDeleteHostel) onDeleteHostel(hostelId);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Listing',
+      message: 'Are you sure you want to delete this listing? All associated rooms and data will be permanently removed.',
+      confirmText: 'Delete',
+      isDanger: true,
+      onConfirm: () => {
+        if (onDeleteHostel) onDeleteHostel(hostelId);
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
   const getPriceRangeString = (hostel: Hostel) => {
@@ -459,6 +482,16 @@ export const OwnerPortal = ({
       )}
 
       <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 };

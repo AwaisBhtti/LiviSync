@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import type { Room, Hostel } from '../types';
 import { Plus, Trash2, ArrowLeft, Check, Edit2 } from 'lucide-react';
 import { ImageLightbox } from './ImageLightbox';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface RoomListingProps {
   hostel: Hostel;
@@ -15,6 +16,20 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void | Promise<void>;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Form states
   const [sharingType, setSharingType] = useState<'single' | 'double' | 'triple' | 'quad' | 'penta'>('single');
@@ -276,19 +291,27 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
   };
 
   const handleDeleteRoom = async (roomId: string) => {
-    if (!confirm('Are you sure you want to delete this room?')) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/owners/rooms/${roomId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        fetchRooms();
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Room',
+      message: 'Are you sure you want to delete this room from your listing?',
+      confirmText: 'Delete',
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const response = await fetch(`${API_BASE_URL}/owners/rooms/${roomId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            fetchRooms();
+          }
+        } catch (err) {
+          console.error('Error deleting room:', err);
+        }
       }
-    } catch (err) {
-      console.error('Error deleting room:', err);
-    }
+    });
   };
 
   const handleFinish = () => {
@@ -728,6 +751,16 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       )}
 
       <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 };

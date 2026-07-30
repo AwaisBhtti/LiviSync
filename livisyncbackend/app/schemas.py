@@ -19,6 +19,7 @@ class PreferencesOut(BaseModel):
     smoking: str
     pets: str
     guest_tolerance: str
+    noise_tolerance: str
 
     class Config:
         from_attributes = True
@@ -67,6 +68,7 @@ class StudentUpdate(BaseModel):
     smoking: str
     pets: str
     guest_tolerance: str
+    noise_tolerance: str
     hostel_id: Optional[UUID] = None
 
 # Owner Schemas

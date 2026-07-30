@@ -162,7 +162,8 @@ export const Navbar = ({
 
 // Styles
 const headerStyle: React.CSSProperties = {
-  backgroundColor: 'var(--card)',
+  backgroundColor: 'var(--glass-bg)',
+  backdropFilter: 'blur(20px)',
   borderBottom: '1px solid var(--border)',
   position: 'sticky',
   top: 0,
@@ -175,41 +176,45 @@ const navContainerStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  height: '56px',
+  height: '64px',
   padding: '0 1.5rem',
 };
 
 const logoSectionStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.5rem',
+  gap: '0.625rem',
   cursor: 'pointer',
+  color: 'var(--primary)',
 };
 
 const logoTextStyle: React.CSSProperties = {
-  fontWeight: 700,
-  fontSize: '1.05rem',
-  letterSpacing: '-0.03em',
+  fontWeight: 800,
+  fontSize: '1.25rem',
+  letterSpacing: '-0.04em',
+  background: 'var(--gradient-brand)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
 };
 
 const desktopNavStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.25rem',
+  gap: '0.5rem',
 };
 
 const tabButtonStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '0.375rem',
-  padding: '0.5rem 0.75rem',
-  fontSize: '0.85rem',
-  fontWeight: 500,
-  color: isActive ? 'var(--foreground)' : 'var(--muted)',
-  background: 'none',
+  gap: '0.5rem',
+  padding: '0.625rem 1rem',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  color: isActive ? 'var(--primary)' : 'var(--muted)',
+  background: isActive ? 'rgba(99, 102, 241, 0.08)' : 'none',
   border: 'none',
   cursor: 'pointer',
-  borderRadius: 'var(--radius)',
+  borderRadius: 'var(--radius-sm)',
   transition: 'var(--transition)',
   position: 'relative',
 });
@@ -218,37 +223,39 @@ const unreadBadgeStyle: React.CSSProperties = {
   backgroundColor: 'var(--primary)',
   color: 'var(--primary-foreground)',
   fontSize: '0.7rem',
-  fontWeight: 600,
+  fontWeight: 700,
   borderRadius: '9999px',
-  minWidth: '16px',
-  height: '16px',
+  minWidth: '18px',
+  height: '18px',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '0 4px',
+  padding: '0 5px',
   marginLeft: '4px',
+  boxShadow: '0 2px 5px rgba(99, 102, 241, 0.3)',
 };
 
 const mobileUnreadBadgeStyle: React.CSSProperties = {
   position: 'absolute',
-  top: '-5px',
-  right: '-8px',
+  top: '-4px',
+  right: '-6px',
   backgroundColor: 'var(--danger)',
   color: 'white',
   fontSize: '0.65rem',
-  fontWeight: 600,
+  fontWeight: 700,
   borderRadius: '9999px',
-  width: '14px',
-  height: '14px',
+  width: '15px',
+  height: '15px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  boxShadow: '0 2px 5px rgba(244, 63, 94, 0.3)',
 };
 
 const userControlStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1rem',
+  gap: '1.25rem',
 };
 
 const roleDisplayStyle: React.CSSProperties = {
@@ -256,14 +263,18 @@ const roleDisplayStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: '0.375rem',
   fontSize: '0.8rem',
+  background: 'var(--secondary)',
+  padding: '0.375rem 0.75rem',
+  borderRadius: '9999px',
 };
 
 const roleLabelStyle: React.CSSProperties = {
   color: 'var(--muted)',
+  fontWeight: 500,
 };
 
 const roleBadgeStyle = (role: string): React.CSSProperties => ({
-  fontWeight: 600,
+  fontWeight: 700,
   color: role === 'admin' ? 'var(--danger)' : role === 'owner' ? 'var(--success)' : 'var(--primary)',
 });
 
@@ -271,17 +282,18 @@ const mobileTabButtonStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: '2px',
+  gap: '4px',
   background: 'none',
   border: 'none',
-  color: isActive ? 'var(--foreground)' : 'var(--muted)',
+  color: isActive ? 'var(--primary)' : 'var(--muted)',
   cursor: 'pointer',
   fontSize: '0.75rem',
   width: '20%',
-  padding: '4px 0',
+  padding: '6px 0',
+  transition: 'var(--transition)',
 });
 
 const mobileTabTextStyle: React.CSSProperties = {
   fontSize: '0.65rem',
-  fontWeight: 500,
+  fontWeight: 600,
 };

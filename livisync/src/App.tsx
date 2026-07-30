@@ -50,6 +50,7 @@ import {
 } from './store/slices/adminSlice';
 import { supabase } from './supabase';
 import { API_BASE_URL } from './config';
+import { ConfirmationModal } from './components/ConfirmationModal';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -63,7 +64,44 @@ export default function App() {
 
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
-  const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading;
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({
+    show: false,
+    message: '',
+    type: 'success',
+  });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ show: true, message, type });
+  };
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        setToast((prev) => ({ ...prev, show: false }));
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void | Promise<void>;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading || (token !== null && currentUser === null);
 
   // Sync active user session
   useEffect(() => {
@@ -173,7 +211,7 @@ export default function App() {
       const result = await dispatch(updateProfile({ updatedUser: updatedUser as Student, token })).unwrap();
       dispatch(updateUserInList(result));
     } catch (err: any) {
-      alert(err || 'Error occurred saving profile.');
+      showToast(err || 'Error occurred saving profile.', 'error');
     }
   };
 
@@ -195,9 +233,9 @@ export default function App() {
         throw new Error(data.detail || 'Failed to send request');
       }
       dispatch(fetchMatches({ token, role: currentUser.role }));
-      alert('Match request sent successfully!');
+      showToast('Match request sent successfully!', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error sending request');
+      showToast(err.message || 'Error sending request', 'error');
     }
   };
 
@@ -218,9 +256,9 @@ export default function App() {
         throw new Error(data.detail || 'Failed to accept request');
       }
       dispatch(acceptRequest(reqId));
-      alert('Match request accepted!');
+      showToast('Match request accepted!', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error accepting request');
+      showToast(err.message || 'Error accepting request', 'error');
     }
   };
 
@@ -241,9 +279,9 @@ export default function App() {
         throw new Error(data.detail || 'Failed to decline request');
       }
       dispatch(declineRequest(reqId));
-      alert('Match request declined.');
+      showToast('Match request declined.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error declining request');
+      showToast(err.message || 'Error declining request', 'error');
     }
   };
 
@@ -262,9 +300,9 @@ export default function App() {
         throw new Error(data.detail || 'Failed to cancel request');
       }
       dispatch(setMatchesState(matchRequests.filter((r) => r.id !== reqId)));
-      alert('Match request cancelled.');
+      showToast('Match request cancelled.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error cancelling request');
+      showToast(err.message || 'Error cancelling request', 'error');
     }
   };
 
@@ -282,9 +320,9 @@ export default function App() {
         throw new Error(data.detail || 'Failed to unfriend');
       }
       dispatch(setMatchesState(matchRequests.filter((r) => r.id !== reqId)));
-      alert('Roommate unfriended successfully.');
+      showToast('Roommate unfriended successfully.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error unfriending');
+      showToast(err.message || 'Error unfriending', 'error');
     }
   };
 
@@ -313,9 +351,9 @@ export default function App() {
       const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
       dispatch(updateUserInList(updatedUser));
       dispatch(removeMatchesForUser(targetId));
-      alert('User blocked successfully.');
+      showToast('User blocked successfully.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error blocking user');
+      showToast(err.message || 'Error blocking user', 'error');
     }
   };
 
@@ -339,9 +377,9 @@ export default function App() {
       dispatch(setBlockedUsers(updatedBlocked));
       const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
       dispatch(updateUserInList(updatedUser));
-      alert('User unblocked successfully.');
+      showToast('User unblocked successfully.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error unblocking user');
+      showToast(err.message || 'Error unblocking user', 'error');
     }
   };
 
@@ -378,13 +416,22 @@ export default function App() {
 
       dispatch(addLocalReport(newReport));
       
-      const confirmBlock = window.confirm(
-        'Thank you. The safety report has been filed and sent to administrators for review.\n\n' +
-        'Would you like to block this user as well to prevent them from contacting or matching with you?'
-      );
-      if (confirmBlock) {
-        await handleBlockUser(reportedId);
-      }
+      setConfirmModal({
+        isOpen: true,
+        title: 'Report Filed Successfully',
+        message: 'Thank you. The safety report has been filed and sent to administrators for review.\n\nWould you like to block this user as well to prevent them from contacting or matching with you?',
+        confirmText: 'Block User',
+        isDanger: true,
+        onConfirm: async () => {
+          try {
+            await handleBlockUser(reportedId);
+          } catch (err: any) {
+            console.error("Error blocking reported user:", err);
+          } finally {
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          }
+        }
+      });
     } catch (err: any) {
       alert(err.message || 'Error submitting safety report');
     }
@@ -682,6 +729,71 @@ export default function App() {
         </Routes>
       </BrowserRouter>
       {loadingData && <SpinnerLoader />}
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
+      {toast.show && (
+        <div style={toastContainerStyle(toast.type)}>
+          <style>{`
+            @keyframes toastSlideIn {
+              from { transform: translateY(1.5rem) scale(0.95); opacity: 0; }
+              to { transform: translateY(0) scale(1); opacity: 1; }
+            }
+          `}</style>
+          <span>{toast.message}</span>
+          <button 
+            onClick={() => setToast(prev => ({ ...prev, show: false }))} 
+            style={toastCloseStyle}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </>
   );
 }
+
+// Toast Styles
+const toastContainerStyle = (type: 'success' | 'error' | 'info'): React.CSSProperties => {
+  const borderCol = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--primary)';
+  return {
+    position: 'fixed',
+    bottom: '2rem',
+    right: '2rem',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backdropFilter: 'blur(16px)',
+    borderLeft: `4px solid ${borderCol}`,
+    padding: '1rem 1.5rem',
+    borderRadius: 'var(--radius-sm, 8px)',
+    boxShadow: 'var(--shadow-lg)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1.5rem',
+    zIndex: 9999999,
+    color: 'var(--foreground)',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    animation: 'toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    border: '1px solid var(--border)',
+  };
+};
+
+const toastCloseStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  color: 'var(--muted)',
+  fontSize: '0.85rem',
+  padding: '0.25rem',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
