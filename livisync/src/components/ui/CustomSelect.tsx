@@ -14,6 +14,9 @@ interface CustomSelectProps {
   style?: React.CSSProperties;
 }
 
+const DROPDOWN_MAX_HEIGHT = 240;
+const DROPDOWN_MARGIN = 6;
+
 export const CustomSelect = ({
   value,
   onChange,
@@ -22,7 +25,9 @@ export const CustomSelect = ({
   style,
 }: CustomSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const selectedOption = options.find((o) => o.value === value);
 
@@ -36,6 +41,19 @@ export const CustomSelect = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleToggle = () => {
+    if (!isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      // Open upward if not enough space below AND there's more space above
+      setOpenUpward(
+        spaceBelow < DROPDOWN_MAX_HEIGHT + DROPDOWN_MARGIN && spaceAbove > spaceBelow
+      );
+    }
+    setIsOpen((prev) => !prev);
+  };
 
   const triggerStyle: React.CSSProperties = {
     width: '100%',
@@ -59,7 +77,9 @@ export const CustomSelect = ({
 
   const listContainerStyle: React.CSSProperties = {
     position: 'absolute',
-    top: 'calc(100% + 6px)',
+    ...(openUpward
+      ? { bottom: `calc(100% + ${DROPDOWN_MARGIN}px)`, top: 'auto' }
+      : { top: `calc(100% + ${DROPDOWN_MARGIN}px)`, bottom: 'auto' }),
     left: 0,
     right: 0,
     background: '#ffffff',
@@ -71,7 +91,7 @@ export const CustomSelect = ({
     display: 'flex',
     flexDirection: 'column',
     gap: '2px',
-    maxHeight: '240px',
+    maxHeight: `${DROPDOWN_MAX_HEIGHT}px`,
     overflowY: 'auto',
   };
 
@@ -79,8 +99,9 @@ export const CustomSelect = ({
     <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
       {/* Trigger Button */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={handleToggle}
         style={{
           ...triggerStyle,
           borderColor: isOpen ? 'var(--primary)' : 'var(--border-solid)',
