@@ -10,6 +10,7 @@ import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
 import { Users, Search, ChevronLeft, Inbox } from 'lucide-react';
+import { colors } from '../styles/colors';
 
 interface RoommateFinderProps {
   currentUser: User;
@@ -271,16 +272,9 @@ export const RoommateFinder = ({
 
 // ─── Dark-navy page theme ─────────────────────────────────────────────────────
 
-const DARK_BG   = '#0f172a';   // Slate 900
-const DARK_CARD = 'rgba(15, 23, 42, 0.75)';
-const DARK_SURFACE = 'rgba(30, 41, 59, 0.7)';  // Slate 800 tinted
-const DARK_BORDER = 'rgba(255,255,255,0.08)';
-const DARK_TEXT = '#f1f5f9';    // Slate 100
-const DARK_MUTED = '#94a3b8';   // Slate 400
-
 const pageWrapStyle: React.CSSProperties = {
   minHeight: 'calc(100vh - 64px)',
-  background: `linear-gradient(160deg, #0f172a 0%, #1e1b4b 55%, #0f172a 100%)`,
+  background: colors.dark.bgGradient,
   backgroundAttachment: 'fixed',
   /* Full-bleed escape from centered max-width container */
   width: '100vw',
@@ -319,7 +313,7 @@ const iconBoxStyle: React.CSSProperties = {
   width: '28px',
   height: '28px',
   borderRadius: '8px',
-  background: 'var(--gradient-brand)',
+  background: colors.gradientBrand,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -329,13 +323,13 @@ const iconBoxStyle: React.CSSProperties = {
 const pageTitleStyle: React.CSSProperties = {
   fontSize: '1.35rem',
   fontWeight: 800,
-  color: DARK_TEXT,
+  color: colors.dark.text,
   letterSpacing: '-0.03em',
 };
 
 const pageSubtitleStyle: React.CSSProperties = {
   fontSize: '0.8rem',
-  color: DARK_MUTED,
+  color: colors.dark.muted,
   marginLeft: '36px',
 };
 
@@ -343,8 +337,8 @@ const searchWrapStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
-  background: DARK_SURFACE,
-  border: `1px solid ${DARK_BORDER}`,
+  background: colors.dark.surface,
+  border: `1px solid ${colors.dark.border}`,
   borderRadius: '10px',
   padding: '0.5rem 0.875rem',
   minWidth: '220px',
@@ -355,7 +349,7 @@ const searchInputStyle: React.CSSProperties = {
   background: 'none',
   border: 'none',
   outline: 'none',
-  color: DARK_TEXT,
+  color: colors.dark.text,
   fontSize: '0.85rem',
   flex: 1,
 };
@@ -374,7 +368,7 @@ const tabBtnStyle = (isActive: boolean): React.CSSProperties => ({
   padding: '0.75rem 1.25rem',
   fontSize: '0.85rem',
   fontWeight: isActive ? 700 : 500,
-  color: isActive ? '#ffffff' : DARK_MUTED,
+  color: isActive ? '#ffffff' : colors.dark.muted,
   background: 'none',
   border: 'none',
   borderBottom: isActive ? '2px solid var(--primary)' : '2px solid transparent',
@@ -413,9 +407,9 @@ const filterToggleStyle: React.CSSProperties = {
   padding: '0.3rem 0.7rem',
   fontSize: '0.75rem',
   fontWeight: 600,
-  color: DARK_MUTED,
-  background: DARK_SURFACE,
-  border: `1px solid ${DARK_BORDER}`,
+  color: colors.dark.muted,
+  background: colors.dark.surface,
+  border: `1px solid ${colors.dark.border}`,
   borderRadius: '9999px',
   cursor: 'pointer',
   transition: 'var(--transition)',

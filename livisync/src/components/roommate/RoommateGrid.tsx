@@ -2,6 +2,7 @@
 import type { User, MatchRequest } from '../../types';
 import { Check, MapPin, Clock, Sparkles } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
+import { colors } from '../../styles/colors';
 
 export type Candidate = User & { score: number };
 
@@ -12,15 +13,15 @@ interface RoommateGridProps {
   onSelectCandidate: (user: User) => void;
 }
 
-const CARD_BG     = 'rgba(30, 41, 59, 0.6)';
-const CARD_BORDER = 'rgba(255, 255, 255, 0.07)';
-const TEXT        = '#f1f5f9';
-const MUTED       = '#94a3b8';
+const CARD_BG     = colors.dark.card;
+const CARD_BORDER = colors.dark.border;
+const TEXT        = colors.dark.text;
+const MUTED       = colors.dark.muted;
 
 const getScoreColors = (score: number) => {
-  if (score >= 80) return { color: '#34d399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.25)' };
-  if (score >= 50) return { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)' };
-  return              { color: MUTED,       bg: 'rgba(100,116,139,0.1)',   border: 'rgba(100,116,139,0.2)' };
+  if (score >= 80) return { color: '#34d399', bg: 'rgba(52,211,153,0.12)', border: colors.successBorder };
+  if (score >= 50) return { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: colors.warningBorder };
+  return              { color: MUTED,       bg: 'rgba(100,116,139,0.1)',   border: colors.dark.border };
 };
 
 export const RoommateGrid = ({

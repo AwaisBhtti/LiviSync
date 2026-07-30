@@ -1,6 +1,6 @@
-/** RoommateFilters — left sidebar, dark navy theme. */
 import type { Hostel } from '../../types';
 import { SlidersHorizontal } from 'lucide-react';
+import { colors } from '../../styles/colors';
 
 interface RoommateFiltersProps {
   maxBudget: number;
@@ -16,12 +16,12 @@ interface RoommateFiltersProps {
   onHostelChange: (val: string) => void;
 }
 
-const CARD_BG     = 'rgba(30, 41, 59, 0.6)';
-const CARD_BORDER = 'rgba(255, 255, 255, 0.07)';
-const TEXT        = '#f1f5f9';
-const MUTED       = '#94a3b8';
-const INPUT_BG    = 'rgba(15, 23, 42, 0.5)';
-const INPUT_BORDER = 'rgba(255,255,255,0.1)';
+const CARD_BG     = colors.dark.card;
+const CARD_BORDER = colors.dark.border;
+const TEXT        = colors.dark.text;
+const MUTED       = colors.dark.muted;
+const INPUT_BG    = colors.dark.inputBg;
+const INPUT_BORDER = colors.dark.inputBorder;
 
 const selectStyle: React.CSSProperties = {
   width: '100%',

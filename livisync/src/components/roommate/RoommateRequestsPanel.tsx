@@ -1,6 +1,7 @@
 /** RoommateRequestsPanel — "My Requests" tab, dark navy theme. */
 import type { User, MatchRequest } from '../../types';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
+import { colors } from '../../styles/colors';
 
 interface RoommateRequestsPanelProps {
   users: User[];
@@ -11,11 +12,11 @@ interface RoommateRequestsPanelProps {
   onCancelRequest: (reqId: string) => void;
 }
 
-const CARD_BG     = 'rgba(30, 41, 59, 0.6)';
-const CARD_BORDER = 'rgba(255, 255, 255, 0.07)';
-const ITEM_BG     = 'rgba(15, 23, 42, 0.5)';
-const TEXT        = '#f1f5f9';
-const MUTED       = '#94a3b8';
+const CARD_BG     = colors.dark.card;
+const CARD_BORDER = colors.dark.border;
+const ITEM_BG     = colors.dark.inputBg;
+const TEXT        = colors.dark.text;
+const MUTED       = colors.dark.muted;
 
 export const RoommateRequestsPanel = ({
   users,
