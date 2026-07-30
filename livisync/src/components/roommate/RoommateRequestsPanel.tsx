@@ -83,7 +83,6 @@ export const RoommateRequestsPanel = ({
                       fontSize: '0.85rem',
                       color: 'var(--foreground)',
                       margin: '0.5rem 0',
-                      fontStyle: 'italic',
                     }}
                   >
                     "{req.message}"
@@ -149,7 +148,6 @@ export const RoommateRequestsPanel = ({
                       fontSize: '0.85rem',
                       color: 'var(--foreground)',
                       margin: '0.5rem 0',
-                      fontStyle: 'italic',
                     }}
                   >
                     "{req.message}"
@@ -170,8 +168,8 @@ export const RoommateRequestsPanel = ({
                           req.status === 'accepted'
                             ? 'var(--success)'
                             : req.status === 'declined'
-                            ? 'var(--danger)'
-                            : 'var(--muted)',
+                              ? 'var(--danger)'
+                              : 'var(--muted)',
                         textTransform: 'uppercase',
                       }}
                     >
