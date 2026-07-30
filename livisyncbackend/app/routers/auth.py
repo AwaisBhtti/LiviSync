@@ -51,7 +51,8 @@ def register_student(student_in: StudentCreate, db: Session = Depends(get_db)):
         cleanliness="moderate",
         smoking="no",
         pets="no",
-        guest_tolerance="weekends"
+        guest_tolerance="weekends",
+        noise_tolerance="moderate"
     )
     db.add(db_prefs)
     db.commit()
@@ -125,7 +126,8 @@ def get_me(current_user: Union[Student, Owner, Admin] = Depends(get_current_user
                 "cleanliness": current_user.preferences.cleanliness if current_user.preferences else "moderate",
                 "smoking": current_user.preferences.smoking if current_user.preferences else "no",
                 "pets": current_user.preferences.pets if current_user.preferences else "no",
-                "guest_tolerance": current_user.preferences.guest_tolerance if current_user.preferences else "weekends"
+                "guest_tolerance": current_user.preferences.guest_tolerance if current_user.preferences else "weekends",
+                "noise_tolerance": current_user.preferences.noise_tolerance if current_user.preferences else "moderate"
             }
         }
     elif isinstance(current_user, Owner):

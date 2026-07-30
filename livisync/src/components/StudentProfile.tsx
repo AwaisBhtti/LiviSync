@@ -250,6 +250,15 @@ export const StudentProfile = ({ currentUser, onSave, hostels, users, onUnblockU
                   <option value="anytime">Anytime</option>
                 </select>
               </div>
+
+              <div className="form-group">
+                <label className="form-label">Noise Tolerance</label>
+                <select className="form-select" value={preferences.noiseTolerance || 'moderate'} onChange={(e) => handlePrefChange('noiseTolerance', e.target.value)}>
+                  <option value="moderate">Moderate</option>
+                  <option value="silent">Silent</option>
+                  <option value="lively">Lively</option>
+                </select>
+              </div>
             </div>
 
             {/* Action Buttons */}

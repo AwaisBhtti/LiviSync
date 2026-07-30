@@ -387,6 +387,7 @@ export const RoommateFinder = ({
                   {renderPrefLabel('smoking', selectedUser.preferences.smoking)}
                   {renderPrefLabel('pets', selectedUser.preferences.pets)}
                   {renderPrefLabel('guestTolerance', selectedUser.preferences.guestTolerance)}
+                  {renderPrefLabel('noiseTolerance', selectedUser.preferences.noiseTolerance || 'moderate')}
                 </div>
               </div>
 

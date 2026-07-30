@@ -70,7 +70,8 @@ def update_profile(profile_in: StudentUpdate, db: Session = Depends(get_db), cur
             cleanliness=profile_in.cleanliness,
             smoking=profile_in.smoking,
             pets=profile_in.pets,
-            guest_tolerance=profile_in.guest_tolerance
+            guest_tolerance=profile_in.guest_tolerance,
+            noise_tolerance=profile_in.noise_tolerance
         )
         db.add(prefs)
     else:
@@ -79,6 +80,7 @@ def update_profile(profile_in: StudentUpdate, db: Session = Depends(get_db), cur
         current_user.preferences.smoking = profile_in.smoking
         current_user.preferences.pets = profile_in.pets
         current_user.preferences.guest_tolerance = profile_in.guest_tolerance
+        current_user.preferences.noise_tolerance = profile_in.noise_tolerance
 
     db.commit()
     return {"message": "Profile updated successfully"}
