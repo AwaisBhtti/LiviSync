@@ -5,6 +5,7 @@
 import type { Hostel } from '../types';
 import { useAppDispatch, useAppSelector } from '../store/store';
 import { addHostel, editHostel, deleteHostel, verifyHostel } from '../store/slices/hostelSlice';
+import { showToast } from '../store/slices/toastSlice';
 
 export function useHostelActions() {
   const dispatch = useAppDispatch();
@@ -14,10 +15,10 @@ export function useHostelActions() {
     if (!token) return;
     try {
       await dispatch(addHostel({ newHostel, token })).unwrap();
-      alert('Hostel listing added successfully!');
+      dispatch(showToast({ message: 'Hostel listing added successfully!', type: 'success' }));
     } catch (err: any) {
       const errMsg = typeof err === 'string' ? err : err.message || 'Error adding hostel listing.';
-      alert(errMsg);
+      dispatch(showToast({ message: errMsg, type: 'error' }));
     }
   };
 
@@ -25,10 +26,10 @@ export function useHostelActions() {
     if (!token) return;
     try {
       await dispatch(editHostel({ updatedHostel, token })).unwrap();
-      alert('Hostel listing updated successfully!');
+      dispatch(showToast({ message: 'Hostel listing updated successfully!', type: 'success' }));
     } catch (err: any) {
       const errMsg = typeof err === 'string' ? err : err.message || 'Error updating hostel listing.';
-      alert(errMsg);
+      dispatch(showToast({ message: errMsg, type: 'error' }));
     }
   };
 
@@ -36,9 +37,9 @@ export function useHostelActions() {
     if (!token) return;
     try {
       await dispatch(deleteHostel({ hostelId, token })).unwrap();
-      alert('Hostel listing deleted.');
+      dispatch(showToast({ message: 'Hostel listing deleted.', type: 'success' }));
     } catch (err: any) {
-      alert(err || 'Error deleting hostel listing.');
+      dispatch(showToast({ message: err || 'Error deleting hostel listing.', type: 'error' }));
     }
   };
 
@@ -46,9 +47,9 @@ export function useHostelActions() {
     if (!token) return;
     try {
       await dispatch(verifyHostel({ hostelId, token })).unwrap();
-      alert('Listing verified successfully!');
+      dispatch(showToast({ message: 'Listing verified successfully!', type: 'success' }));
     } catch (err: any) {
-      alert(err || 'Error verifying listing.');
+      dispatch(showToast({ message: err || 'Error verifying listing.', type: 'error' }));
     }
   };
 

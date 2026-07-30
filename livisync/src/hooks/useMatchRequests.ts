@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from '../store/store';
 import { fetchMatches, acceptRequest, declineRequest, setMatchesState } from '../store/slices/matchSlice';
+import { showToast } from '../store/slices/toastSlice';
 import * as matchApi from '../api/matchApi';
 
 export function useMatchRequests() {
@@ -12,9 +13,9 @@ export function useMatchRequests() {
     try {
       await matchApi.sendMatchRequest(receiverId, message);
       dispatch(fetchMatches({ token, role: currentUser.role }));
-      alert('Match request sent successfully!');
+      dispatch(showToast({ message: 'Match request sent successfully!', type: 'success' }));
     } catch (err: any) {
-      alert(err.message || 'Error sending request');
+      dispatch(showToast({ message: err.message || 'Error sending request', type: 'error' }));
     }
   };
 
@@ -23,9 +24,9 @@ export function useMatchRequests() {
     try {
       await matchApi.updateMatchStatus(reqId, 'accepted');
       dispatch(acceptRequest(reqId));
-      alert('Match request accepted!');
+      dispatch(showToast({ message: 'Match request accepted!', type: 'success' }));
     } catch (err: any) {
-      alert(err.message || 'Error accepting request');
+      dispatch(showToast({ message: err.message || 'Error accepting request', type: 'error' }));
     }
   };
 
@@ -34,9 +35,9 @@ export function useMatchRequests() {
     try {
       await matchApi.updateMatchStatus(reqId, 'declined');
       dispatch(declineRequest(reqId));
-      alert('Match request declined.');
+      dispatch(showToast({ message: 'Match request declined.', type: 'success' }));
     } catch (err: any) {
-      alert(err.message || 'Error declining request');
+      dispatch(showToast({ message: err.message || 'Error declining request', type: 'error' }));
     }
   };
 
@@ -45,9 +46,9 @@ export function useMatchRequests() {
     try {
       await matchApi.cancelMatchRequest(reqId);
       dispatch(setMatchesState(matchRequests.filter((r) => r.id !== reqId)));
-      alert('Match request cancelled.');
+      dispatch(showToast({ message: 'Match request cancelled.', type: 'success' }));
     } catch (err: any) {
-      alert(err.message || 'Error cancelling request');
+      dispatch(showToast({ message: err.message || 'Error cancelling request', type: 'error' }));
     }
   };
 
@@ -56,9 +57,9 @@ export function useMatchRequests() {
     try {
       await matchApi.cancelMatchRequest(reqId);
       dispatch(setMatchesState(matchRequests.filter((r) => r.id !== reqId)));
-      alert('Roommate unfriended successfully.');
+      dispatch(showToast({ message: 'Roommate unfriended successfully.', type: 'success' }));
     } catch (err: any) {
-      alert(err.message || 'Error unfriending');
+      dispatch(showToast({ message: err.message || 'Error unfriending', type: 'error' }));
     }
   };
 

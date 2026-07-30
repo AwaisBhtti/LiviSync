@@ -23,6 +23,7 @@ import { fetchHostels } from './store/slices/hostelSlice';
 import { fetchRoommates, updateUserInList } from './store/slices/roommateSlice';
 import { fetchMatches } from './store/slices/matchSlice';
 import { fetchReports, fetchUsers } from './store/slices/adminSlice';
+import { showToast, hideToast } from './store/slices/toastSlice';
 import { supabase } from './supabase';
 import { API_BASE_URL } from './config';
 import { AppLayout } from './components/layout/AppLayout';
@@ -46,28 +47,16 @@ export default function App() {
 
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
-  const [toast, setToast] = useState<{
-    show: boolean;
-    message: string;
-    type: 'success' | 'error' | 'info';
-  }>({
-    show: false,
-    message: '',
-    type: 'success',
-  });
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
-    setToast({ show: true, message, type });
-  };
+  const { show: toastShow, message: toastMessage, type: toastType } = useAppSelector((state) => state.toast);
 
   useEffect(() => {
-    if (toast.show) {
+    if (toastShow) {
       const timer = setTimeout(() => {
-        setToast((prev) => ({ ...prev, show: false }));
+        dispatch(hideToast());
       }, 3500);
       return () => clearTimeout(timer);
     }
-  }, [toast.show]);
+  }, [toastShow, dispatch]);
 
   const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading || (token !== null && currentUser === null);
 
@@ -178,9 +167,9 @@ export default function App() {
     try {
       const result = await dispatch(updateProfile({ updatedUser: updatedUser as Student, token })).unwrap();
       dispatch(updateUserInList(result));
-      showToast('Profile saved successfully!', 'success');
+      dispatch(showToast({ message: 'Profile saved successfully!', type: 'success' }));
     } catch (err: any) {
-      showToast(err || 'Error occurred saving profile.', 'error');
+      dispatch(showToast({ message: err || 'Error occurred saving profile.', type: 'error' }));
     }
   };
 
@@ -357,17 +346,17 @@ export default function App() {
           <Route path="*" element={<Navigate to="/hostels" replace />} />
         </Routes>
       </BrowserRouter>
-      {toast.show && (
-        <div style={toastContainerStyle(toast.type)}>
+      {toastShow && (
+        <div style={toastContainerStyle(toastType)}>
           <style>{`
             @keyframes toastSlideIn {
               from { transform: translateY(1.5rem) scale(0.95); opacity: 0; }
               to { transform: translateY(0) scale(1); opacity: 1; }
             }
           `}</style>
-          <span>{toast.message}</span>
+          <span>{toastMessage}</span>
           <button
-            onClick={() => setToast((prev) => ({ ...prev, show: false }))}
+            onClick={() => dispatch(hideToast())}
             style={toastCloseStyle}
           >
             ✕

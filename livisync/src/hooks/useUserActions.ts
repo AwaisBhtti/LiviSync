@@ -8,6 +8,7 @@ import { setBlockedUsers } from '../store/slices/authSlice';
 import { updateUserInList } from '../store/slices/roommateSlice';
 import { removeMatchesForUser } from '../store/slices/matchSlice';
 import { addLocalReport } from '../store/slices/adminSlice';
+import { showToast } from '../store/slices/toastSlice';
 import type { Report } from '../types';
 import * as userApi from '../api/userApi';
 
@@ -29,9 +30,9 @@ export function useUserActions() {
       const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
       dispatch(updateUserInList(updatedUser));
       dispatch(removeMatchesForUser(targetId));
-      alert('User blocked successfully.');
+      dispatch(showToast({ message: 'User blocked successfully.', type: 'success' }));
     } catch (err: any) {
-      alert(err.message || 'Error blocking user');
+      dispatch(showToast({ message: err.message || 'Error blocking user', type: 'error' }));
     }
   };
 
@@ -46,9 +47,9 @@ export function useUserActions() {
       dispatch(setBlockedUsers(updatedBlocked));
       const updatedUser = { ...currentUser, blockedUsers: updatedBlocked };
       dispatch(updateUserInList(updatedUser));
-      alert('User unblocked successfully.');
+      dispatch(showToast({ message: 'User unblocked successfully.', type: 'success' }));
     } catch (err: any) {
-      alert(err.message || 'Error unblocking user');
+      dispatch(showToast({ message: err.message || 'Error unblocking user', type: 'error' }));
     }
   };
 
@@ -76,7 +77,7 @@ export function useUserActions() {
         await handleBlockUser(reportedId);
       }
     } catch (err: any) {
-      alert(err.message || 'Error submitting safety report');
+      dispatch(showToast({ message: err.message || 'Error submitting safety report', type: 'error' }));
     }
   };
 
