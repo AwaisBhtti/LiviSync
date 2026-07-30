@@ -84,12 +84,14 @@ export const Navbar = ({
           </nav>
 
           <div style={userControlStyle}>
-            <div style={roleDisplayStyle}>
-              <span style={roleLabelStyle}>Role:</span>
-              <span style={roleBadgeStyle(currentUser.role)}>
-                {currentUser.role === 'admin' ? 'Admin' : currentUser.role === 'owner' ? 'Owner' : 'Student'}
-              </span>
-            </div>
+            {currentUser.role !== 'student' && (
+              <div style={roleDisplayStyle}>
+                <span style={roleLabelStyle}>Role:</span>
+                <span style={roleBadgeStyle(currentUser.role)}>
+                  {currentUser.role === 'admin' ? 'Admin' : 'Owner'}
+                </span>
+              </div>
+            )}
             <button className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }} onClick={onLogout}>
               Sign Out
             </button>
@@ -275,9 +277,8 @@ const roleLabelStyle: React.CSSProperties = {
 
 const roleBadgeStyle = (role: string): React.CSSProperties => ({
   fontWeight: 700,
-  color: role === 'admin' ? 'var(--danger)' : role === 'owner' ? 'var(--success)' : 'var(--primary)',
+  color: role === 'admin' ? 'var(--danger)' : 'var(--success)',
 });
-
 const mobileTabButtonStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   flexDirection: 'column',
