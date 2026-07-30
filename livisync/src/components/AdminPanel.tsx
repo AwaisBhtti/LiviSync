@@ -97,16 +97,17 @@ const sectionTitleStyle: React.CSSProperties = {
 const tableContainerStyle: React.CSSProperties = {
   width: '100%',
   overflowX: 'auto',
+  maxHeight: '400px',
+  overflowY: 'auto',
 };
 
 const tableStyle: React.CSSProperties = {
   width: '100%',
   borderCollapse: 'collapse',
-  textAlign: 'left',
 };
 
 const tableHeaderRowStyle: React.CSSProperties = {
-  borderBottom: '1px solid var(--border)',
+  borderBottom: '2px solid var(--border)',
 };
 
 const thStyle: React.CSSProperties = {
@@ -115,6 +116,10 @@ const thStyle: React.CSSProperties = {
   color: 'var(--muted)',
   textTransform: 'uppercase',
   padding: '0.75rem 1rem',
+  position: 'sticky',
+  top: 0,
+  backgroundColor: 'var(--card)',
+  zIndex: 10,
 };
 
 const tableRowStyle: React.CSSProperties = {
