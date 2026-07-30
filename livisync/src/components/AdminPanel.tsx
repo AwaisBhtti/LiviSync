@@ -192,6 +192,10 @@ export const AdminPanel = ({
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [selectedUserDetail, setSelectedUserDetail] = useState<User | null>(null);
 
+  const [studentSearch, setStudentSearch] = useState('');
+  const [ownerSearch, setOwnerSearch] = useState('');
+  const [hostelSearch, setHostelSearch] = useState('');
+
   const fetchInvitations = async () => {
     try {
       const token = localStorage.getItem('livisync_token');
@@ -422,8 +426,16 @@ export const AdminPanel = ({
           return 'var(--success)';
         };
 
-        const students = users.filter((u) => u.role === 'student');
-        const owners = users.filter((u) => u.role === 'owner');
+        const students = users.filter((u) => {
+          if (u.role !== 'student') return false;
+          const term = studentSearch.toLowerCase().trim();
+          return u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
+        });
+        const owners = users.filter((u) => {
+          if (u.role !== 'owner') return false;
+          const term = ownerSearch.toLowerCase().trim();
+          return u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
+        });
 
         return (
           <>
@@ -432,6 +444,16 @@ export const AdminPanel = ({
               <h3 style={sectionTitleStyle}>
                 <Users size={18} /> Student Directory
               </h3>
+              <div style={{ marginBottom: '1rem', width: '100%', maxWidth: '320px' }}>
+                <input
+                  type="text"
+                  placeholder="Search student by name or email..."
+                  className="form-input"
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.825rem', width: '100%' }}
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                />
+              </div>
               <div style={tableContainerStyle}>
                 <table style={tableStyle}>
                   <thead>
@@ -530,6 +552,16 @@ export const AdminPanel = ({
               <h3 style={sectionTitleStyle}>
                 <Users size={18} /> Hostel Owner Directory
               </h3>
+              <div style={{ marginBottom: '1rem', width: '100%', maxWidth: '320px' }}>
+                <input
+                  type="text"
+                  placeholder="Search owner by name or email..."
+                  className="form-input"
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.825rem', width: '100%' }}
+                  value={ownerSearch}
+                  onChange={(e) => setOwnerSearch(e.target.value)}
+                />
+              </div>
               <div style={tableContainerStyle}>
                 <table style={tableStyle}>
                   <thead>
@@ -722,27 +754,43 @@ export const AdminPanel = ({
       )}
 
       {/* Hostel Listings Moderation */}
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <h3 style={sectionTitleStyle}>
-          <Building size={18} /> Hostel Listings Verification
-        </h3>
-        {hostels.filter(h => !h.isVerified).length === 0 ? (
-          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', padding: '1rem 0' }}>
-            No pending hostels for verification.
-          </p>
-        ) : (
-          <div style={tableContainerStyle}>
-            <table style={tableStyle}>
-              <thead>
-                <tr style={tableHeaderRowStyle}>
-                  <th style={thStyle}>Hostel Name</th>
-                  <th style={thStyle}>Location</th>
-                  <th style={thStyle}>Rent (PKR)</th>
-                  <th style={thStyle}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {hostels.filter(h => !h.isVerified).map((hostel) => (
+      {(() => {
+        const filteredHostels = hostels.filter(
+          (h) => !h.isVerified && h.name.toLowerCase().includes(hostelSearch.toLowerCase().trim())
+        );
+
+        return (
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <h3 style={sectionTitleStyle}>
+              <Building size={18} /> Hostel Listings Verification
+            </h3>
+            <div style={{ marginBottom: '1rem', width: '100%', maxWidth: '320px' }}>
+              <input
+                type="text"
+                placeholder="Search hostel by name..."
+                className="form-input"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.825rem', width: '100%' }}
+                value={hostelSearch}
+                onChange={(e) => setHostelSearch(e.target.value)}
+              />
+            </div>
+            {filteredHostels.length === 0 ? (
+              <p style={{ color: 'var(--muted)', fontSize: '0.875rem', padding: '1rem 0' }}>
+                No pending hostels for verification matching search.
+              </p>
+            ) : (
+              <div style={tableContainerStyle}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr style={tableHeaderRowStyle}>
+                      <th style={thStyle}>Hostel Name</th>
+                      <th style={thStyle}>Location</th>
+                      <th style={thStyle}>Rent (PKR)</th>
+                      <th style={thStyle}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredHostels.map((hostel) => (
                   <tr key={hostel.id} style={tableRowStyle}>
                     <td style={tdStyle}>
                       <button
@@ -772,6 +820,8 @@ export const AdminPanel = ({
           </div>
         )}
       </div>
+    );
+  })()}
 
       {selectedHostel && (
         <div style={modalOverlayStyle}>
