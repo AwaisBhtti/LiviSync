@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import studentFemale from '../assets/student-female.jpg';
 import studentMale from '../assets/student-male.jpg';
@@ -10,6 +11,20 @@ interface LandingPageProps {
 }
 
 export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 40) {
+        setShowScrollIndicator(false);
+      } else {
+        setShowScrollIndicator(true);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div style={containerStyle}>
       <style>{`
@@ -21,6 +36,11 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
           from { opacity: 0; transform: translateY(24px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+          40% { transform: translateY(-8px) translateX(-50%); }
+          60% { transform: translateY(-4px) translateX(-50%); }
+        }
         .animate-fade-up {
           animation: fade-up 0.8s cubic-bezier(0.19, 1, 0.22, 1) both;
         }
@@ -29,6 +49,9 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
         }
         .landing-link:hover {
           color: var(--primary) !important;
+        }
+        .scroll-bounce {
+          animation: bounce 2.5s infinite;
         }
       `}</style>
 
@@ -326,6 +349,13 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
           </div>
         </div>
       </footer>
+
+      {showScrollIndicator && (
+        <div className="scroll-bounce" style={scrollIndicatorStyle}>
+          <span style={scrollIndicatorTextStyle}>Scroll Down</span>
+          <span style={scrollIndicatorArrowStyle}>↓</span>
+        </div>
+      )}
     </div>
   );
 };
@@ -753,4 +783,38 @@ const footerBottomStyle: React.CSSProperties = {
   flexWrap: 'wrap',
   gap: '1.5rem',
 };
+
+const scrollIndicatorStyle: React.CSSProperties = {
+  position: 'fixed',
+  bottom: '2.5rem',
+  left: '50%',
+  zIndex: 100,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '0.15rem',
+  backgroundColor: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: '24px',
+  padding: '0.4rem 1.25rem',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+  pointerEvents: 'none',
+  transition: 'opacity 0.3s ease',
+};
+
+const scrollIndicatorTextStyle: React.CSSProperties = {
+  fontSize: '0.65rem',
+  fontWeight: 800,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: 'var(--muted)',
+};
+
+const scrollIndicatorArrowStyle: React.CSSProperties = {
+  fontSize: '0.9rem',
+  fontWeight: 900,
+  color: 'var(--primary)',
+  lineHeight: 1.1,
+};
+
 
