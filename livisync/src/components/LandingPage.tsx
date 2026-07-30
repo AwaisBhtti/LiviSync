@@ -5,6 +5,7 @@ import studentMale from '../assets/student-male.jpg';
 import hostelOrchard from '../assets/hostel-orchard.jpg';
 import hostelStudio from '../assets/hostel-studio.jpg';
 import hostelHeritage from '../assets/hostel-heritage.jpg';
+import logo from '../assets/logo2.png';
 
 interface LandingPageProps {
   isAuthenticated: boolean;
@@ -58,10 +59,8 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
       {/* Nav */}
       <nav style={navStyle}>
         <div style={navInnerStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={logoBadgeStyle}>
-              <div style={logoInnerStyle}></div>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <img src={logo} alt="LiviSync Logo" style={{ width: '30px', height: '30px', objectFit: 'contain' }} />
             <span style={logoTextStyle}>LiviSync</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
@@ -307,6 +306,7 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
             {/* Column 1: Intro */}
             <div style={footerColStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <img src={logo} alt="LiviSync Logo" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
                 <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>LiviSync</span>
               </div>
               <p style={footerTextStyle}>
@@ -385,24 +385,6 @@ const navInnerStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-};
-
-const logoBadgeStyle: React.CSSProperties = {
-  width: '32px',
-  height: '32px',
-  backgroundColor: 'var(--primary)',
-  borderRadius: '50%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const logoInnerStyle: React.CSSProperties = {
-  width: '12px',
-  height: '12px',
-  backgroundColor: 'var(--background)',
-  transform: 'rotate(45deg)',
-  borderRadius: '2px',
 };
 
 const logoTextStyle: React.CSSProperties = {
