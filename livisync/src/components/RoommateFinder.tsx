@@ -9,7 +9,7 @@ import { RoommateFilters } from './roommate/RoommateFilters';
 import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
-import { Users, Search } from 'lucide-react';
+import { Users, Search, ChevronLeft } from 'lucide-react';
 
 interface RoommateFinderProps {
   currentUser: User;
@@ -53,6 +53,9 @@ export const RoommateFinder = ({
     setActiveTab(tab);
     sessionStorage.setItem('livisync_roommate_tab', tab);
   };
+
+  // ── Filter panel visibility ───────────────────────────────────────────────
+  const [showFilters, setShowFilters] = useState(true);
 
   // ── Modal / selection state ───────────────────────────────────────────────
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -176,26 +179,49 @@ export const RoommateFinder = ({
 
       {activeTab === 'find' ? (
         <>
-          <div className="split-layout">
-            <RoommateFilters
-              maxBudget={maxBudget}
-              filterGender={filterGender}
-              filterSleep={filterSleep}
-              filterCleanliness={filterCleanliness}
-              filterHostel={filterHostel}
-              hostels={hostels}
-              onMaxBudgetChange={setMaxBudget}
-              onGenderChange={setFilterGender}
-              onSleepChange={setFilterSleep}
-              onCleanlinessChange={setFilterCleanliness}
-              onHostelChange={setFilterHostel}
-            />
-            <RoommateGrid
-              candidates={candidates}
-              matchRequests={matchRequests}
-              currentUserId={currentUser.id}
-              onSelectCandidate={setSelectedUser}
-            />
+          <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+            {/* Collapsible filter sidebar */}
+            {showFilters && (
+              <div style={{ width: '240px', flexShrink: 0 }}>
+                <RoommateFilters
+                  maxBudget={maxBudget}
+                  filterGender={filterGender}
+                  filterSleep={filterSleep}
+                  filterCleanliness={filterCleanliness}
+                  filterHostel={filterHostel}
+                  hostels={hostels}
+                  onMaxBudgetChange={setMaxBudget}
+                  onGenderChange={setFilterGender}
+                  onSleepChange={setFilterSleep}
+                  onCleanlinessChange={setFilterCleanliness}
+                  onHostelChange={setFilterHostel}
+                />
+              </div>
+            )}
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Toggle button above the grid */}
+              <button
+                onClick={() => setShowFilters((v) => !v)}
+                title={showFilters ? 'Hide filters' : 'Show filters'}
+                style={filterToggleStyle(showFilters)}
+              >
+                <ChevronLeft
+                  size={14}
+                  style={{
+                    transition: 'transform 0.25s ease',
+                    transform: showFilters ? 'rotate(0deg)' : 'rotate(180deg)',
+                  }}
+                />
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
+              </button>
+              <RoommateGrid
+                candidates={candidates}
+                matchRequests={matchRequests}
+                currentUserId={currentUser.id}
+                onSelectCandidate={setSelectedUser}
+              />
+            </div>
           </div>
 
           <RoommateModals
@@ -352,3 +378,20 @@ const tabBadgeStyle: React.CSSProperties = {
   padding: '0 4px',
   boxShadow: '0 2px 5px var(--primary-glow)',
 };
+
+const filterToggleStyle = (filtersVisible: boolean): React.CSSProperties => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.35rem',
+  marginBottom: '0.75rem',
+  padding: '0.35rem 0.75rem',
+  fontSize: '0.775rem',
+  fontWeight: 600,
+  color: filtersVisible ? 'var(--primary)' : 'var(--muted)',
+  background: filtersVisible ? 'var(--primary-glow-light)' : 'var(--secondary)',
+  border: `1px solid ${filtersVisible ? 'rgba(99,102,241,0.2)' : 'var(--border)'}`,
+  borderRadius: '9999px',
+  cursor: 'pointer',
+  transition: 'var(--transition)',
+});
+
