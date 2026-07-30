@@ -4,6 +4,7 @@ import type { Hostel, User } from '../types';
 import { Search, MapPin, Check, ArrowLeft } from 'lucide-react';
 import { ImageLightbox } from './ImageLightbox';
 import { BUILTIN_AMENITIES } from './Amenities';
+import { CustomSelect } from './ui/CustomSelect';
 
 interface HostelDirectoryProps {
   hostels: Hostel[];
@@ -263,7 +264,7 @@ export const HostelDirectory = ({
           {/* Directory Content Layout */}
           <div className="split-layout">
             {/* Filters Column */}
-            <div className="card" style={{ padding: '1.25rem', height: 'fit-content' }}>
+            <div className="card" style={{ padding: '1.25rem', height: 'fit-content', overflow: 'visible' }}>
               <h3 style={{ fontSize: '0.95rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
                 Filters
               </h3>
@@ -285,35 +286,31 @@ export const HostelDirectory = ({
               {/* Sharing Type Filter */}
               <div className="form-group">
                 <label className="form-label" style={{ fontSize: '0.75rem' }}>Room Sharing</label>
-                <select
-                  className="form-select"
+                <CustomSelect
                   value={selectedSharing}
-                  onChange={(e) => setSelectedSharing(e.target.value)}
-                >
-                  <option value="all">Any Sharing</option>
-                  <option value="single">1 Seater Room</option>
-                  <option value="double">2 Seater Room</option>
-                  <option value="triple">3 Seater Room</option>
-                  <option value="quad">4 Seater Room</option>
-                  <option value="penta">5 Seater Room</option>
-                </select>
+                  onChange={setSelectedSharing}
+                  options={[
+                    { value: 'all', label: 'Any Sharing' },
+                    { value: 'single', label: '1 Seater Room' },
+                    { value: 'double', label: '2 Seater Room' },
+                    { value: 'triple', label: '3 Seater Room' },
+                    { value: 'quad', label: '4 Seater Room' },
+                    { value: 'penta', label: '5 Seater Room' },
+                  ]}
+                />
               </div>
 
               {/* Amenities Filter */}
               <div className="form-group">
                 <label className="form-label" style={{ fontSize: '0.75rem' }}>Must Have Amenity</label>
-                <select
-                  className="form-select"
+                <CustomSelect
                   value={selectedAmenity}
-                  onChange={(e) => setSelectedAmenity(e.target.value)}
-                >
-                  <option value="all">Any Amenity</option>
-                  {allAmenities.map((amenity, idx) => (
-                    <option key={idx} value={amenity}>
-                      {amenity}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedAmenity}
+                  options={[
+                    { value: 'all', label: 'Any Amenity' },
+                    ...allAmenities.map((amenity) => ({ value: amenity, label: amenity })),
+                  ]}
+                />
               </div>
             </div>
 

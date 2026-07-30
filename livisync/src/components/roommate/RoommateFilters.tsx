@@ -1,6 +1,7 @@
 import type { Hostel } from '../../types';
 import { SlidersHorizontal } from 'lucide-react';
 import { colors } from '../../styles/colors';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface RoommateFiltersProps {
   maxBudget: number;
@@ -16,26 +17,10 @@ interface RoommateFiltersProps {
   onHostelChange: (val: string) => void;
 }
 
-const CARD_BG     = colors.dark.card;
-const CARD_BORDER = colors.dark.border;
-const TEXT        = colors.dark.text;
-const MUTED       = colors.dark.muted;
-const INPUT_BG    = colors.dark.inputBg;
-const INPUT_BORDER = colors.dark.inputBorder;
-
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.55rem 0.75rem',
-  fontFamily: 'var(--font-sans)',
-  fontSize: '0.825rem',
-  background: INPUT_BG,
-  border: `1px solid ${INPUT_BORDER}`,
-  borderRadius: '8px',
-  color: TEXT,
-  outline: 'none',
-  cursor: 'pointer',
-  transition: 'var(--transition)',
-};
+const CARD_BG     = colors.roommateMinimal.card;
+const CARD_BORDER = colors.roommateMinimal.border;
+const TEXT        = colors.roommateMinimal.text;
+const MUTED       = colors.roommateMinimal.muted;
 
 const labelStyle: React.CSSProperties = {
   fontSize: '0.7rem',
@@ -59,84 +44,108 @@ export const RoommateFilters = ({
   onSleepChange,
   onCleanlinessChange,
   onHostelChange,
-}: RoommateFiltersProps) => (
-  <div
-    style={{
-      background: CARD_BG,
-      border: `1px solid ${CARD_BORDER}`,
-      borderRadius: '16px',
-      backdropFilter: 'blur(16px)',
-      padding: '1.125rem',
-      height: 'fit-content',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '1rem',
-    }}
-  >
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: `1px solid ${CARD_BORDER}`, paddingBottom: '0.75rem' }}>
-      <SlidersHorizontal size={13} color={MUTED} />
-      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: TEXT }}>Filters</span>
-    </div>
+}: RoommateFiltersProps) => {
+  const genderOptions = [
+    { value: 'all', label: 'Any Gender' },
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' },
+  ];
 
-    {/* Budget */}
-    <div>
-      <label style={labelStyle}>Max Budget</label>
-      <p style={{ fontSize: '0.8rem', color: TEXT, fontWeight: 600, marginBottom: '0.4rem' }}>
-        PKR {maxBudget.toLocaleString()}
-      </p>
-      <input
-        type="range"
-        min="20000"
-        max="200000"
-        step="5000"
-        value={maxBudget}
-        onChange={(e) => onMaxBudgetChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: 'var(--primary)', cursor: 'pointer' }}
-      />
-    </div>
+  const sleepOptions = [
+    { value: 'all', label: 'Any Cycle' },
+    { value: 'early-bird', label: 'Early Bird' },
+    { value: 'night-owl', label: 'Night Owl' },
+    { value: 'flexible', label: 'Flexible' },
+  ];
 
-    {/* Gender */}
-    <div>
-      <label style={labelStyle}>Gender</label>
-      <select className="rm-select" style={selectStyle} value={filterGender} onChange={(e) => onGenderChange(e.target.value)}>
-        <option value="all">Any Gender</option>
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-        <option value="other">Other</option>
-      </select>
-    </div>
+  const cleanlinessOptions = [
+    { value: 'all', label: 'Any Level' },
+    { value: 'meticulous', label: 'Meticulous' },
+    { value: 'moderate', label: 'Moderate' },
+    { value: 'relaxed', label: 'Relaxed' },
+  ];
 
-    {/* Sleep */}
-    <div>
-      <label style={labelStyle}>Sleep Schedule</label>
-      <select className="rm-select" style={selectStyle} value={filterSleep} onChange={(e) => onSleepChange(e.target.value)}>
-        <option value="all">Any Cycle</option>
-        <option value="early-bird">Early Bird</option>
-        <option value="night-owl">Night Owl</option>
-        <option value="flexible">Flexible</option>
-      </select>
-    </div>
+  const hostelOptions = [
+    { value: 'all', label: 'Any Hostel' },
+    ...hostels.map((h) => ({ value: h.id, label: h.name })),
+  ];
 
-    {/* Cleanliness */}
-    <div>
-      <label style={labelStyle}>Cleanliness</label>
-      <select className="rm-select" style={selectStyle} value={filterCleanliness} onChange={(e) => onCleanlinessChange(e.target.value)}>
-        <option value="all">Any Level</option>
-        <option value="meticulous">Meticulous</option>
-        <option value="moderate">Moderate</option>
-        <option value="relaxed">Relaxed</option>
-      </select>
-    </div>
+  return (
+    <div
+      style={{
+        background: CARD_BG,
+        border: `1px solid ${CARD_BORDER}`,
+        borderRadius: '16px',
+        padding: '1.125rem',
+        height: 'fit-content',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        boxShadow: '0 4px 15px -3px rgba(0,0,0,0.02), 0 2px 6px -2px rgba(0,0,0,0.02)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: `1px solid ${CARD_BORDER}`, paddingBottom: '0.75rem' }}>
+        <SlidersHorizontal size={13} color={MUTED} />
+        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: TEXT }}>Filters</span>
+      </div>
 
-    {/* Hostel */}
-    <div>
-      <label style={labelStyle}>Hostel</label>
-      <select className="rm-select" style={selectStyle} value={filterHostel} onChange={(e) => onHostelChange(e.target.value)}>
-        <option value="all">Any Hostel</option>
-        {hostels.map((h) => (
-          <option key={h.id} value={h.id}>{h.name}</option>
-        ))}
-      </select>
+      {/* Budget */}
+      <div>
+        <label style={labelStyle}>Max Budget</label>
+        <p style={{ fontSize: '0.8rem', color: TEXT, fontWeight: 600, marginBottom: '0.4rem' }}>
+          PKR {maxBudget.toLocaleString()}
+        </p>
+        <input
+          type="range"
+          min="20000"
+          max="200000"
+          step="5000"
+          value={maxBudget}
+          onChange={(e) => onMaxBudgetChange(Number(e.target.value))}
+          style={{ width: '100%', accentColor: 'var(--primary)', cursor: 'pointer' }}
+        />
+      </div>
+
+      {/* Gender */}
+      <div>
+        <label style={labelStyle}>Gender</label>
+        <CustomSelect
+          value={filterGender}
+          onChange={onGenderChange}
+          options={genderOptions}
+        />
+      </div>
+
+      {/* Sleep */}
+      <div>
+        <label style={labelStyle}>Sleep Schedule</label>
+        <CustomSelect
+          value={filterSleep}
+          onChange={onSleepChange}
+          options={sleepOptions}
+        />
+      </div>
+
+      {/* Cleanliness */}
+      <div>
+        <label style={labelStyle}>Cleanliness</label>
+        <CustomSelect
+          value={filterCleanliness}
+          onChange={onCleanlinessChange}
+          options={cleanlinessOptions}
+        />
+      </div>
+
+      {/* Hostel */}
+      <div>
+        <label style={labelStyle}>Hostel</label>
+        <CustomSelect
+          value={filterHostel}
+          onChange={onHostelChange}
+          options={hostelOptions}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};

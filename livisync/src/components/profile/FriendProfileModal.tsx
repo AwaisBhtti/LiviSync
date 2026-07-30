@@ -146,15 +146,9 @@ export const FriendProfileModal = ({
                 Reason
               </label>
               <select
+                className="form-select"
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '6px',
-                  border: '1px solid var(--border)',
-                  backgroundColor: 'var(--card-bg)',
-                }}
               >
                 <option value="fake-profile">Fake Profile</option>
                 <option value="harassment">Harassment</option>
