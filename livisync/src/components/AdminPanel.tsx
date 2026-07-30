@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import type { User, Report, Hostel } from '../types';
 import { Building, Users, ShieldAlert, CheckCircle, Ban, RefreshCw } from 'lucide-react';
 import { ImageLightbox } from './ImageLightbox';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface AdminPanelProps {
   users: User[];
@@ -168,6 +169,20 @@ export const AdminPanel = ({
   const [inviteError, setInviteError] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void | Promise<void>;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [selectedUserDetail, setSelectedUserDetail] = useState<User | null>(null);
@@ -474,9 +489,17 @@ export const AdminPanel = ({
                               className="btn btn-danger"
                               style={tableBtnStyle}
                               onClick={() => {
-                                if (confirm(`Are you sure you want to delete ${user.name}'s account?`)) {
-                                  onDeleteUser(user.id);
-                                }
+                                setConfirmModal({
+                                  isOpen: true,
+                                  title: 'Delete Student Account',
+                                  message: `Are you sure you want to delete ${user.name}'s account? This action is permanent.`,
+                                  confirmText: 'Delete',
+                                  isDanger: true,
+                                  onConfirm: () => {
+                                    onDeleteUser(user.id);
+                                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                                  }
+                                });
                               }}
                             >
                               Delete
@@ -541,9 +564,17 @@ export const AdminPanel = ({
                               className="btn btn-danger"
                               style={tableBtnStyle}
                               onClick={() => {
-                                if (confirm(`Are you sure you want to delete owner ${user.name}?`)) {
-                                  onDeleteUser(user.id);
-                                }
+                                setConfirmModal({
+                                  isOpen: true,
+                                  title: 'Delete Owner Account',
+                                  message: `Are you sure you want to delete owner ${user.name}? This action is permanent.`,
+                                  confirmText: 'Delete',
+                                  isDanger: true,
+                                  onConfirm: () => {
+                                    onDeleteUser(user.id);
+                                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                                  }
+                                });
                               }}
                             >
                               Delete
@@ -937,6 +968,16 @@ export const AdminPanel = ({
       )}
 
       <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 };

@@ -50,6 +50,7 @@ import {
 } from './store/slices/adminSlice';
 import { supabase } from './supabase';
 import { API_BASE_URL } from './config';
+import { ConfirmationModal } from './components/ConfirmationModal';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -62,6 +63,20 @@ export default function App() {
   const { users: adminUsers, reports, loading: adminLoading } = useAppSelector((state) => state.admin);
 
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void | Promise<void>;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading || (token !== null && currentUser === null);
 
@@ -378,13 +393,22 @@ export default function App() {
 
       dispatch(addLocalReport(newReport));
       
-      const confirmBlock = window.confirm(
-        'Thank you. The safety report has been filed and sent to administrators for review.\n\n' +
-        'Would you like to block this user as well to prevent them from contacting or matching with you?'
-      );
-      if (confirmBlock) {
-        await handleBlockUser(reportedId);
-      }
+      setConfirmModal({
+        isOpen: true,
+        title: 'Report Filed Successfully',
+        message: 'Thank you. The safety report has been filed and sent to administrators for review.\n\nWould you like to block this user as well to prevent them from contacting or matching with you?',
+        confirmText: 'Block User',
+        isDanger: true,
+        onConfirm: async () => {
+          try {
+            await handleBlockUser(reportedId);
+          } catch (err: any) {
+            console.error("Error blocking reported user:", err);
+          } finally {
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          }
+        }
+      });
     } catch (err: any) {
       alert(err.message || 'Error submitting safety report');
     }
@@ -682,6 +706,16 @@ export default function App() {
         </Routes>
       </BrowserRouter>
       {loadingData && <SpinnerLoader />}
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </>
   );
 }
