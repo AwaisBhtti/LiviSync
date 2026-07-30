@@ -39,7 +39,7 @@ export const RoommateRequestsPanel = ({
       r.status === 'pending' &&
       !currentUser.blockedUsers?.includes(r.senderId)
   );
-  const sentRequests = matchRequests.filter((r) => r.senderId === currentUser.id);
+  const sentRequests = matchRequests.filter((r) => r.senderId === currentUser.id && r.status === 'pending');
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
