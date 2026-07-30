@@ -202,6 +202,7 @@ export const RoommateModals = ({
                     smoking: selectedUser.preferences?.smoking ?? 'no',
                     pets: selectedUser.preferences?.pets ?? 'no',
                     guestTolerance: selectedUser.preferences?.guestTolerance ?? 'weekends',
+                    noiseTolerance: selectedUser.preferences?.noiseTolerance ?? 'moderate',
                   }).map(([key, val]) => (
                     <div style={prefTagStyle} key={key}>
                       <span style={{ color: 'var(--muted)', textTransform: 'capitalize' }}>
