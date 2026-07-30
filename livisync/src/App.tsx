@@ -28,8 +28,7 @@ import { supabase } from './supabase';
 import { API_BASE_URL } from './config';
 import { AppLayout } from './components/layout/AppLayout';
 import { SpinnerLoader } from './components/layout/SpinnerLoader';
-
-// Logic hooks
+import { LandingPage } from './components/LandingPage';
 import { useMatchRequests } from './hooks/useMatchRequests';
 import { useUserActions } from './hooks/useUserActions';
 import { useHostelActions } from './hooks/useHostelActions';
@@ -228,6 +227,11 @@ export default function App() {
             }
           />
 
+          <Route
+            path="/"
+            element={<LandingPage isAuthenticated={!!token} />}
+          />
+
           <Route element={<ProtectedRoute />}>
             <Route
               element={
@@ -245,7 +249,7 @@ export default function App() {
                 />
               }
             >
-              <Route path="/" element={<Navigate to="/hostels" replace />} />
+              <Route path="" element={<Navigate to="/hostels" replace />} />
               <Route
                 path="/hostels"
                 element={

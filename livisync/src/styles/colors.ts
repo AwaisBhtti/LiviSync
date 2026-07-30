@@ -41,5 +41,27 @@ export const colors = {
     overlay: 'rgba(15, 23, 42, 0.9)',
     inputBg: 'rgba(15, 23, 42, 0.5)',
     inputBorder: 'rgba(255, 255, 255, 0.1)',
+  },
+
+  // Refined Minimalist Light Theme for Roommate Finder (Avoiding "AI Slop" Dark Neon Look)
+  roommateMinimal: {
+    bg: '#fbfbf9',
+    bgGradient: 'linear-gradient(180deg, #fbfbf9 0%, #f2f1ec 100%)',
+    card: '#ffffff',
+    border: '#e5e4df',
+    text: '#1e2221',
+    muted: '#767876',
+    surface: '#ffffff',
+    overlay: 'rgba(30, 34, 33, 0.3)',
+    inputBg: '#ffffff',
+    inputBorder: '#e5e4df',
+    headerBg: '#ffffff',
+    trackBg: '#f2f1ec',
+    successText: '#10b981',
+    successBg: '#ecfdf5',
+    successBorder: 'rgba(16, 185, 129, 0.15)',
+    warningText: '#d97706',
+    warningBg: '#fffbeb',
+    warningBorder: 'rgba(217, 119, 6, 0.15)',
   }
 };

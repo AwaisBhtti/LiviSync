@@ -1,48 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --background: #f8fafc; /* Slate 50 */
-  --foreground: #0f172a; /* Slate 900 */
-  --card: rgba(255, 255, 255, 0.8);
-  --card-foreground: #0f172a;
-  --primary: #6366f1; /* Indigo 500 */
-  --primary-hover: #4f46e5; /* Indigo 600 */
-  --primary-foreground: #ffffff;
-  --primary-glow: rgba(99, 102, 241, 0.3);
-  --primary-glow-light: rgba(99, 102, 241, 0.1);
-  --secondary: #f1f5f9; /* Slate 100 */
-  --secondary-foreground: #334155; /* Slate 700 */
-  --muted: #64748b; /* Slate 500 */
-  --muted-subtle: #94a3b8; /* Slate 400 */
-  --muted-bg: #f1f5f9;
-  --border: rgba(226, 232, 240, 0.7); /* Slate 200 with transparency */
-  --border-solid: rgba(226, 232, 240, 1);
-  --border-focus: #6366f1;
-  --radius: 16px;
-  --radius-sm: 10px;
+  --background: #fbfbf9; /* Stone/cream surface */
+  --foreground: #1e2221; /* Rich dark charcoal */
+  --card: #ffffff;
+  --card-foreground: #1e2221;
+  --primary: #b55c3c; /* Terracotta primary */
+  --primary-hover: #a34e30;
+  --primary-foreground: #fbfbf9;
+  --primary-glow: rgba(181, 92, 60, 0.2);
+  --primary-glow-light: rgba(181, 92, 60, 0.05);
+  --secondary: #f2f1ec; /* Light stone */
+  --secondary-foreground: #1e2221;
+  --muted: #767876; /* Warm grey */
+  --muted-subtle: #9ca3af;
+  --muted-bg: #f2f1ec;
+  --border: rgba(229, 228, 223, 0.7); /* Soft border */
+  --border-solid: rgba(229, 228, 223, 1);
+  --border-focus: #b55c3c;
+  --radius: 12px;
+  --radius-sm: 8px;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.06), 0 1px 3px rgba(0, 0, 0, 0.01);
-  --shadow-lg: 0 20px 40px -15px rgba(99, 102, 241, 0.12), 0 8px 16px -8px rgba(0, 0, 0, 0.02);
-  --shadow-glow: 0 20px 25px -5px rgba(99, 102, 241, 0.1), 0 8px 10px -6px rgba(99, 102, 241, 0.05);
-  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --danger: #f43f5e; /* Rose 500 */
+  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.02), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 20px 40px -15px rgba(181, 92, 60, 0.08), 0 8px 16px -8px rgba(0, 0, 0, 0.02);
+  --shadow-glow: 0 20px 25px -5px rgba(181, 92, 60, 0.06), 0 8px 10px -6px rgba(181, 92, 60, 0.03);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Inter Tight', sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+  --danger: #f43f5e;
   --danger-bg: #fff1f2;
-  --danger-glow: rgba(244, 63, 94, 0.2);
-  --success: #10b981; /* Emerald 500 */
+  --danger-glow: rgba(244, 63, 94, 0.15);
+  --success: #10b981;
   --success-bg: #ecfdf5;
-  --success-border: rgba(16, 185, 129, 0.2);
-  --warning: #d97706; /* Amber 600 */
+  --success-border: rgba(16, 185, 129, 0.15);
+  --warning: #d97706;
   --warning-bg: #fffbeb;
-  --warning-border: rgba(217, 119, 6, 0.2);
-  --warning-label: #eab308; /* Yellow 500 */
-  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #7c3aed 100%);
-  --gradient-card: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-dark: rgba(15, 23, 42, 0.75);
-  --overlay-dark: rgba(15, 23, 42, 0.4);
-  --overlay-backdrop: rgba(15, 23, 42, 0.6);
+  --warning-border: rgba(217, 119, 6, 0.15);
+  --warning-label: #eab308;
+  --gradient-brand: linear-gradient(135deg, #b55c3c 0%, #9e4629 100%);
+  --gradient-card: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+  --glass-bg: rgba(251, 251, 249, 0.85);
+  --glass-border: rgba(229, 228, 223, 0.5);
+  --glass-dark: rgba(30, 34, 33, 0.85);
+  --overlay-dark: rgba(30, 34, 33, 0.4);
+  --overlay-backdrop: rgba(30, 34, 33, 0.6);
 }
 
 * {
