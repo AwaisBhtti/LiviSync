@@ -617,9 +617,11 @@ export default function App() {
                   onLogout={handleLogout}
                   unreadMessagesCount={unreadMessagesCount}
                   pendingRequestsCount={
-                    matchRequests.filter(
-                      (r) => r.receiverId === currentUser!.id && r.status === 'pending'
-                    ).length
+                    currentUser && currentUser.role === 'student'
+                      ? matchRequests.filter(
+                          (r) => r.receiverId === currentUser.id && r.status === 'pending'
+                        ).length
+                      : 0
                   }
                 />
                 <main className="main-content">
