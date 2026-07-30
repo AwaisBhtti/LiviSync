@@ -32,7 +32,8 @@ export const RoommateFilters = ({
   <div className="card" style={{ padding: '1.25rem', height: 'fit-content' }}>
     <h3
       style={{
-        fontSize: '0.95rem',
+        fontSize: '0.9rem',
+        fontWeight: 700,
         borderBottom: '1px solid var(--border)',
         paddingBottom: '0.5rem',
         marginBottom: '1.25rem',
@@ -46,8 +47,8 @@ export const RoommateFilters = ({
     </h3>
 
     <div className="form-group">
-      <label className="form-label" style={{ fontSize: '0.75rem' }}>
-        Max Roommate Budget: {maxBudget.toLocaleString()}
+      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+        Max Budget: PKR {maxBudget.toLocaleString()}
       </label>
       <input
         type="range"
@@ -56,12 +57,12 @@ export const RoommateFilters = ({
         step="5000"
         value={maxBudget}
         onChange={(e) => onMaxBudgetChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: 'var(--primary)' }}
+        style={{ width: '100%', accentColor: 'var(--primary)', cursor: 'pointer' }}
       />
     </div>
 
     <div className="form-group">
-      <label className="form-label" style={{ fontSize: '0.75rem' }}>
+      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
         Gender
       </label>
       <select
@@ -77,7 +78,7 @@ export const RoommateFilters = ({
     </div>
 
     <div className="form-group">
-      <label className="form-label" style={{ fontSize: '0.75rem' }}>
+      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
         Sleep Schedule
       </label>
       <select
@@ -93,7 +94,7 @@ export const RoommateFilters = ({
     </div>
 
     <div className="form-group">
-      <label className="form-label" style={{ fontSize: '0.75rem' }}>
+      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
         Cleanliness
       </label>
       <select
@@ -109,7 +110,7 @@ export const RoommateFilters = ({
     </div>
 
     <div className="form-group">
-      <label className="form-label" style={{ fontSize: '0.75rem' }}>
+      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
         Current Hostel
       </label>
       <select

@@ -24,63 +24,67 @@ export const Navbar = ({
       <header style={headerStyle}>
         <div style={navContainerStyle}>
           <Link style={logoSectionStyle} to="/hostels">
-            <Building size={20} strokeWidth={2.2} />
+            <div style={logoBoxStyle}>
+              <Building size={16} color="white" strokeWidth={2.5} />
+            </div>
             <span style={logoTextStyle}>LiviSync</span>
           </Link>
 
           <nav style={desktopNavStyle}>
-            <Link
-              to="/hostels"
-              style={tabButtonStyle(currentPath === '/hostels' || currentPath === '/')}
-            >
-              <Building size={16} />
-              Hostels
-            </Link>
-            {currentUser.role === 'student' && (
-              <>
-                <Link
-                  to="/roommates"
-                  style={tabButtonStyle(currentPath === '/roommates')}
-                >
-                  <Users size={16} />
-                  Roommates
-                  {pendingRequestsCount > 0 && <span style={unreadBadgeStyle}>{pendingRequestsCount}</span>}
-                </Link>
-                <Link
-                  to="/chats"
-                  style={tabButtonStyle(currentPath === '/chats')}
-                >
-                  <MessageSquare size={16} />
-                  Inbox
-                  {unreadMessagesCount > 0 && <span style={unreadBadgeStyle}>{unreadMessagesCount}</span>}
-                </Link>
-              </>
-            )}
-            <Link
-              to="/profile"
-              style={tabButtonStyle(currentPath === '/profile')}
-            >
-              <User size={16} />
-              Profile
-            </Link>
-            {currentUser.role === 'owner' && (
+            <div style={navTrackStyle}>
               <Link
-                to="/owner"
-                style={tabButtonStyle(currentPath === '/owner')}
+                to="/hostels"
+                style={tabButtonStyle(currentPath === '/hostels' || currentPath === '/')}
               >
-                <Building size={16} />
-                Owner Portal
+                <Building size={15} />
+                Hostels
               </Link>
-            )}
-            {currentUser.role === 'admin' && (
+              {currentUser.role === 'student' && (
+                <>
+                  <Link
+                    to="/roommates"
+                    style={tabButtonStyle(currentPath === '/roommates')}
+                  >
+                    <Users size={15} />
+                    Roommates
+                    {pendingRequestsCount > 0 && <span style={unreadBadgeStyle}>{pendingRequestsCount}</span>}
+                  </Link>
+                  <Link
+                    to="/chats"
+                    style={tabButtonStyle(currentPath === '/chats')}
+                  >
+                    <MessageSquare size={15} />
+                    Inbox
+                    {unreadMessagesCount > 0 && <span style={unreadBadgeStyle}>{unreadMessagesCount}</span>}
+                  </Link>
+                </>
+              )}
               <Link
-                to="/admin"
-                style={tabButtonStyle(currentPath === '/admin')}
+                to="/profile"
+                style={tabButtonStyle(currentPath === '/profile')}
               >
-                <Shield size={16} />
-                Admin
+                <User size={15} />
+                Profile
               </Link>
-            )}
+              {currentUser.role === 'owner' && (
+                <Link
+                  to="/owner"
+                  style={tabButtonStyle(currentPath === '/owner')}
+                >
+                  <Building size={15} />
+                  Owner Portal
+                </Link>
+              )}
+              {currentUser.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  style={tabButtonStyle(currentPath === '/admin')}
+                >
+                  <Shield size={15} />
+                  Admin
+                </Link>
+              )}
+            </div>
           </nav>
 
           <div style={userControlStyle}>
@@ -92,7 +96,7 @@ export const Navbar = ({
                 </span>
               </div>
             )}
-            <button className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }} onClick={onLogout}>
+            <button className="btn btn-secondary" style={{ padding: '0.375rem 0.875rem', fontSize: '0.775rem' }} onClick={onLogout}>
               Sign Out
             </button>
           </div>
@@ -162,14 +166,17 @@ export const Navbar = ({
   );
 };
 
-// Styles
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const headerStyle: React.CSSProperties = {
   backgroundColor: 'var(--glass-bg)',
-  backdropFilter: 'blur(20px)',
+  backdropFilter: 'blur(24px)',
+  WebkitBackdropFilter: 'blur(24px)',
   borderBottom: '1px solid var(--border)',
   position: 'sticky',
   top: 0,
   zIndex: 90,
+  boxShadow: '0 1px 24px rgba(99, 102, 241, 0.06)',
 };
 
 const navContainerStyle: React.CSSProperties = {
@@ -182,59 +189,84 @@ const navContainerStyle: React.CSSProperties = {
   padding: '0 1.5rem',
 };
 
+const logoBoxStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '30px',
+  height: '30px',
+  borderRadius: '8px',
+  background: 'var(--gradient-brand)',
+  boxShadow: '0 4px 10px var(--primary-glow)',
+  flexShrink: 0,
+};
+
 const logoSectionStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.625rem',
+  gap: '0.5rem',
   cursor: 'pointer',
-  color: 'var(--primary)',
+  textDecoration: 'none',
 };
 
 const logoTextStyle: React.CSSProperties = {
   fontWeight: 800,
-  fontSize: '1.25rem',
+  fontSize: '1.2rem',
   letterSpacing: '-0.04em',
   background: 'var(--gradient-brand)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
+  fontFamily: 'var(--font-sans)',
 };
 
 const desktopNavStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.5rem',
+};
+
+const navTrackStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.25rem',
+  background: 'rgba(241, 245, 249, 0.6)',
+  borderRadius: '12px',
+  padding: '0.3rem',
+  border: '1px solid var(--border)',
 };
 
 const tabButtonStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '0.5rem',
-  padding: '0.625rem 1rem',
-  fontSize: '0.875rem',
-  fontWeight: 600,
-  color: isActive ? 'var(--primary)' : 'var(--muted)',
-  background: isActive ? 'rgba(99, 102, 241, 0.08)' : 'none',
+  gap: '0.4rem',
+  padding: '0.45rem 0.875rem',
+  fontSize: '0.85rem',
+  fontWeight: isActive ? 700 : 500,
+  color: isActive ? 'var(--foreground)' : 'var(--muted)',
+  background: isActive ? 'white' : 'transparent',
   border: 'none',
   cursor: 'pointer',
-  borderRadius: 'var(--radius-sm)',
+  borderRadius: '9px',
   transition: 'var(--transition)',
   position: 'relative',
+  boxShadow: isActive ? '0 1px 6px rgba(0,0,0,0.1)' : 'none',
+  textDecoration: 'none',
+  whiteSpace: 'nowrap' as const,
 });
 
 const unreadBadgeStyle: React.CSSProperties = {
   backgroundColor: 'var(--primary)',
   color: 'var(--primary-foreground)',
-  fontSize: '0.7rem',
+  fontSize: '0.65rem',
   fontWeight: 700,
   borderRadius: '9999px',
-  minWidth: '18px',
-  height: '18px',
+  minWidth: '16px',
+  height: '16px',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '0 5px',
-  marginLeft: '4px',
-  boxShadow: '0 2px 5px rgba(99, 102, 241, 0.3)',
+  padding: '0 4px',
+  marginLeft: '2px',
+  boxShadow: '0 2px 5px var(--primary-glow)',
 };
 
 const mobileUnreadBadgeStyle: React.CSSProperties = {
@@ -251,13 +283,13 @@ const mobileUnreadBadgeStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  boxShadow: '0 2px 5px rgba(244, 63, 94, 0.3)',
+  boxShadow: '0 2px 5px var(--danger-glow)',
 };
 
 const userControlStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1.25rem',
+  gap: '1rem',
 };
 
 const roleDisplayStyle: React.CSSProperties = {
@@ -279,6 +311,7 @@ const roleBadgeStyle = (role: string): React.CSSProperties => ({
   fontWeight: 700,
   color: role === 'admin' ? 'var(--danger)' : 'var(--success)',
 });
+
 const mobileTabButtonStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   flexDirection: 'column',

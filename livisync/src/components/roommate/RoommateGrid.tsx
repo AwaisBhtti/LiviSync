@@ -24,9 +24,9 @@ const scoreCircleStyle = (score: number): React.CSSProperties => {
     width: '48px',
     height: '48px',
     borderRadius: '50%',
-    border: `2px solid ${isHigh ? 'var(--success)' : isMid ? '#fef3c7' : 'var(--border)'}`,
-    color: isHigh ? 'var(--success)' : isMid ? '#d97706' : 'var(--muted)',
-    backgroundColor: isHigh ? 'var(--success-bg)' : isMid ? '#fffbeb' : 'var(--muted-bg)',
+    border: `2px solid ${isHigh ? 'var(--success)' : isMid ? 'var(--warning-border)' : 'var(--border)'}`,
+    color: isHigh ? 'var(--success)' : isMid ? 'var(--warning)' : 'var(--muted)',
+    backgroundColor: isHigh ? 'var(--success-bg)' : isMid ? 'var(--warning-bg)' : 'var(--muted-bg)',
   };
 };
 
@@ -153,7 +153,7 @@ export const RoommateGrid = ({
                 </span>
               )}
               {reqStatus === 'pending' && (
-                <span style={{ color: '#d97706', fontSize: '0.75rem', fontWeight: 500 }}>
+                <span style={{ color: 'var(--warning)', fontSize: '0.75rem', fontWeight: 500 }}>
                   Pending
                 </span>
               )}

@@ -5,11 +5,11 @@
 import { useState } from 'react';
 import type { User, MatchRequest, Hostel } from '../types';
 import { calculateCompatibility } from '../utils';
-import { pageHeaderStyle } from '../styles/commonStyles';
 import { RoommateFilters } from './roommate/RoommateFilters';
 import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
+import { Users, Search } from 'lucide-react';
 
 interface RoommateFinderProps {
   currentUser: User;
@@ -42,6 +42,7 @@ export const RoommateFinder = ({
   const [filterGender, setFilterGender] = useState('all');
   const [filterHostel, setFilterHostel] = useState('all');
   const [maxBudget, setMaxBudget] = useState(200000);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // ── Tab state (persisted in sessionStorage) ───────────────────────────────
   const [activeTab, setActiveTab] = useState<'find' | 'requests'>(() => {
@@ -82,8 +83,9 @@ export const RoommateFinder = ({
       const matchesGender = filterGender === 'all' || u.gender === filterGender;
       const matchesBudget = (u.budget ?? 0) <= maxBudget;
       const matchesHostel = filterHostel === 'all' || u.hostelId === filterHostel;
+      const matchesSearch = !searchQuery.trim() || u.name.toLowerCase().includes(searchQuery.toLowerCase());
 
-      return matchesSleep && matchesClean && matchesGender && matchesBudget && matchesHostel;
+      return matchesSleep && matchesClean && matchesGender && matchesBudget && matchesHostel && matchesSearch;
     })
     .map((u) => ({ ...u, score: calculateCompatibility(currentUser.preferences, u.preferences) }))
     .sort((a, b) => b.score - a.score);
@@ -122,64 +124,52 @@ export const RoommateFinder = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div style={pageHeaderStyle}>
-        <h1>Find Roommates</h1>
-        <p style={{ color: 'var(--muted)' }}>
-          Browse students, compare lifestyle compatibility scores, and start team ups.
-        </p>
+      {/* Premium Page Header */}
+      <div style={pageHeroStyle}>
+        <div style={pageHeroInnerStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <div style={heroIconBoxStyle}>
+              <Users size={18} color="white" />
+            </div>
+            <h1 style={heroTitleStyle}>Find Roommates</h1>
+          </div>
+          <p style={heroSubtitleStyle}>
+            Browse students, compare lifestyle compatibility, and build your team.
+          </p>
+        </div>
+
+        {/* Search Bar */}
+        <div style={searchBarWrapperStyle}>
+          <Search size={16} style={{ color: 'var(--muted)', flexShrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={searchInputStyle}
+          />
+          {candidates.length > 0 && (
+            <span style={resultCountStyle}>{candidates.length} found</span>
+          )}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+      {/* Premium Tab Switch */}
+      <div style={tabTrackStyle}>
         <button
           onClick={() => handleTabChange('find')}
-          style={{
-            background: 'none',
-            border: 'none',
-            borderBottom: activeTab === 'find' ? '2px solid var(--primary)' : 'none',
-            color: activeTab === 'find' ? 'var(--primary)' : 'var(--muted)',
-            fontWeight: 600,
-            padding: '0.5rem 1rem',
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-          }}
+          style={tabStyle(activeTab === 'find')}
         >
-          Find Roommates
+          <Users size={15} />
+          Browse
         </button>
         <button
           onClick={() => handleTabChange('requests')}
-          style={{
-            background: 'none',
-            border: 'none',
-            borderBottom: activeTab === 'requests' ? '2px solid var(--primary)' : 'none',
-            color: activeTab === 'requests' ? 'var(--primary)' : 'var(--muted)',
-            fontWeight: 600,
-            padding: '0.5rem 1rem',
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-          }}
+          style={tabStyle(activeTab === 'requests')}
         >
-          My Requests
+          Requests
           {pendingReceivedCount > 0 && (
-            <span
-              style={{
-                backgroundColor: 'var(--primary)',
-                color: 'white',
-                fontSize: '0.7rem',
-                borderRadius: '50%',
-                width: '18px',
-                height: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-              }}
-            >
-              {pendingReceivedCount}
-            </span>
+            <span style={tabBadgeStyle}>{pendingReceivedCount}</span>
           )}
         </button>
       </div>
@@ -242,4 +232,123 @@ export const RoommateFinder = ({
       )}
     </div>
   );
+};
+
+// ─── Page-level styles ────────────────────────────────────────────────────────
+
+const pageHeroStyle: React.CSSProperties = {
+  background: 'var(--gradient-brand)',
+  borderRadius: 'var(--radius)',
+  padding: '1.75rem 2rem',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  flexWrap: 'wrap',
+  gap: '1rem',
+  boxShadow: '0 8px 30px var(--primary-glow)',
+};
+
+const pageHeroInnerStyle: React.CSSProperties = {
+  flex: '1 1 auto',
+};
+
+const heroIconBoxStyle: React.CSSProperties = {
+  width: '36px',
+  height: '36px',
+  borderRadius: '10px',
+  background: 'rgba(255, 255, 255, 0.2)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backdropFilter: 'blur(8px)',
+};
+
+const heroTitleStyle: React.CSSProperties = {
+  fontSize: '1.5rem',
+  fontWeight: 800,
+  color: 'white',
+  letterSpacing: '-0.02em',
+  margin: 0,
+};
+
+const heroSubtitleStyle: React.CSSProperties = {
+  color: 'rgba(255, 255, 255, 0.75)',
+  fontSize: '0.875rem',
+  marginTop: '0.25rem',
+};
+
+const searchBarWrapperStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  background: 'rgba(255, 255, 255, 0.15)',
+  backdropFilter: 'blur(8px)',
+  border: '1px solid rgba(255, 255, 255, 0.25)',
+  borderRadius: '12px',
+  padding: '0.6rem 1rem',
+  minWidth: '240px',
+  flex: '0 1 300px',
+};
+
+const searchInputStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  outline: 'none',
+  color: 'white',
+  fontSize: '0.875rem',
+  flex: 1,
+  minWidth: 0,
+};
+
+const resultCountStyle: React.CSSProperties = {
+  fontSize: '0.7rem',
+  fontWeight: 700,
+  color: 'rgba(255,255,255,0.6)',
+  background: 'rgba(255,255,255,0.15)',
+  padding: '0.2rem 0.5rem',
+  borderRadius: '20px',
+  whiteSpace: 'nowrap',
+};
+
+const tabTrackStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.25rem',
+  background: 'rgba(241, 245, 249, 0.6)',
+  borderRadius: '12px',
+  padding: '0.3rem',
+  border: '1px solid var(--border)',
+  width: 'fit-content',
+};
+
+const tabStyle = (isActive: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.4rem',
+  padding: '0.5rem 1.25rem',
+  fontSize: '0.875rem',
+  fontWeight: isActive ? 700 : 500,
+  color: isActive ? 'var(--foreground)' : 'var(--muted)',
+  background: isActive ? 'white' : 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  borderRadius: '9px',
+  transition: 'var(--transition)',
+  boxShadow: isActive ? '0 1px 6px rgba(0,0,0,0.1)' : 'none',
+  whiteSpace: 'nowrap' as const,
+});
+
+const tabBadgeStyle: React.CSSProperties = {
+  backgroundColor: 'var(--primary)',
+  color: 'white',
+  fontSize: '0.65rem',
+  fontWeight: 700,
+  borderRadius: '9999px',
+  minWidth: '18px',
+  height: '18px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0 4px',
+  boxShadow: '0 2px 5px var(--primary-glow)',
 };
