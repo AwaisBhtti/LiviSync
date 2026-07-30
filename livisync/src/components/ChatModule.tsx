@@ -3,6 +3,7 @@ import type { MatchRequest, User, Message } from '../types';
 import { Send, ArrowLeft, MessageSquare, Clock } from 'lucide-react';
 import { supabase } from '../supabase';
 import { API_BASE_URL } from '../config';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface ChatModuleProps {
   currentUser: User;
@@ -32,6 +33,20 @@ export const ChatModule = ({
   const [reportReason, setReportReason] = useState('other');
   const [reportDescription, setReportDescription] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => void | Promise<void>;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const appendOrMergeMessage = (peerId: string, newMessage: Message & { status?: string }) => {
     setMessages((prev) => {
@@ -397,10 +412,23 @@ export const ChatModule = ({
                   className="btn btn-secondary"
                   style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
                   onClick={() => {
-                    if (confirm(`Block ${getRespondent()?.name}?`)) {
-                      onBlockUser(activeChatUserId);
-                      setActiveChatUserId(null);
-                    }
+                    const name = getRespondent()?.name || 'this user';
+                    setConfirmModal({
+                      isOpen: true,
+                      title: 'Block User',
+                      message: `Are you sure you want to block ${name}?`,
+                      confirmText: 'Block',
+                      isDanger: true,
+                      onConfirm: async () => {
+                        try {
+                          await onBlockUser(activeChatUserId!);
+                          setActiveChatUserId(null);
+                          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                        } catch (err: any) {
+                          alert(err.message || 'Error blocking user.');
+                        }
+                      }
+                    });
                   }}
                 >
                   Block
@@ -638,7 +666,7 @@ export const ChatModule = ({
                     type="button"
                     className="btn btn-danger"
                     style={{ flex: '1 1 100%' }}
-                    onClick={async () => {
+                    onClick={() => {
                       const respondent = getRespondent();
                       if (!respondent) return;
 
@@ -649,15 +677,23 @@ export const ChatModule = ({
                       );
 
                       if (connection) {
-                        if (confirm(`Are you sure you want to unfriend ${respondent.name}? You will no longer be connected.`)) {
-                          try {
-                            await onUnfriend(connection.id);
-                            setShowRespondentProfile(false);
-                            setActiveChatUserId(null);
-                          } catch (err: any) {
-                            alert(err.message || 'Error unfriending.');
+                        setConfirmModal({
+                          isOpen: true,
+                          title: 'Unfriend Roommate',
+                          message: `Are you sure you want to unfriend ${respondent.name}? You will no longer be connected.`,
+                          confirmText: 'Unfriend',
+                          isDanger: true,
+                          onConfirm: async () => {
+                            try {
+                              await onUnfriend(connection.id);
+                              setShowRespondentProfile(false);
+                              setActiveChatUserId(null);
+                              setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                            } catch (err: any) {
+                              alert(err.message || 'Error unfriending.');
+                            }
                           }
-                        }
+                        });
                       } else {
                         alert('Could not find active match request to delete.');
                       }
@@ -670,18 +706,26 @@ export const ChatModule = ({
                     type="button"
                     className="btn btn-secondary"
                     style={{ flex: '1', border: '1px solid var(--danger)', color: 'var(--danger)' }}
-                    onClick={async () => {
+                    onClick={() => {
                       const respondent = getRespondent();
                       if (!respondent) return;
-                      if (confirm(`Are you sure you want to block ${respondent.name}? You will no longer be connected.`)) {
-                        try {
-                          await onBlockUser(respondent.id);
-                          setShowRespondentProfile(false);
-                          setActiveChatUserId(null);
-                        } catch (err: any) {
-                          alert(err.message || 'Error blocking user.');
+                      setConfirmModal({
+                        isOpen: true,
+                        title: 'Block User',
+                        message: `Are you sure you want to block ${respondent.name}? You will no longer be connected.`,
+                        confirmText: 'Block',
+                        isDanger: true,
+                        onConfirm: async () => {
+                          try {
+                            await onBlockUser(respondent.id);
+                            setShowRespondentProfile(false);
+                            setActiveChatUserId(null);
+                            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                          } catch (err: any) {
+                            alert(err.message || 'Error blocking user.');
+                          }
                         }
-                      }
+                      });
                     }}
                   >
                     Block
@@ -712,6 +756,16 @@ export const ChatModule = ({
             )}
           </div>
         </div>
+      )}
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
       )}
     </div>
   );
