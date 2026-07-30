@@ -1,9 +1,8 @@
-/** RoommateGrid — candidate cards grid for the Roommate Finder. */
+/** RoommateGrid — candidate cards, dark navy theme. */
 import type { User, MatchRequest } from '../../types';
 import { Check, MapPin, Clock, Sparkles } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
 
-// Candidate extends User fields with a computed score
 export type Candidate = User & { score: number };
 
 interface RoommateGridProps {
@@ -13,10 +12,15 @@ interface RoommateGridProps {
   onSelectCandidate: (user: User) => void;
 }
 
-const getScoreColor = (score: number) => {
-  if (score >= 80) return { color: 'var(--success)', bg: 'var(--success-bg)', border: 'var(--success-border)' };
-  if (score >= 50) return { color: 'var(--warning)', bg: 'var(--warning-bg)', border: 'var(--warning-border)' };
-  return { color: 'var(--muted)', bg: 'var(--muted-bg)', border: 'var(--border)' };
+const CARD_BG     = 'rgba(30, 41, 59, 0.6)';
+const CARD_BORDER = 'rgba(255, 255, 255, 0.07)';
+const TEXT        = '#f1f5f9';
+const MUTED       = '#94a3b8';
+
+const getScoreColors = (score: number) => {
+  if (score >= 80) return { color: '#34d399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.25)' };
+  if (score >= 50) return { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)' };
+  return              { color: MUTED,       bg: 'rgba(100,116,139,0.1)',   border: 'rgba(100,116,139,0.2)' };
 };
 
 export const RoommateGrid = ({
@@ -37,19 +41,22 @@ export const RoommateGrid = ({
   if (candidates.length === 0) {
     return (
       <div
-        className="card"
         style={{
-          padding: '3rem',
+          padding: '4rem 2rem',
           textAlign: 'center',
-          color: 'var(--muted)',
+          color: MUTED,
+          background: CARD_BG,
+          border: `1px solid ${CARD_BORDER}`,
+          borderRadius: '16px',
+          backdropFilter: 'blur(12px)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: '0.75rem',
         }}
       >
-        <Sparkles size={32} style={{ opacity: 0.3 }} />
-        <p style={{ fontWeight: 600 }}>No matches found</p>
+        <Sparkles size={36} style={{ color: 'rgba(99,102,241,0.4)' }} />
+        <p style={{ fontWeight: 700, color: TEXT, fontSize: '1rem' }}>No matches found</p>
         <p style={{ fontSize: '0.85rem' }}>Try adjusting your filters to see more candidates.</p>
       </div>
     );
@@ -60,38 +67,48 @@ export const RoommateGrid = ({
       {candidates.map((candidate) => {
         const reqStatus = getRequestStatus(candidate.id);
         const occupationDisplay = candidate.occupation === 'job' ? 'Job Holder' : 'Student';
-        const { color, bg, border } = getScoreColor(candidate.score);
-        const sleepLabel = candidate.preferences?.sleepSchedule
-          ? candidate.preferences.sleepSchedule.replace('-', ' ')
-          : null;
+        const { color, bg, border } = getScoreColors(candidate.score);
+        const sleepLabel = candidate.preferences?.sleepSchedule?.replace('-', ' ') ?? null;
 
         return (
           <div
             key={candidate.id}
-            className="candidate-card"
+            className="rm-card-hover"
             onClick={() => onSelectCandidate(candidate)}
+            style={{
+              background: CARD_BG,
+              border: `1px solid ${CARD_BORDER}`,
+              borderRadius: '16px',
+              backdropFilter: 'blur(16px)',
+              padding: '1.125rem 1.25rem',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
+            }}
           >
-            {/* Top row: avatar + name + score */}
+            {/* Top row */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem' }}>
-              <div style={{ position: 'relative', flexShrink: 0 }}>
-                <img
-                  src={candidate.photo || DEFAULT_AVATAR}
-                  alt={candidate.name}
-                  style={{
-                    width: '52px',
-                    height: '52px',
-                    borderRadius: '14px',
-                    objectFit: 'cover',
-                    border: '2px solid var(--border)',
-                  }}
-                />
-              </div>
+              <img
+                src={candidate.photo || DEFAULT_AVATAR}
+                alt={candidate.name}
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  objectFit: 'cover',
+                  border: '1.5px solid rgba(255,255,255,0.1)',
+                  flexShrink: 0,
+                }}
+              />
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3
                   style={{
-                    fontSize: '1rem',
+                    fontSize: '0.95rem',
                     fontWeight: 700,
+                    color: TEXT,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -100,14 +117,21 @@ export const RoommateGrid = ({
                 >
                   {candidate.name}
                 </h3>
-                <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                <p style={{ fontSize: '0.75rem', color: MUTED, marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
                   <span>{candidate.age ?? '?'} y/o</span>
-                  <span style={{ opacity: 0.4 }}>•</span>
+                  <span style={{ opacity: 0.4 }}>·</span>
                   <span style={{ textTransform: 'capitalize' }}>{candidate.gender ?? 'N/A'}</span>
-                  <span style={{ opacity: 0.4 }}>•</span>
+                  <span style={{ opacity: 0.4 }}>·</span>
                   <span
-                    className="badge badge-neutral"
-                    style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}
+                    style={{
+                      background: 'rgba(99,102,241,0.15)',
+                      color: 'rgba(165,180,252,0.9)',
+                      border: '1px solid rgba(99,102,241,0.25)',
+                      borderRadius: '20px',
+                      padding: '0.05rem 0.45rem',
+                      fontSize: '0.65rem',
+                      fontWeight: 600,
+                    }}
                   >
                     {occupationDisplay}
                   </span>
@@ -122,26 +146,24 @@ export const RoommateGrid = ({
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '12px',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '10px',
                   border: `1.5px solid ${border}`,
-                  backgroundColor: bg,
+                  background: bg,
                   color,
                 }}
               >
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, lineHeight: 1 }}>{candidate.score}%</span>
-                <span style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.75, marginTop: '1px' }}>
-                  match
-                </span>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, lineHeight: 1 }}>{candidate.score}%</span>
+                <span style={{ fontSize: '0.48rem', textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.7, marginTop: '2px' }}>match</span>
               </div>
             </div>
 
             {/* Bio */}
             <p
               style={{
-                fontSize: '0.825rem',
-                color: 'var(--muted)',
+                fontSize: '0.8rem',
+                color: 'rgba(148,163,184,0.85)',
                 overflow: 'hidden',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -152,112 +174,59 @@ export const RoommateGrid = ({
               {candidate.bio || 'No biography provided.'}
             </p>
 
-            {/* Habit tags */}
+            {/* Habit chips */}
             {(sleepLabel || candidate.preferences?.cleanliness) && (
               <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                 {sleepLabel && (
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      color: 'var(--muted)',
-                      background: 'var(--secondary)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '20px',
-                      padding: '0.2rem 0.55rem',
-                      textTransform: 'capitalize',
-                    }}
-                  >
+                  <span style={chipStyle}>
                     <Clock size={10} />
                     {sleepLabel}
                   </span>
                 )}
                 {candidate.preferences?.cleanliness && (
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      color: 'var(--muted)',
-                      background: 'var(--secondary)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '20px',
-                      padding: '0.2rem 0.55rem',
-                      textTransform: 'capitalize',
-                    }}
-                  >
+                  <span style={chipStyle}>
                     ✦ {candidate.preferences.cleanliness}
                   </span>
                 )}
               </div>
             )}
 
-            {/* Footer: location + status */}
+            {/* Footer */}
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderTop: '1px solid var(--border)',
+                borderTop: '1px solid rgba(255,255,255,0.06)',
                 paddingTop: '0.625rem',
                 marginTop: 'auto',
               }}
             >
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: 'var(--muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '3px',
-                }}
-              >
+              <span style={{ fontSize: '0.72rem', color: 'rgba(100,116,139,0.8)', display: 'flex', alignItems: 'center', gap: '3px' }}>
                 <MapPin size={11} />
-                {candidate.location || 'Islamabad'} • PKR {(candidate.budget ?? 0).toLocaleString()}/mo
+                {candidate.location || 'Islamabad'} · PKR {(candidate.budget ?? 0).toLocaleString()}/mo
               </span>
 
               {reqStatus === 'accepted' && (
-                <span
-                  style={{
-                    color: 'var(--success)',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '3px',
-                  }}
-                >
-                  <Check size={12} /> Matched
+                <span style={{ color: '#34d399', fontSize: '0.72rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <Check size={11} /> Matched
                 </span>
               )}
               {reqStatus === 'pending' && (
-                <span
-                  style={{
-                    color: 'var(--warning)',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    background: 'var(--warning-bg)',
-                    border: '1px solid var(--warning-border)',
-                    borderRadius: '20px',
-                    padding: '0.15rem 0.5rem',
-                  }}
-                >
+                <span style={{
+                  color: '#fbbf24',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  background: 'rgba(251,191,36,0.1)',
+                  border: '1px solid rgba(251,191,36,0.2)',
+                  borderRadius: '20px',
+                  padding: '0.15rem 0.5rem',
+                }}>
                   Pending
                 </span>
               )}
               {!reqStatus && (
-                <span
-                  style={{
-                    color: 'var(--primary)',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                  }}
-                >
+                <span style={{ color: 'rgba(165,180,252,0.9)', fontSize: '0.72rem', fontWeight: 600 }}>
                   View →
                 </span>
               )}
@@ -267,4 +236,18 @@ export const RoommateGrid = ({
       })}
     </div>
   );
+};
+
+const chipStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.25rem',
+  fontSize: '0.68rem',
+  fontWeight: 600,
+  color: 'rgba(148,163,184,0.8)',
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '20px',
+  padding: '0.18rem 0.5rem',
+  textTransform: 'capitalize',
 };

@@ -1,4 +1,4 @@
-/** RoommateRequestsPanel — "My Requests" tab: received + sent request columns. */
+/** RoommateRequestsPanel — "My Requests" tab, dark navy theme. */
 import type { User, MatchRequest } from '../../types';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
 
@@ -11,19 +11,11 @@ interface RoommateRequestsPanelProps {
   onCancelRequest: (reqId: string) => void;
 }
 
-const requestCardStyle: React.CSSProperties = {
-  padding: '1rem',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  backgroundColor: 'var(--secondary)',
-};
-
-const senderAvatarStyle: React.CSSProperties = {
-  width: '40px',
-  height: '40px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-};
+const CARD_BG     = 'rgba(30, 41, 59, 0.6)';
+const CARD_BORDER = 'rgba(255, 255, 255, 0.07)';
+const ITEM_BG     = 'rgba(15, 23, 42, 0.5)';
+const TEXT        = '#f1f5f9';
+const MUTED       = '#94a3b8';
 
 export const RoommateRequestsPanel = ({
   users,
@@ -41,152 +33,106 @@ export const RoommateRequestsPanel = ({
   );
   const sentRequests = matchRequests.filter((r) => r.senderId === currentUser.id && r.status === 'pending');
 
+  const panelStyle: React.CSSProperties = {
+    background: CARD_BG,
+    border: `1px solid ${CARD_BORDER}`,
+    borderRadius: '16px',
+    backdropFilter: 'blur(16px)',
+    padding: '1.5rem',
+  };
+
+  const sectionHeadStyle: React.CSSProperties = {
+    fontSize: '0.9rem',
+    fontWeight: 700,
+    color: TEXT,
+    borderBottom: `1px solid ${CARD_BORDER}`,
+    paddingBottom: '0.625rem',
+    marginBottom: '1rem',
+  };
+
+  const itemStyle: React.CSSProperties = {
+    padding: '0.875rem',
+    border: `1px solid ${CARD_BORDER}`,
+    borderRadius: '12px',
+    backgroundColor: ITEM_BG,
+  };
+
+  const renderRequestCard = (req: MatchRequest, person: User, side: 'received' | 'sent') => (
+    <div key={req.id} style={itemStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.625rem' }}>
+        <img
+          src={person.photo || DEFAULT_AVATAR}
+          alt=""
+          style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'cover', border: `1px solid ${CARD_BORDER}` }}
+        />
+        <div>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: TEXT }}>{person.name}</h4>
+          <span style={{ fontSize: '0.72rem', color: MUTED }}>
+            PKR {(person.budget ?? 0).toLocaleString()}/mo
+          </span>
+        </div>
+      </div>
+
+      <p style={{ fontSize: '0.8rem', color: 'rgba(148,163,184,0.8)', fontStyle: 'italic', margin: '0.5rem 0', lineHeight: 1.5 }}>
+        "{req.message}"
+      </p>
+
+      {side === 'received' ? (
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+          <button
+            onClick={() => onAcceptRequest(req.id)}
+            style={actionBtnStyle('#34d399', 'rgba(52,211,153,0.12)', 'rgba(52,211,153,0.25)')}
+          >
+            Accept
+          </button>
+          <button
+            onClick={() => onDeclineRequest(req.id)}
+            style={actionBtnStyle('#f87171', 'rgba(248,113,113,0.1)', 'rgba(248,113,113,0.2)')}
+          >
+            Decline
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
+          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Awaiting response
+          </span>
+          <button
+            onClick={() => onCancelRequest(req.id)}
+            style={actionBtnStyle('#f87171', 'rgba(248,113,113,0.08)', 'rgba(248,113,113,0.15)')}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-      {/* Received */}
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <h3
-          style={{
-            fontSize: '1.1rem',
-            fontWeight: 600,
-            borderBottom: '1px solid var(--border)',
-            paddingBottom: '0.75rem',
-            marginBottom: '1.25rem',
-          }}
-        >
-          Received Requests ({receivedRequests.length})
-        </h3>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+      <div style={panelStyle}>
+        <h3 style={sectionHeadStyle}>Received ({receivedRequests.length})</h3>
         {receivedRequests.length === 0 ? (
-          <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
-            No pending received requests.
-          </p>
+          <p style={{ color: MUTED, fontSize: '0.85rem' }}>No pending received requests.</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {receivedRequests.map((req) => {
               const sender = users.find((u) => u.id === req.senderId);
-              if (!sender) return null;
-              return (
-                <div key={req.id} style={requestCardStyle}>
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}
-                  >
-                    <img src={sender.photo || DEFAULT_AVATAR} alt="" style={senderAvatarStyle} />
-                    <div>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: 600 }}>{sender.name}</h4>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                        Budget: PKR {(sender.budget ?? 0).toLocaleString()}/mo
-                      </span>
-                    </div>
-                  </div>
-                  <p
-                    style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--foreground)',
-                      margin: '0.5rem 0',
-                    }}
-                  >
-                    "{req.message}"
-                  </p>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button
-                      className="btn btn-primary"
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                      onClick={() => onAcceptRequest(req.id)}
-                    >
-                      Accept
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                      onClick={() => onDeclineRequest(req.id)}
-                    >
-                      Decline
-                    </button>
-                  </div>
-                </div>
-              );
+              return sender ? renderRequestCard(req, sender, 'received') : null;
             })}
           </div>
         )}
       </div>
 
-      {/* Sent */}
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <h3
-          style={{
-            fontSize: '1.1rem',
-            fontWeight: 600,
-            borderBottom: '1px solid var(--border)',
-            paddingBottom: '0.75rem',
-            marginBottom: '1.25rem',
-          }}
-        >
-          Sent Requests ({sentRequests.length})
-        </h3>
+      <div style={panelStyle}>
+        <h3 style={sectionHeadStyle}>Sent ({sentRequests.length})</h3>
         {sentRequests.length === 0 ? (
-          <p style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>No sent requests.</p>
+          <p style={{ color: MUTED, fontSize: '0.85rem' }}>No pending sent requests.</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {sentRequests.map((req) => {
               const receiver = users.find((u) => u.id === req.receiverId);
-              if (!receiver) return null;
-              return (
-                <div key={req.id} style={requestCardStyle}>
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}
-                  >
-                    <img src={receiver.photo || DEFAULT_AVATAR} alt="" style={senderAvatarStyle} />
-                    <div>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: 600 }}>{receiver.name}</h4>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                        Budget: PKR {(receiver.budget ?? 0).toLocaleString()}/mo
-                      </span>
-                    </div>
-                  </div>
-                  <p
-                    style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--foreground)',
-                      margin: '0.5rem 0',
-                    }}
-                  >
-                    "{req.message}"
-                  </p>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginTop: '0.75rem',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color:
-                          req.status === 'accepted'
-                            ? 'var(--success)'
-                            : req.status === 'declined'
-                              ? 'var(--danger)'
-                              : 'var(--muted)',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      Status: {req.status}
-                    </span>
-                    {req.status === 'pending' && (
-                      <button
-                        className="btn btn-danger"
-                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                        onClick={() => onCancelRequest(req.id)}
-                      >
-                        Cancel Request
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
+              return receiver ? renderRequestCard(req, receiver, 'sent') : null;
             })}
           </div>
         )}
@@ -194,3 +140,15 @@ export const RoommateRequestsPanel = ({
     </div>
   );
 };
+
+const actionBtnStyle = (color: string, bg: string, border: string): React.CSSProperties => ({
+  padding: '0.3rem 0.75rem',
+  fontSize: '0.775rem',
+  fontWeight: 700,
+  color,
+  background: bg,
+  border: `1px solid ${border}`,
+  borderRadius: '8px',
+  cursor: 'pointer',
+  transition: 'all 0.2s',
+});
