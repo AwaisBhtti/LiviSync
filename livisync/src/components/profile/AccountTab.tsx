@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { ShieldX, Trash2 } from 'lucide-react';
 import { API_BASE_URL } from '../../config';
 import { showToast } from '../../store/slices/toastSlice';
 import { useAppDispatch } from '../../store/store';
@@ -151,50 +150,36 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
       </form>
 
       <h3 style={{ ...sectionTitleStyle, marginTop: '2.5rem', color: 'var(--danger)' }}>Danger Zone</h3>
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <div
-          style={{
-            flex: 1,
-            minWidth: '250px',
-            border: '1px solid var(--border)',
-            padding: '1rem',
-            borderRadius: 'var(--radius)',
-          }}
-        >
-          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--danger)', fontSize: '0.9rem' }}>
-            <ShieldX size={16} /> Deactivate Account
-          </h4>
-          <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: '0.5rem 0 1rem 0' }}>
-            Temporarily hide your profile. You will not appear in the search results and you can reactivate anytime.
-          </p>
+      <div
+        style={{
+          border: '1px solid rgba(244, 63, 94, 0.2)',
+          padding: '1.25rem',
+          borderRadius: 'var(--radius)',
+          backgroundColor: 'rgba(244, 63, 94, 0.02)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+        }}
+      >
+        <p style={{ fontSize: '0.85rem', color: 'var(--muted)', margin: 0, lineHeight: '1.4' }}>
+          Deactivating hides your profile temporarily from roommate search results, while deleting permanently wipes all your match history, chat logs, and account records.
+        </p>
+        <div style={{ display: 'flex', gap: '1rem' }}>
           <button
             type="button"
             onClick={handleDeactivate}
             className="btn btn-secondary"
-            style={{ color: 'var(--danger)', borderColor: 'rgba(244, 63, 94, 0.2)' }}
+            style={{ color: 'var(--danger)', borderColor: 'rgba(244, 63, 94, 0.3)', flex: 1 }}
           >
-            Deactivate
+            Deactivate Account
           </button>
-        </div>
-
-        <div
-          style={{
-            flex: 1,
-            minWidth: '250px',
-            border: '1px solid rgba(244, 63, 94, 0.2)',
-            padding: '1rem',
-            borderRadius: 'var(--radius)',
-            backgroundColor: 'rgba(244, 63, 94, 0.02)',
-          }}
-        >
-          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--danger)', fontSize: '0.9rem' }}>
-            <Trash2 size={16} /> Delete Account permanently
-          </h4>
-          <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: '0.5rem 0 1rem 0' }}>
-            Permanently delete all profile details, match requests, messages, and account settings. This cannot be undone.
-          </p>
-          <button type="button" onClick={handleDeleteAccount} className="btn btn-danger">
-            Delete Permanently
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            className="btn btn-danger"
+            style={{ flex: 1 }}
+          >
+            Delete Account Permanently
           </button>
         </div>
       </div>

@@ -8,7 +8,10 @@ import { AccountTab } from './profile/AccountTab';
 import { BlocklistTab } from './profile/BlocklistTab';
 import { useAppDispatch, useAppSelector } from '../store/store';
 import { useMatchRequests } from '../hooks/useMatchRequests';
+import { useUserActions } from '../hooks/useUserActions';
 import { logout } from '../store/slices/authSlice';
+import { showToast } from '../store/slices/toastSlice';
+import { FriendProfileModal } from './profile/FriendProfileModal';
 
 interface StudentProfileProps {
   currentUser: Student;
@@ -32,6 +35,7 @@ export const StudentProfile = ({
   // Retrieve matches & actions directly from hooks/store to keep App.tsx props unchanged
   const { matchRequests } = useAppSelector((state) => state.matches);
   const { handleUnfriend } = useMatchRequests();
+  const { handleBlockUser, handleReportUser } = useUserActions();
   const handleLogout = () => {
     dispatch(logout());
   };
@@ -39,6 +43,7 @@ export const StudentProfile = ({
   const [activeSection, setActiveSection] = useState<TabType>(() => {
     return (sessionStorage.getItem('livisync_profile_section') as TabType) || 'profile';
   });
+  const [selectedFriend, setSelectedFriend] = useState<User | null>(null);
 
   const handleSectionChange = (section: TabType) => {
     setActiveSection(section);
@@ -59,7 +64,7 @@ export const StudentProfile = ({
   const friendsCount = users.filter((u) => matchedFriendIds.includes(u.id)).length;
 
   return (
-    <div className="split-layout">
+    <div style={splitLayoutContainerStyle}>
       {/* Sidebar Navigation */}
       <div style={sidebarStyle} className="mobile-hide">
         <div style={sidebarHeaderStyle}>
@@ -110,15 +115,17 @@ export const StudentProfile = ({
         {/* Logout Button on Bottom */}
         <button
           onClick={handleLogout}
-          className="btn btn-secondary"
+          className="btn btn-danger"
           style={{
             marginTop: 'auto',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.5rem',
-            color: 'var(--danger)',
-            borderColor: 'rgba(244, 63, 94, 0.15)',
+            backgroundColor: 'var(--danger)',
+            color: '#ffffff',
+            border: 'none',
+            boxShadow: '0 4px 12px rgba(244, 63, 94, 0.2)',
           }}
         >
           <LogOut size={14} />
@@ -127,7 +134,7 @@ export const StudentProfile = ({
       </div>
 
       {/* Main Settings Card */}
-      <div className="card" style={{ padding: '2rem', flex: 1 }}>
+      <div className="card" style={rightCardStyle}>
         {activeSection === 'profile' && (
           <ProfileTab currentUser={currentUser} hostels={hostels} onSave={handleSaveFields} />
         )}
@@ -138,6 +145,7 @@ export const StudentProfile = ({
             users={users}
             matchRequests={matchRequests}
             onUnfriend={handleUnfriend}
+            onSelectFriend={setSelectedFriend}
           />
         )}
 
@@ -151,16 +159,71 @@ export const StudentProfile = ({
           <BlocklistTab currentUser={currentUser} users={users} onUnblockUser={onUnblockUser} />
         )}
       </div>
+
+      {selectedFriend && (
+        <FriendProfileModal
+          selectedUser={selectedFriend}
+          currentUser={currentUser}
+          matchRequests={matchRequests}
+          onClose={() => setSelectedFriend(null)}
+          onUnfriend={async (id) => {
+            try {
+              await handleUnfriend(id);
+              setSelectedFriend(null);
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error unfriending.', type: 'error' }));
+            }
+          }}
+          onBlockUser={async (id) => {
+            try {
+              await handleBlockUser(id);
+              setSelectedFriend(null);
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error blocking user.', type: 'error' }));
+            }
+          }}
+          onReportUser={async (reportedId, reason, desc) => {
+            try {
+              await handleReportUser(reportedId, reason, desc);
+              const stillConnected = matchRequests.some(
+                (r) => r.status === 'accepted' &&
+                  ((r.senderId === currentUser.id && r.receiverId === reportedId) ||
+                    (r.senderId === reportedId && r.receiverId === currentUser.id))
+              );
+              if (!stillConnected) {
+                setSelectedFriend(null);
+              }
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error submitting report', type: 'error' }));
+            }
+          }}
+          showSafetyActions={true}
+        />
+      )}
     </div>
   );
 };
 
-// Sidebar Styles
+// Sidebar & Layout Styles
+const splitLayoutContainerStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '260px 1fr',
+  gap: '2rem',
+  height: 'calc(100vh - 180px)',
+  minHeight: '520px',
+};
+
 const sidebarStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: '0.5rem',
-  minHeight: '480px',
+  height: '100%',
+};
+
+const rightCardStyle: React.CSSProperties = {
+  padding: '2rem',
+  height: '100%',
+  overflowY: 'auto',
 };
 
 const sidebarHeaderStyle: React.CSSProperties = {

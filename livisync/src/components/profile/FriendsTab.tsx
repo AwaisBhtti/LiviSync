@@ -6,9 +6,10 @@ interface FriendsTabProps {
   users: User[];
   matchRequests: MatchRequest[];
   onUnfriend: (requestId: string) => void;
+  onSelectFriend: (friend: User) => void;
 }
 
-export const FriendsTab = ({ currentUser, users, matchRequests, onUnfriend }: FriendsTabProps) => {
+export const FriendsTab = ({ currentUser, users, matchRequests, onUnfriend, onSelectFriend }: FriendsTabProps) => {
   // Filter matched friends
   const matchedFriendIds = matchRequests
     .filter((r) => r.status === 'accepted')
@@ -19,7 +20,7 @@ export const FriendsTab = ({ currentUser, users, matchRequests, onUnfriend }: Fr
     <div>
       <h2 style={{ marginBottom: '0.5rem' }}>My Friends</h2>
       <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '2rem' }}>
-        These are roommates you have matched with successfully.
+        These are roommates you have matched with successfully. Click on a friend's card to view their compatibility profile.
       </p>
 
       {friends.length === 0 ? (
@@ -38,6 +39,7 @@ export const FriendsTab = ({ currentUser, users, matchRequests, onUnfriend }: Fr
             return (
               <div
                 key={friend.id}
+                onClick={() => onSelectFriend(friend)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -46,6 +48,7 @@ export const FriendsTab = ({ currentUser, users, matchRequests, onUnfriend }: Fr
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius)',
                   backgroundColor: 'var(--secondary)',
+                  cursor: 'pointer',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -66,7 +69,10 @@ export const FriendsTab = ({ currentUser, users, matchRequests, onUnfriend }: Fr
                     type="button"
                     className="btn btn-danger"
                     style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}
-                    onClick={() => onUnfriend(req.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUnfriend(req.id);
+                    }}
                   >
                     Unfriend
                   </button>

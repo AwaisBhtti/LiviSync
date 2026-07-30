@@ -4,6 +4,9 @@ import { Send, ArrowLeft, MessageSquare, Clock } from 'lucide-react';
 import { supabase } from '../supabase';
 import { API_BASE_URL } from '../config';
 import { ConfirmationModal } from './ConfirmationModal';
+import { FriendProfileModal } from './profile/FriendProfileModal';
+import { showToast } from '../store/slices/toastSlice';
+import { useAppDispatch } from '../store/store';
 
 interface ChatModuleProps {
   currentUser: User;
@@ -24,14 +27,12 @@ export const ChatModule = ({
   onUnfriend,
   onReportUser,
 }: ChatModuleProps) => {
+  const dispatch = useAppDispatch();
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [typedMessage, setTypedMessage] = useState('');
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [showRespondentProfile, setShowRespondentProfile] = useState(false);
-  const [showReportForm, setShowReportForm] = useState(false);
-  const [reportReason, setReportReason] = useState('other');
-  const [reportDescription, setReportDescription] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [confirmModal, setConfirmModal] = useState<{
@@ -495,267 +496,49 @@ export const ChatModule = ({
       </div>
 
       {showRespondentProfile && getRespondent() && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.4)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 99999,
-        }}>
-          <div style={{
-            backgroundColor: 'var(--card-bg, #ffffff)',
-            borderRadius: '12px',
-            border: '1px solid var(--border)',
-            padding: '1.5rem',
-            width: '100%',
-            maxWidth: '480px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            color: 'var(--foreground)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
-                {showReportForm ? `Report ${getRespondent()?.name}` : 'Roommate Profile'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowRespondentProfile(false);
-                  setShowReportForm(false);
-                }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.25rem' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {showReportForm ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>Reason</label>
-                  <select
-                    value={reportReason}
-                    onChange={(e) => setReportReason(e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--card-bg)' }}
-                  >
-                    <option value="fake-profile">Fake Profile</option>
-                    <option value="harassment">Harassment</option>
-                    <option value="spam">Spam</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>Description</label>
-                  <textarea
-                    value={reportDescription}
-                    onChange={(e) => setReportDescription(e.target.value)}
-                    placeholder="Describe the situation in detail..."
-                    rows={4}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--card-bg)', resize: 'vertical' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    style={{ flex: 1 }}
-                    onClick={async () => {
-                      const respondent = getRespondent();
-                      if (!respondent) return;
-                      try {
-                        await onReportUser(respondent.id, reportReason, reportDescription);
-                        setShowReportForm(false);
-                        const stillConnected = matchRequests.some(
-                          (r) => r.status === 'accepted' &&
-                            ((r.senderId === currentUser.id && r.receiverId === respondent.id) ||
-                              (r.senderId === respondent.id && r.receiverId === currentUser.id))
-                        );
-                        if (!stillConnected) {
-                          setShowRespondentProfile(false);
-                          setActiveChatUserId(null);
-                        }
-                      } catch (err: any) {
-                        alert(err.message || 'Error submitting report');
-                      }
-                    }}
-                  >
-                    Submit Safety Report
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ flex: 0.5 }}
-                    onClick={() => setShowReportForm(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <img
-                    src={getRespondent()?.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80'}
-                    alt=""
-                    style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }}
-                  />
-                  <div>
-                    <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>{getRespondent()?.name}</h4>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
-                      {getRespondent()?.age} y/o • {getRespondent()?.gender}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>Contact Info</h5>
-                  <p style={{ margin: 0, fontSize: '0.875rem' }}>📧 Email: {getRespondent()?.email}</p>
-                  {getRespondent()?.phone && <p style={{ margin: 0, fontSize: '0.875rem' }}>📞 Phone: {getRespondent()?.phone}</p>}
-                </div>
-
-                {getRespondent()?.bio && (
-                  <div>
-                    <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>Biography</h5>
-                    <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.4', color: 'var(--muted)' }}>{getRespondent()?.bio}</p>
-                  </div>
-                )}
-
-                <div>
-                  <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>Details</h5>
-                  <p style={{ margin: 0, fontSize: '0.875rem' }}>📍 Preferred Location: {getRespondent()?.location}</p>
-                  <p style={{ margin: 0, fontSize: '0.875rem' }}>💰 Max Budget: PKR {getRespondent()?.budget?.toLocaleString()} / mo</p>
-                  <p style={{ margin: 0, fontSize: '0.875rem', textTransform: 'capitalize' }}>
-                    💼 Occupation: {getRespondent()?.occupation || 'student'}
-                    {getRespondent()?.institution && ` at ${getRespondent()?.institution}`}
-                    {getRespondent()?.company && ` at ${getRespondent()?.company}`}
-                  </p>
-                </div>
-
-                {getRespondent()?.preferences && (
-                  <div>
-                    <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.5rem 0', color: 'var(--muted)' }}>Lifestyle Habits</h5>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                        🛌 Sleep: {getRespondent()?.preferences.sleepSchedule || 'flexible'}
-                      </span>
-                      <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                        🧹 Cleanliness: {getRespondent()?.preferences.cleanliness || 'moderate'}
-                      </span>
-                      <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                        🚬 Smoking: {getRespondent()?.preferences.smoking || 'no'}
-                      </span>
-                      <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                        🐾 Pets: {getRespondent()?.preferences.pets || 'no'}
-                      </span>
-                      <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                        👥 Guests: {getRespondent()?.preferences.guestTolerance || 'weekends'}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    style={{ flex: '1 1 100%' }}
-                    onClick={() => {
-                      const respondent = getRespondent();
-                      if (!respondent) return;
-
-                      const connection = matchRequests.find(
-                        (r) => r.status === 'accepted' &&
-                          ((r.senderId === currentUser.id && r.receiverId === respondent.id) ||
-                            (r.senderId === respondent.id && r.receiverId === currentUser.id))
-                      );
-
-                      if (connection) {
-                        setConfirmModal({
-                          isOpen: true,
-                          title: 'Unfriend Roommate',
-                          message: `Are you sure you want to unfriend ${respondent.name}? You will no longer be connected.`,
-                          confirmText: 'Unfriend',
-                          isDanger: true,
-                          onConfirm: async () => {
-                            try {
-                              await onUnfriend(connection.id);
-                              setShowRespondentProfile(false);
-                              setActiveChatUserId(null);
-                              setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                            } catch (err: any) {
-                              alert(err.message || 'Error unfriending.');
-                            }
-                          }
-                        });
-                      } else {
-                        alert('Could not find active match request to delete.');
-                      }
-                    }}
-                  >
-                    Unfriend Roommate
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ flex: '1', border: '1px solid var(--danger)', color: 'var(--danger)' }}
-                    onClick={() => {
-                      const respondent = getRespondent();
-                      if (!respondent) return;
-                      setConfirmModal({
-                        isOpen: true,
-                        title: 'Block User',
-                        message: `Are you sure you want to block ${respondent.name}? You will no longer be connected.`,
-                        confirmText: 'Block',
-                        isDanger: true,
-                        onConfirm: async () => {
-                          try {
-                            await onBlockUser(respondent.id);
-                            setShowRespondentProfile(false);
-                            setActiveChatUserId(null);
-                            setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                          } catch (err: any) {
-                            alert(err.message || 'Error blocking user.');
-                          }
-                        }
-                      });
-                    }}
-                  >
-                    Block
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ flex: '1', border: '1px solid #eab308', color: '#eab308' }}
-                    onClick={() => setShowReportForm(true)}
-                  >
-                    Report
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ flex: '0.5' }}
-                    onClick={() => {
-                      setShowRespondentProfile(false);
-                      setShowReportForm(false);
-                    }}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <FriendProfileModal
+          selectedUser={getRespondent()!}
+          currentUser={currentUser}
+          matchRequests={matchRequests}
+          onClose={() => {
+            setShowRespondentProfile(false);
+          }}
+          onUnfriend={async (id) => {
+            try {
+              await onUnfriend(id);
+              setShowRespondentProfile(false);
+              setActiveChatUserId(null);
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error unfriending.', type: 'error' }));
+            }
+          }}
+          onBlockUser={async (id) => {
+            try {
+              await onBlockUser(id);
+              setShowRespondentProfile(false);
+              setActiveChatUserId(null);
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error blocking user.', type: 'error' }));
+            }
+          }}
+          onReportUser={async (reportedId, reason, desc) => {
+            try {
+              await onReportUser(reportedId, reason, desc);
+              const stillConnected = matchRequests.some(
+                (r) => r.status === 'accepted' &&
+                  ((r.senderId === currentUser.id && r.receiverId === reportedId) ||
+                    (r.senderId === reportedId && r.receiverId === currentUser.id))
+              );
+              if (!stillConnected) {
+                setShowRespondentProfile(false);
+                setActiveChatUserId(null);
+              }
+            } catch (err: any) {
+              dispatch(showToast({ message: err.message || 'Error submitting report', type: 'error' }));
+            }
+          }}
+          showSafetyActions={true}
+        />
       )}
       {confirmModal.isOpen && (
         <ConfirmationModal
