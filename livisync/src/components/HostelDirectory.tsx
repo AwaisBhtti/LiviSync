@@ -360,6 +360,30 @@ export const HostelDirectory = ({
                   ]}
                 />
               </div>
+
+              {/* Clear Filters Button */}
+              <button
+                onClick={() => {
+                  setMaxPrice(25000);
+                  setSelectedSharing('all');
+                  setSelectedAmenity('all');
+                  setSelectedType('all');
+                  setSearchQuery('');
+                }}
+                className="btn btn-secondary"
+                style={{
+                  width: '100%',
+                  marginTop: '0.5rem',
+                  fontSize: '0.8rem',
+                  padding: '0.5rem',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                Clear Filters
+              </button>
             </div>
 
             {/* Hostels List Column */}

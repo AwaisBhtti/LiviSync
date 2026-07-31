@@ -15,6 +15,7 @@ interface RoommateFiltersProps {
   onCleanlinessChange: (val: string) => void;
   onHostelChange: (val: string) => void;
   onHideFilters?: () => void;
+  onClearFilters: () => void;
 }
 
 const CARD_BG     = '#f0ece6'; // Linen beige from logo theme
@@ -52,6 +53,7 @@ export const RoommateFilters = ({
   onCleanlinessChange,
   onHostelChange,
   onHideFilters,
+  onClearFilters,
 }: RoommateFiltersProps) => {
   const genderOptions = [
     { value: 'all', label: 'Any Gender' },
@@ -182,6 +184,32 @@ export const RoommateFilters = ({
           style={customSelectStyle}
         />
       </div>
+
+      {/* Clear Filters Button */}
+      <button
+        onClick={onClearFilters}
+        style={{
+          width: '100%',
+          padding: '0.625rem 1rem',
+          fontSize: '0.8rem',
+          fontWeight: 700,
+          color: '#b55c3c',
+          background: 'transparent',
+          border: '1px solid #b55c3c',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          marginTop: '0.5rem',
+          transition: 'all 0.15s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(181, 92, 60, 0.08)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent';
+        }}
+      >
+        Clear Filters
+      </button>
     </div>
   );
 };

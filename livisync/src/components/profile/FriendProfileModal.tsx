@@ -3,6 +3,7 @@ import type { User, MatchRequest } from '../../types';
 import { ConfirmationModal } from '../ConfirmationModal';
 import { showToast } from '../../store/slices/toastSlice';
 import { useAppDispatch } from '../../store/store';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface FriendProfileModalProps {
   selectedUser: User;
@@ -145,16 +146,16 @@ export const FriendProfileModal = ({
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>
                 Reason
               </label>
-              <select
-                className="form-select"
+              <CustomSelect
                 value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-              >
-                <option value="fake-profile">Fake Profile</option>
-                <option value="harassment">Harassment</option>
-                <option value="spam">Spam</option>
-                <option value="other">Other</option>
-              </select>
+                onChange={setReportReason}
+                options={[
+                  { value: 'fake-profile', label: 'Fake Profile' },
+                  { value: 'harassment', label: 'Harassment' },
+                  { value: 'spam', label: 'Spam' },
+                  { value: 'other', label: 'Other' }
+                ]}
+              />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>

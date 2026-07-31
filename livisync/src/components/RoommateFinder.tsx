@@ -95,6 +95,15 @@ export const RoommateFinder = ({
       !(currentUser.blockedUsers ?? []).includes(r.senderId)
   ).length;
 
+  const handleClearFilters = () => {
+    setFilterSleep('all');
+    setFilterCleanliness('all');
+    setFilterGender('all');
+    setFilterHostel('all');
+    setMaxBudget(200000);
+    setSearchQuery('');
+  };
+
   const handleSubmitConnect = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
@@ -212,6 +221,7 @@ export const RoommateFinder = ({
                   onCleanlinessChange={setFilterCleanliness}
                   onHostelChange={setFilterHostel}
                   onHideFilters={() => setShowFilters(false)}
+                  onClearFilters={handleClearFilters}
                 />
               </div>
             )}
@@ -295,6 +305,7 @@ export const RoommateFinder = ({
                       onCleanlinessChange={setFilterCleanliness}
                       onHostelChange={setFilterHostel}
                       onHideFilters={() => setShowMobileFilters(false)}
+                      onClearFilters={handleClearFilters}
                     />
                   </div>
                 </div>

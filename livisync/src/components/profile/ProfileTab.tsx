@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Save } from 'lucide-react';
 import type { Student, Hostel, User } from '../../types';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface ProfileTabProps {
   currentUser: Student;
@@ -72,20 +73,28 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
 
           <div className="form-group">
             <label className="form-label">Gender</label>
-            <select className="form-select" value={gender} onChange={(e) => setGender(e.target.value as any)} required>
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+            <CustomSelect
+              value={gender}
+              onChange={(val) => setGender(val as any)}
+              placeholder="Select Gender"
+              options={[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' }
+              ]}
+            />
           </div>
 
           <div className="form-group">
             <label className="form-label">City Location</label>
-            <select className="form-select" value={location} onChange={(e) => setLocation(e.target.value)} required>
-              <option value="">Select City</option>
-              <option value="Lahore">Lahore</option>
-            </select>
+            <CustomSelect
+              value={location}
+              onChange={setLocation}
+              placeholder="Select City"
+              options={[
+                { value: 'Lahore', label: 'Lahore' }
+              ]}
+            />
           </div>
         </div>
 
@@ -104,10 +113,14 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
         <div style={formGridStyle}>
           <div className="form-group">
             <label className="form-label">Occupation</label>
-            <select className="form-select" value={occupation} onChange={(e) => setOccupation(e.target.value as any)}>
-              <option value="student">Student</option>
-              <option value="job">Job Holder</option>
-            </select>
+            <CustomSelect
+              value={occupation}
+              onChange={(val) => setOccupation(val as any)}
+              options={[
+                { value: 'student', label: 'Student' },
+                { value: 'job', label: 'Job Holder' }
+              ]}
+            />
           </div>
 
           {occupation === 'student' ? (
@@ -152,12 +165,18 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
 
           <div className="form-group">
             <label className="form-label">Current Hostel Residence (Optional)</label>
-            <select className="form-select" value={hostelId} onChange={(e) => setHostelId(e.target.value)}>
-              <option value="">Not Residing in Hostel / Searching</option>
-              {hostels.map((h) => (
-                <option key={h.id} value={h.id}>{h.name} ({h.location})</option>
-              ))}
-            </select>
+            <CustomSelect
+              value={hostelId}
+              onChange={setHostelId}
+              placeholder="Not Residing in Hostel / Searching"
+              options={[
+                { value: '', label: 'Not Residing in Hostel / Searching' },
+                ...hostels.map((h) => ({
+                  value: h.id,
+                  label: `${h.name} (${h.location})`
+                }))
+              ]}
+            />
           </div>
         </div>
 

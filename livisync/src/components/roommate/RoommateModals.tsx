@@ -6,6 +6,7 @@ import type { User, MatchRequest } from '../../types';
 import { calculateCompatibility } from '../../utils';
 import { X, MessageSquarePlus, ShieldAlert, UserCheck } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface RoommateModalsProps {
   selectedUser: User | null;
@@ -340,16 +341,17 @@ export const RoommateModals = ({
             <div style={{ padding: '1.5rem' }}>
               <div className="form-group">
                 <label className="form-label">Reason</label>
-                <select
-                  className="form-select"
+                <CustomSelect
                   value={reportReason}
-                  onChange={(e) => onReportReasonChange(e.target.value)}
-                >
-                  <option value="fake-profile">Fake Profile</option>
-                  <option value="harassment">Harassment</option>
-                  <option value="spam">Spam / Advertising</option>
-                  <option value="other">Other</option>
-                </select>
+                  onChange={onReportReasonChange}
+                  options={[
+                    { value: 'fake-profile', label: 'Fake Profile' },
+                    { value: 'harassment', label: 'Harassment' },
+                    { value: 'spam', label: 'Spam / Advertising' },
+                    { value: 'other', label: 'Other' }
+                  ]}
+                  style={{ background: '#faf8f5', border: '1px solid #e0d6cb', color: '#332721' }}
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Details</label>

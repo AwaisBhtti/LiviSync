@@ -6,6 +6,7 @@ import { RoomListing } from './RoomListing';
 import { ImageLightbox } from './ImageLightbox';
 import { BUILTIN_AMENITIES } from './Amenities';
 import { ConfirmationModal } from './ConfirmationModal';
+import { CustomSelect } from './ui/CustomSelect';
 
 interface OwnerPortalProps {
   currentUser: User;
@@ -288,16 +289,15 @@ export const OwnerPortal = ({
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label className="form-label">Hostel Category</label>
-              <select
-                className="form-input"
+              <CustomSelect
                 value={hostelType}
-                onChange={(e) => setHostelType(e.target.value)}
-                style={{ width: '100%', background: 'var(--input-bg)' }}
-              >
-                <option value="boys">Boys Hostel</option>
-                <option value="girls">Girls Hostel</option>
-                <option value="co-sharing">Co-sharing Hostel</option>
-              </select>
+                onChange={setHostelType}
+                options={[
+                  { value: 'boys', label: 'Boys Hostel' },
+                  { value: 'girls', label: 'Girls Hostel' },
+                  { value: 'co-sharing', label: 'Co-sharing Hostel' }
+                ]}
+              />
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
