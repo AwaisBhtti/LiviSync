@@ -23,6 +23,7 @@ export const HostelDirectory = ({
   const [selectedSharing, setSelectedSharing] = useState<string>('all');
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [selectedAmenity, setSelectedAmenity] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>('all');
   const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
   const [loadingPhone, setLoadingPhone] = useState<boolean>(false);
 
@@ -77,9 +78,13 @@ export const HostelDirectory = ({
       selectedAmenity === 'all' ||
       hostel.amenities.includes(selectedAmenity);
 
+    const matchesType =
+      selectedType === 'all' ||
+      (hostel.hostelType || 'boys') === selectedType;
+
     const isVisible = hostel.isVerified || currentUser.role === 'admin' || hostel.ownerId === currentUser.id;
 
-    return matchesSearch && matchesPrice && matchesSharing && matchesAmenity && isVisible;
+    return matchesSearch && matchesPrice && matchesSharing && matchesAmenity && matchesType && isVisible;
   });
 
 
@@ -135,7 +140,12 @@ export const HostelDirectory = ({
               <div className="card" style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <h2 style={{ fontSize: '1.25rem' }}>{selectedHostel.name}</h2>
+                    <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {selectedHostel.name}
+                      <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.75rem', fontWeight: 600 }}>
+                        {selectedHostel.hostelType ? selectedHostel.hostelType.replace('-', ' ') : 'Boys'} Hostel
+                      </span>
+                    </h2>
                     <p style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
                       <MapPin size={14} />
                       {selectedHostel.location}
@@ -283,6 +293,44 @@ export const HostelDirectory = ({
                 />
               </div>
 
+              {/* Hostel Type Filter (Tabs) */}
+              <div className="form-group">
+                <label className="form-label" style={{ fontSize: '0.75rem' }}>Hostel Category</label>
+                <div style={{ display: 'flex', background: 'var(--card-hover)', borderRadius: 'var(--radius-sm)', padding: '0.2rem', gap: '0.2rem', border: '1px solid var(--border-solid)' }}>
+                  {([
+                    { value: 'all', label: 'All' },
+                    { value: 'boys', label: 'Boys' },
+                    { value: 'girls', label: 'Girls' },
+                    { value: 'co-sharing', label: 'Co-Sharing' }
+                  ]).map((tab) => {
+                    const isActive = selectedType === tab.value;
+                    return (
+                      <button
+                        key={tab.value}
+                        type="button"
+                        onClick={() => setSelectedType(tab.value)}
+                        style={{
+                          flex: 1,
+                          padding: '0.35rem 0.25rem',
+                          fontSize: '0.68rem',
+                          fontWeight: isActive ? 700 : 500,
+                          borderRadius: '4px',
+                          border: 'none',
+                          background: isActive ? 'var(--primary)' : 'transparent',
+                          color: isActive ? 'var(--primary-foreground)' : 'var(--muted)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          textAlign: 'center',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Sharing Type Filter */}
               <div className="form-group">
                 <label className="form-label" style={{ fontSize: '0.75rem' }}>Room Sharing</label>
@@ -341,7 +389,12 @@ export const HostelDirectory = ({
                       <div style={hostelInfoStyle}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <h3 style={{ fontSize: '1.05rem', fontWeight: 600 }}>{hostel.name}</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <h3 style={{ fontSize: '1.05rem', fontWeight: 600 }}>{hostel.name}</h3>
+                              <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.65rem', fontWeight: 600 }}>
+                                {hostel.hostelType ? hostel.hostelType.replace('-', ' ') : 'Boys'}
+                              </span>
+                            </div>
                             <p style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.125rem' }}>
                               <MapPin size={12} />
                               {hostel.location}
