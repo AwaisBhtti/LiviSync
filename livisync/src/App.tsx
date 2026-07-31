@@ -12,6 +12,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { OwnerPortal } from './components/OwnerPortal';
 import { RegisterOwner } from './components/RegisterOwner';
+import { HostelDetailView } from './components/HostelDetailView';
 import { useAppDispatch, useAppSelector } from './store/store';
 import {
   fetchCurrentUser,
@@ -254,6 +255,16 @@ export default function App() {
                 path="/hostels"
                 element={
                   <HostelDirectory
+                    hostels={hostels}
+                    currentUser={currentUser!}
+                    token={token!}
+                  />
+                }
+              />
+              <Route
+                path="/hostels/:id"
+                element={
+                  <HostelDetailView
                     hostels={hostels}
                     currentUser={currentUser!}
                     token={token!}
