@@ -575,8 +575,8 @@ const inboxListStyle = (isChatActive: boolean): React.CSSProperties => {
     flexDirection: 'column',
     overflowY: 'auto',
     height: '100%',
-    borderRight: '1px solid var(--border)',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRight: '1px solid var(--border-solid)',
+    backgroundColor: 'var(--card)',
   };
   // Responsive check
   if (isChatActive && window.innerWidth <= 768) {
@@ -591,7 +591,7 @@ const chatWindowStyle = (isChatActive: boolean): React.CSSProperties => {
     flexDirection: 'column',
     height: '100%',
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'var(--background)',
   };
   // Responsive check
   if (!isChatActive && window.innerWidth <= 768) {
@@ -643,9 +643,9 @@ const chatRowStyle = (isActive: boolean): React.CSSProperties => ({
   borderRadius: 'var(--radius-sm)',
   cursor: 'pointer',
   transition: 'var(--transition)',
-  backgroundColor: isActive ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255, 255, 255, 0.45)',
-  border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid var(--border)',
-  boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.05)' : 'none',
+  backgroundColor: isActive ? 'var(--primary-glow-light)' : 'var(--card)',
+  border: isActive ? '1px solid var(--primary-glow)' : '1px solid var(--border-solid)',
+  boxShadow: isActive ? 'var(--shadow)' : 'none',
   marginBottom: '0.25rem',
 });
 
@@ -663,9 +663,8 @@ const chatHeaderStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: '0.75rem',
   padding: '0.875rem 1.25rem',
-  borderBottom: '1px solid var(--border)',
-  backgroundColor: 'rgba(255, 255, 255, 0.4)',
-  backdropFilter: 'blur(8px)',
+  borderBottom: '1px solid var(--border-solid)',
+  backgroundColor: 'var(--card)',
 };
 
 const backButtonStyle: React.CSSProperties = {
@@ -680,7 +679,7 @@ const chatMessagesStyle: React.CSSProperties = {
   flex: 1,
   padding: '1.5rem',
   overflowY: 'auto',
-  backgroundColor: 'rgba(248, 250, 252, 0.35)',
+  backgroundColor: 'var(--background)',
   display: 'flex',
   flexDirection: 'column',
   gap: '1rem',
@@ -704,10 +703,10 @@ const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
   maxWidth: '70%',
   padding: '0.75rem 1rem',
   borderRadius: isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-  background: isSelf ? 'var(--gradient-brand)' : '#ffffff',
+  background: isSelf ? 'var(--gradient-brand)' : 'var(--card)',
   color: isSelf ? 'var(--primary-foreground)' : 'var(--foreground)',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
-  border: isSelf ? 'none' : '1px solid var(--border)',
+  boxShadow: 'var(--shadow-sm)',
+  border: isSelf ? 'none' : '1px solid var(--border-solid)',
 });
 
 const msgTimeStyle = (isSelf: boolean): React.CSSProperties => ({

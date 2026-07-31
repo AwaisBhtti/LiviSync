@@ -57,11 +57,6 @@ export const StudentProfile = ({
     } as User);
   };
 
-  // Filter matched friends count for sidebar label
-  const matchedFriendIds = matchRequests
-    .filter((r) => r.status === 'accepted')
-    .map((r) => (r.senderId === currentUser.id ? r.receiverId : r.senderId));
-  const friendsCount = users.filter((u) => matchedFriendIds.includes(u.id)).length;
 
   return (
     <div style={splitLayoutContainerStyle}>
@@ -85,7 +80,7 @@ export const StudentProfile = ({
           className="sidebar-tab"
         >
           <Users size={14} />
-          My Friends ({friendsCount})
+          My Friends
         </div>
         <div
           style={sidebarItemStyle(activeSection === 'lifestyle')}
@@ -115,17 +110,17 @@ export const StudentProfile = ({
         {/* Logout Button on Bottom */}
         <button
           onClick={handleLogout}
-          className="btn btn-danger"
+          className="btn btn-primary"
           style={{
             marginTop: 'auto',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.5rem',
-            backgroundColor: 'var(--danger)',
-            color: '#ffffff',
-            border: 'none',
-            boxShadow: '0 4px 12px rgba(244, 63, 94, 0.2)',
+            padding: '0.5rem 1rem',
+            fontSize: '0.85rem',
+            width: '100%',
+            boxShadow: 'var(--shadow-sm)',
           }}
         >
           <LogOut size={14} />

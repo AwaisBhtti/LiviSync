@@ -10,7 +10,7 @@ import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
 import { Users, Search, ChevronLeft, Inbox } from 'lucide-react';
-import { colors } from '../styles/colors';
+
 
 interface RoommateFinderProps {
   currentUser: User;
@@ -118,15 +118,15 @@ export const RoommateFinder = ({
   return (
     <div style={pageWrapStyle}>
       <style>{`
-        .rm-input::placeholder { color: rgba(148,163,184,0.6); }
-        .rm-select option { background: #1e293b; color: #e2e8f0; }
+        .rm-input::placeholder { color: #8c7b70; }
+        .rm-select option { background: #f0ece6; color: #332721; }
         .rm-card-hover:hover {
-          border-color: rgba(99,102,241,0.5) !important;
-          box-shadow: 0 8px 32px rgba(99,102,241,0.2) !important;
+          border-color: #b55c3c !important;
+          box-shadow: 0 8px 32px rgba(181, 92, 60, 0.1) !important;
           transform: translateY(-2px);
         }
-        .rm-filter-toggle:hover { background: rgba(99,102,241,0.2) !important; }
-        .rm-tab-btn:hover { color: rgba(255,255,255,0.9) !important; }
+        .rm-filter-toggle:hover { background: #e8e3da !important; }
+        .rm-tab-btn:hover { color: #b55c3c !important; }
       `}</style>
 
       {/* ── Header ── */}
@@ -270,11 +270,11 @@ export const RoommateFinder = ({
   );
 };
 
-// ─── Dark-navy page theme ─────────────────────────────────────────────────────
+// ─── Warm Sand & Cashmere Theme ──────────────────────────────────────────────
 
 const pageWrapStyle: React.CSSProperties = {
   minHeight: 'calc(100vh - 64px)',
-  background: colors.dark.bgGradient,
+  background: '#faf8f5', // Warm sand background
   backgroundAttachment: 'fixed',
   /* Full-bleed escape from centered max-width container */
   width: '100vw',
@@ -287,10 +287,10 @@ const pageWrapStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  background: 'rgba(15,23,42,0.9)',
+  background: '#f0ece6', // Linen beige header
   backdropFilter: 'blur(20px)',
   WebkitBackdropFilter: 'blur(20px)',
-  borderBottom: '1px solid rgba(255,255,255,0.07)',
+  borderBottom: '1px solid #e0d6cb',
   padding: '0',
 };
 
@@ -313,23 +313,23 @@ const iconBoxStyle: React.CSSProperties = {
   width: '28px',
   height: '28px',
   borderRadius: '8px',
-  background: colors.gradientBrand,
+  background: '#b55c3c', // Muted terracotta rose
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  boxShadow: '0 4px 12px rgba(99,102,241,0.4)',
+  boxShadow: '0 4px 12px rgba(181, 92, 60, 0.2)',
 };
 
 const pageTitleStyle: React.CSSProperties = {
   fontSize: '1.35rem',
   fontWeight: 800,
-  color: colors.dark.text,
+  color: '#332721', // Espresso brown text
   letterSpacing: '-0.03em',
 };
 
 const pageSubtitleStyle: React.CSSProperties = {
   fontSize: '0.8rem',
-  color: colors.dark.muted,
+  color: '#8c7b70', // Warm beige
   marginLeft: '36px',
 };
 
@@ -337,8 +337,8 @@ const searchWrapStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
-  background: colors.dark.surface,
-  border: `1px solid ${colors.dark.border}`,
+  background: '#faf8f5', // Warm sand background for input
+  border: '1px solid #e0d6cb',
   borderRadius: '10px',
   padding: '0.5rem 0.875rem',
   minWidth: '220px',
@@ -349,7 +349,7 @@ const searchInputStyle: React.CSSProperties = {
   background: 'none',
   border: 'none',
   outline: 'none',
-  color: colors.dark.text,
+  color: '#332721',
   fontSize: '0.85rem',
   flex: 1,
 };
@@ -357,7 +357,7 @@ const searchInputStyle: React.CSSProperties = {
 const tabBarStyle: React.CSSProperties = {
   display: 'flex',
   gap: '0',
-  borderTop: '1px solid rgba(255,255,255,0.05)',
+  borderTop: '1px solid #e0d6cb',
   marginTop: '0.5rem',
 };
 
@@ -368,17 +368,17 @@ const tabBtnStyle = (isActive: boolean): React.CSSProperties => ({
   padding: '0.75rem 1.25rem',
   fontSize: '0.85rem',
   fontWeight: isActive ? 700 : 500,
-  color: isActive ? '#ffffff' : colors.dark.muted,
+  color: isActive ? '#b55c3c' : '#8c7b70',
   background: 'none',
   border: 'none',
-  borderBottom: isActive ? '2px solid var(--primary)' : '2px solid transparent',
+  borderBottom: isActive ? '2.5px solid #b55c3c' : '2.5px solid transparent',
   cursor: 'pointer',
   transition: 'var(--transition)',
   whiteSpace: 'nowrap' as const,
 });
 
 const tabPillStyle: React.CSSProperties = {
-  backgroundColor: 'var(--primary)',
+  backgroundColor: '#b55c3c',
   color: 'white',
   fontSize: '0.65rem',
   fontWeight: 700,
@@ -407,9 +407,9 @@ const filterToggleStyle: React.CSSProperties = {
   padding: '0.3rem 0.7rem',
   fontSize: '0.75rem',
   fontWeight: 600,
-  color: colors.dark.muted,
-  background: colors.dark.surface,
-  border: `1px solid ${colors.dark.border}`,
+  color: '#8c7b70',
+  background: '#f0ece6',
+  border: '1px solid #e0d6cb',
   borderRadius: '9999px',
   cursor: 'pointer',
   transition: 'var(--transition)',
