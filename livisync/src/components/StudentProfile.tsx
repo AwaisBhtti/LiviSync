@@ -59,7 +59,7 @@ export const StudentProfile = ({
 
 
   return (
-    <div style={splitLayoutContainerStyle}>
+    <div className="split-layout profile-split-layout" style={splitLayoutContainerStyle}>
       {/* Sidebar Navigation */}
       <div style={sidebarStyle} className="mobile-hide">
         <div style={sidebarHeaderStyle}>
@@ -130,6 +130,34 @@ export const StudentProfile = ({
 
       {/* Main Settings Card */}
       <div className="card" style={rightCardStyle}>
+        {/* Mobile Section Selector — visible only on narrow screens where sidebar is hidden */}
+        <div className="mobile-section-selector" style={{ marginBottom: '1.5rem' }}>
+          <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Section
+          </label>
+          <select
+            value={activeSection}
+            onChange={(e) => handleSectionChange(e.target.value as TabType)}
+            style={{
+              width: '100%',
+              padding: '0.625rem 0.875rem',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-solid)',
+              backgroundColor: '#faf8f5',
+              color: '#332721',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              outline: 'none',
+            }}
+          >
+            <option value="profile">Profile Settings</option>
+            <option value="friends">My Friends</option>
+            <option value="lifestyle">Lifestyle & Habits</option>
+            <option value="account">Account Security</option>
+            <option value="blocklist">Blocked Users</option>
+          </select>
+        </div>
+
         {activeSection === 'profile' && (
           <ProfileTab currentUser={currentUser} hostels={hostels} onSave={handleSaveFields} />
         )}
@@ -202,7 +230,7 @@ export const StudentProfile = ({
 // Sidebar & Layout Styles
 const splitLayoutContainerStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '260px 1fr',
+  // gridTemplateColumns is controlled by the .split-layout CSS class to allow responsive overrides
   gap: '2rem',
   height: 'calc(100vh - 180px)',
   minHeight: '520px',

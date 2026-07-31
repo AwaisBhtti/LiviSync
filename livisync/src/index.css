@@ -321,6 +321,17 @@ a {
   gap: 2.5rem;
 }
 
+/* Profile page uses a narrower sidebar */
+.profile-split-layout {
+  grid-template-columns: 260px 1fr;
+  gap: 2rem;
+}
+
+/* Mobile section tab dropdown — hidden by default, shown on narrow screens */
+.mobile-section-selector {
+  display: none;
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .split-layout {
@@ -343,6 +354,17 @@ a {
   .split-layout {
     grid-template-columns: 1fr;
     gap: 1.75rem;
+  }
+
+  /* Profile split layout also collapses to single column */
+  .profile-split-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Show the dropdown section selector in place of the hidden sidebar */
+  .mobile-section-selector {
+    display: block !important;
   }
 
   .mobile-hide { display: none !important; }
