@@ -31,7 +31,7 @@ export const Navbar = ({
             <span style={logoTextStyle}>LiviSync</span>
           </Link>
 
-          <nav style={desktopNavStyle}>
+          <nav className="desktop-nav-tabs" style={desktopNavStyle}>
             <div style={navTrackStyle}>
               <Link
                 to="/hostels"

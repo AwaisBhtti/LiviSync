@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MatchRequest, User, Message } from '../types';
-import { Send, ArrowLeft, MessageSquare, Clock } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, Clock, Flag } from 'lucide-react';
 import { supabase } from '../supabase';
 import { API_BASE_URL } from '../config';
 import { ConfirmationModal } from './ConfirmationModal';
 import { FriendProfileModal } from './profile/FriendProfileModal';
+import { ReportMessageModal } from './chat/ReportMessageModal';
 import { showToast } from '../store/slices/toastSlice';
 import { useAppDispatch } from '../store/store';
 
@@ -12,6 +13,7 @@ interface ChatModuleProps {
   currentUser: User;
   users: User[];
   matchRequests: MatchRequest[];
+  token: string;
   onBlockUser: (targetId: string) => void;
   onMessagesRead: () => void;
   onUnfriend: (matchRequestId: string) => Promise<void>;
@@ -22,6 +24,7 @@ export const ChatModule = ({
   currentUser,
   users,
   matchRequests,
+  token,
   onBlockUser,
   onMessagesRead,
   onUnfriend,
@@ -34,6 +37,7 @@ export const ChatModule = ({
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [showRespondentProfile, setShowRespondentProfile] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const prevActiveChatIdRef = useRef<string | null>(null);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -48,6 +52,13 @@ export const ChatModule = ({
     message: '',
     onConfirm: () => {},
   });
+
+  const [reportingMessage, setReportingMessage] = useState<{
+    messageId: string;
+    messageText: string;
+    reportedUserId: string;
+    reportedUserName: string;
+  } | null>(null);
 
   const appendOrMergeMessage = (peerId: string, newMessage: Message & { status?: string }) => {
     setMessages((prev) => {
@@ -172,7 +183,7 @@ export const ChatModule = ({
     });
   }, [activeMatchesIds]);
 
-  // Subscribe to realtime message insert broadcasts globally for all our chats
+  // Subscribe to realtime message insert and update broadcasts globally for all our chats
   useEffect(() => {
     const channel = supabase
       .channel('chat-global-module')
@@ -211,6 +222,24 @@ export const ChatModule = ({
                 });
               }).catch(err => console.error(err));
             }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages' },
+        (payload) => {
+          const updatedMsg = payload.new as any;
+          if (updatedMsg && (updatedMsg.sender_id === currentUser.id || updatedMsg.receiver_id === currentUser.id)) {
+            const peerId = updatedMsg.sender_id === currentUser.id ? updatedMsg.receiver_id : updatedMsg.sender_id;
+            setMessages((prev) => {
+              const peerChatMsgs = prev[peerId] || [];
+              const updated = peerChatMsgs.map(m => m.id === updatedMsg.id ? { ...m, read: updatedMsg.is_read } : m);
+              return {
+                ...prev,
+                [peerId]: updated
+              };
+            });
           }
         }
       )
@@ -254,7 +283,33 @@ export const ChatModule = ({
 
   // Auto-scroll chat to bottom
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!activeChatUserId) {
+      prevActiveChatIdRef.current = null;
+      return;
+    }
+
+    const isChatChanged = prevActiveChatIdRef.current !== activeChatUserId;
+    prevActiveChatIdRef.current = activeChatUserId;
+
+    if (isChatChanged) {
+      // Find the element representing 10 messages from the end
+      const targetMsg = document.getElementById('scroll-target-msg');
+      if (targetMsg) {
+        // Place view instantly at that target message
+        targetMsg.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        // Smoothly animate the remaining distance to the bottom
+        const timer = setTimeout(() => {
+          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 60);
+        return () => clearTimeout(timer);
+      } else {
+        // Fallback: jump straight to bottom
+        chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      }
+    } else {
+      // Normal flow: smooth scroll to bottom for sent/received messages
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages, activeChatUserId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -328,11 +383,11 @@ export const ChatModule = ({
   };
 
   return (
-    <div style={containerStyle} className="auth-chat-container">
+    <div style={containerStyle} className={`auth-chat-container ${activeChatUserId ? 'chat-active' : ''}`}>
       {/* Wrap everything in a single unified dashboard */}
       <div style={{ ...chatGridStyle, height: '100%' }}>
         {/* Left Side: Inbox Lists (Active Chats Only) */}
-        <div style={inboxListStyle(!!activeChatUserId)}>
+        <div className="chat-sidebar" style={inboxListStyle()}>
           {/* Section: Active Chats */}
           <div style={sectionStyle}>
             <h3 style={sectionHeaderStyle}>Roommate Chats ({activeMatches.length})</h3>
@@ -384,12 +439,13 @@ export const ChatModule = ({
         </div>
 
         {/* Right Side: Active Chat Window */}
-        <div style={chatWindowStyle(!!activeChatUserId)}>
+        <div className="chat-window" style={chatWindowStyle()}>
           {activeChatUserId ? (
             <>
               {/* Chat Header */}
               <div style={chatHeaderStyle}>
                 <button
+                  className="chat-back-btn"
                   style={backButtonStyle}
                   onClick={() => setActiveChatUserId(null)}
                 >
@@ -446,22 +502,76 @@ export const ChatModule = ({
                     </p>
                   </div>
                 ) : (
-                  (messages[activeChatUserId] || []).map((msg) => {
+                   (messages[activeChatUserId] || []).map((msg, index, arr) => {
                     const isSelf = msg.senderId === currentUser.id;
+                    const isLastMsg = index === arr.length - 1;
+                    const scrollTargetIndex = Math.max(0, arr.length - 10);
                     return (
-                      <div key={msg.id} style={msgRowStyle(isSelf)}>
-                        <div style={msgBubbleStyle(isSelf)}>
-                          <p style={{ fontSize: '0.875rem' }}>{msg.text}</p>
-                          <span style={msgTimeStyle(isSelf)}>
-                            {new Date(msg.timestamp).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                            {(msg as any).status === 'sending' && (
-                              <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
-                            )}
-                          </span>
+                      <div
+                        key={msg.id}
+                        id={index === scrollTargetIndex ? 'scroll-target-msg' : undefined}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: isSelf ? 'flex-end' : 'flex-start',
+                          width: '100%',
+                        }}
+                      >
+                        <div
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', maxWidth: '70%', flexDirection: isSelf ? 'row-reverse' : 'row' }}
+                          className="chat-msg-row"
+                        >
+                          <div style={msgBubbleStyle(isSelf)}>
+                            <p style={{ fontSize: '0.875rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.text}</p>
+                            <span style={msgTimeStyle(isSelf)}>
+                              {new Date(msg.timestamp).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                              {(msg as any).status === 'sending' && (
+                                <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
+                              )}
+                            </span>
+                          </div>
+                          {!isSelf && (
+                            <button
+                              className="chat-report-btn"
+                              title="Report message"
+                              onClick={() => setReportingMessage({
+                                messageId: msg.id,
+                                messageText: msg.text,
+                                reportedUserId: msg.senderId,
+                                reportedUserName: getRespondent()?.name || 'User',
+                              })}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'var(--muted)',
+                                padding: '0.25rem',
+                                borderRadius: '4px',
+                                opacity: 0,
+                                transition: 'opacity 0.15s ease, color 0.15s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Flag size={13} />
+                            </button>
+                          )}
                         </div>
+                        {isLastMsg && isSelf && (msg as any).status !== 'sending' && (
+                          <span style={{
+                            fontSize: '0.65rem',
+                            color: 'var(--muted)',
+                            marginTop: '0.2rem',
+                            marginRight: '0.25rem',
+                            fontWeight: 600,
+                            letterSpacing: '0.02em',
+                          }}>
+                            {msg.read ? 'Read' : 'Delivered'}
+                          </span>
+                        )}
                       </div>
                     );
                   })
@@ -550,6 +660,16 @@ export const ChatModule = ({
           onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
         />
       )}
+      {reportingMessage && (
+        <ReportMessageModal
+          messageId={reportingMessage.messageId}
+          messageText={reportingMessage.messageText}
+          reportedUserId={reportingMessage.reportedUserId}
+          reportedUserName={reportingMessage.reportedUserName}
+          token={token}
+          onClose={() => setReportingMessage(null)}
+        />
+      )}
     </div>
   );
 };
@@ -569,36 +689,22 @@ const chatGridStyle: React.CSSProperties = {
   height: '100%',
 };
 
-const inboxListStyle = (isChatActive: boolean): React.CSSProperties => {
-  const base: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    overflowY: 'auto',
-    height: '100%',
-    borderRight: '1px solid var(--border-solid)',
-    backgroundColor: 'var(--card)',
-  };
-  // Responsive check
-  if (isChatActive && window.innerWidth <= 768) {
-    return { ...base, display: 'none' };
-  }
-  return base;
-};
+const inboxListStyle = (): React.CSSProperties => ({
+  display: 'flex',
+  flexDirection: 'column',
+  overflowY: 'auto',
+  height: '100%',
+  borderRight: '1px solid var(--border-solid)',
+  backgroundColor: 'var(--card)',
+});
 
-const chatWindowStyle = (isChatActive: boolean): React.CSSProperties => {
-  const base: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
-    overflow: 'hidden',
-    backgroundColor: 'var(--background)',
-  };
-  // Responsive check
-  if (!isChatActive && window.innerWidth <= 768) {
-    return { ...base, display: 'none' };
-  }
-  return base;
-};
+const chatWindowStyle = (): React.CSSProperties => ({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  overflow: 'hidden',
+  backgroundColor: 'var(--background)',
+});
 
 const sectionStyle: React.CSSProperties = {
   padding: '1.25rem',
@@ -672,7 +778,6 @@ const backButtonStyle: React.CSSProperties = {
   border: 'none',
   cursor: 'pointer',
   color: 'var(--muted)',
-  display: window.innerWidth <= 768 ? 'block' : 'none',
 };
 
 const chatMessagesStyle: React.CSSProperties = {
@@ -694,13 +799,10 @@ const chatEmptyFeedStyle: React.CSSProperties = {
   textAlign: 'center',
 };
 
-const msgRowStyle = (isSelf: boolean): React.CSSProperties => ({
-  display: 'flex',
-  justifyContent: isSelf ? 'flex-end' : 'flex-start',
-});
 
 const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
-  maxWidth: '70%',
+  flex: 1,
+  minWidth: 0,
   padding: '0.75rem 1rem',
   borderRadius: isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
   background: isSelf ? 'var(--gradient-brand)' : 'var(--card)',

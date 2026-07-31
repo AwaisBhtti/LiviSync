@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Student, Hostel, User } from '../types';
-import { User as UserIcon, Settings, ShieldAlert, LogOut, Users, Key, Heart } from 'lucide-react';
+import { User as UserIcon, Settings, ShieldAlert, LogOut, Users, Key, Heart, ChevronRight, ArrowLeft } from 'lucide-react';
 import { ProfileTab } from './profile/ProfileTab';
 import { FriendsTab } from './profile/FriendsTab';
 import { LifestyleTab } from './profile/LifestyleTab';
@@ -44,10 +44,17 @@ export const StudentProfile = ({
     return (sessionStorage.getItem('livisync_profile_section') as TabType) || 'profile';
   });
   const [selectedFriend, setSelectedFriend] = useState<User | null>(null);
+  // mobileDrilled: true when user has tapped into a section on narrow screens
+  const [mobileDrilled, setMobileDrilled] = useState(false);
 
   const handleSectionChange = (section: TabType) => {
     setActiveSection(section);
+    setMobileDrilled(true);
     sessionStorage.setItem('livisync_profile_section', section);
+  };
+
+  const handleMobileBack = () => {
+    setMobileDrilled(false);
   };
 
   const handleSaveFields = (updatedFields: Partial<User>) => {
@@ -59,7 +66,7 @@ export const StudentProfile = ({
 
 
   return (
-    <div style={splitLayoutContainerStyle}>
+    <div className="split-layout profile-split-layout" style={splitLayoutContainerStyle}>
       {/* Sidebar Navigation */}
       <div style={sidebarStyle} className="mobile-hide">
         <div style={sidebarHeaderStyle}>
@@ -130,29 +137,96 @@ export const StudentProfile = ({
 
       {/* Main Settings Card */}
       <div className="card" style={rightCardStyle}>
-        {activeSection === 'profile' && (
-          <ProfileTab currentUser={currentUser} hostels={hostels} onSave={handleSaveFields} />
+
+        {/* ── Mobile: Section List (shown when NOT drilled into a section) ── */}
+        {!mobileDrilled && (
+          <div className="mobile-section-list">
+            <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Account</p>
+            {([
+              { key: 'profile',   icon: <Settings size={16} />,     label: 'Profile Settings' },
+              { key: 'friends',   icon: <Users size={16} />,        label: 'My Friends' },
+              { key: 'lifestyle', icon: <Heart size={16} />,        label: 'Lifestyle & Habits' },
+              { key: 'account',   icon: <Key size={16} />,          label: 'Account Security' },
+              { key: 'blocklist', icon: <ShieldAlert size={16} />,  label: 'Blocked Users' },
+            ] as { key: TabType; icon: React.ReactNode; label: string }[]).map(({ key, icon, label }) => (
+              <button
+                key={key}
+                onClick={() => handleSectionChange(key)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  width: '100%', padding: '0.85rem 1rem',
+                  background: 'transparent',
+                  border: 'none', borderBottom: '1px solid var(--border-solid)',
+                  borderRadius: 0, cursor: 'pointer',
+                  color: '#332721', fontSize: '0.9rem', fontWeight: 500,
+                  textAlign: 'left',
+                }}
+              >
+                <span style={{ color: 'var(--primary)', opacity: 0.75 }}>{icon}</span>
+                <span style={{ flex: 1 }}>{label}</span>
+                <ChevronRight size={15} style={{ color: 'var(--muted)', opacity: 0.6 }} />
+              </button>
+            ))}
+            <button
+              onClick={handleLogout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                width: '100%', padding: '0.85rem 1rem', marginTop: '0.5rem',
+                background: 'transparent',
+                border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 600,
+                textAlign: 'left',
+              }}
+            >
+              <LogOut size={16} />
+              Sign Out
+            </button>
+          </div>
         )}
 
-        {activeSection === 'friends' && (
-          <FriendsTab
-            currentUser={currentUser}
-            users={users}
-            matchRequests={matchRequests}
-            onUnfriend={handleUnfriend}
-            onSelectFriend={setSelectedFriend}
-          />
+        {/* ── Mobile: Back button (shown when drilled into a section) ── */}
+        {mobileDrilled && (
+          <button
+            className="mobile-back-btn"
+            onClick={handleMobileBack}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 600,
+              padding: '0 0 1rem 0', marginBottom: '0.25rem',
+            }}
+          >
+            <ArrowLeft size={15} />
+            Back
+          </button>
         )}
 
-        {activeSection === 'lifestyle' && (
-          <LifestyleTab currentUser={currentUser} onSave={handleSaveFields} />
-        )}
+        {/* ── Section Content (always shown on desktop; on mobile only when drilled) ── */}
+        <div className={mobileDrilled ? 'mobile-section-content drilled' : 'mobile-section-content'}>
+          {activeSection === 'profile' && (
+            <ProfileTab currentUser={currentUser} hostels={hostels} onSave={handleSaveFields} />
+          )}
 
-        {activeSection === 'account' && <AccountTab onLogout={handleLogout} />}
+          {activeSection === 'friends' && (
+            <FriendsTab
+              currentUser={currentUser}
+              users={users}
+              matchRequests={matchRequests}
+              onUnfriend={handleUnfriend}
+              onSelectFriend={setSelectedFriend}
+            />
+          )}
 
-        {activeSection === 'blocklist' && (
-          <BlocklistTab currentUser={currentUser} users={users} onUnblockUser={onUnblockUser} />
-        )}
+          {activeSection === 'lifestyle' && (
+            <LifestyleTab currentUser={currentUser} onSave={handleSaveFields} />
+          )}
+
+          {activeSection === 'account' && <AccountTab onLogout={handleLogout} />}
+
+          {activeSection === 'blocklist' && (
+            <BlocklistTab currentUser={currentUser} users={users} onUnblockUser={onUnblockUser} />
+          )}
+        </div>
       </div>
 
       {selectedFriend && (
@@ -202,7 +276,7 @@ export const StudentProfile = ({
 // Sidebar & Layout Styles
 const splitLayoutContainerStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '260px 1fr',
+  // gridTemplateColumns is controlled by the .split-layout CSS class to allow responsive overrides
   gap: '2rem',
   height: 'calc(100vh - 180px)',
   minHeight: '520px',

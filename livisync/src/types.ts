@@ -101,8 +101,12 @@ export interface Hostel {
   description: string;
   photo?: string;
   electricityBillIncluded: boolean;
+  hostelType: string;
+  hasCurfew: boolean;
+  curfewTime?: string;
   amenities: string[];
   ownerId?: string;
+  ownerName?: string;
   isVerified: boolean;
   rooms: Room[];
   currentOccupants?: string[];
@@ -131,6 +135,17 @@ export interface Report {
   reportedId: string;
   reason: 'fake-profile' | 'harassment' | 'spam' | 'other';
   description: string;
+  status: 'pending' | 'resolved';
+  created_at: string;
+}
+
+export interface MessageReport {
+  id: string;
+  reporterId: string;
+  reportedUserId: string;
+  messageId: string;
+  messageText: string;
+  reason: string;
   status: 'pending' | 'resolved';
   created_at: string;
 }

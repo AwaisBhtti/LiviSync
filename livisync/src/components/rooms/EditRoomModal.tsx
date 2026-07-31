@@ -10,6 +10,7 @@ import type { SharingType, FurnitureType } from '../../constants/roomOptions';
 import { ImageLightbox } from '../ImageLightbox';
 import { modalOverlayStyle, modalContentStyle } from '../../styles/commonStyles';
 import { API_BASE_URL } from '../../config';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface EditRoomModalProps {
   room: Room;
@@ -137,19 +138,18 @@ export const EditRoomModal = ({ room, token, onClose, onRoomUpdated }: EditRoomM
 
             <div className="form-group">
               <label className="form-label">Sharing Status / Type</label>
-              <select
-                className="form-select"
+              <CustomSelect
                 value={sharingType}
-                onChange={(e) => {
-                  const newSharing = e.target.value as SharingType;
+                onChange={(val) => {
+                  const newSharing = val as SharingType;
                   setSharingType(newSharing);
                   setSeatsAvailable(String(Math.min(parseInt(seatsAvailable) || 1, CAPACITY_MAP[newSharing])));
                 }}
-              >
-                {SHARING_TYPES.map((t) => (
-                  <option key={t} value={t}>{SHARING_TYPE_LABELS[t]}</option>
-                ))}
-              </select>
+                options={SHARING_TYPES.map((t) => ({
+                  value: t,
+                  label: SHARING_TYPE_LABELS[t],
+                }))}
+              />
             </div>
 
             <div className="form-group">
@@ -184,22 +184,23 @@ export const EditRoomModal = ({ room, token, onClose, onRoomUpdated }: EditRoomM
 
             <div className="form-group">
               <label className="form-label">Floor</label>
-              <select className="form-select" value={floor} onChange={(e) => setFloor(e.target.value)}>
-                {FLOORS.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
+              <CustomSelect
+                value={floor}
+                onChange={setFloor}
+                options={FLOORS.map((f) => ({ value: f, label: f }))}
+              />
             </div>
 
             <div className="form-group">
               <label className="form-label">Furniture Provided</label>
-              <select
-                className="form-select"
+              <CustomSelect
                 value={furniture}
-                onChange={(e) => setFurniture(e.target.value as FurnitureType)}
-              >
-                {FURNITURE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+                onChange={(val) => setFurniture(val as FurnitureType)}
+                options={FURNITURE_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+              />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

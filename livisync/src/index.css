@@ -321,6 +321,47 @@ a {
   gap: 2.5rem;
 }
 
+/* ── Roommate requests side-by-side → stacked on mobile ─ */
+.rm-requests-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* ── Roommate browse tab layout ─────────────────────── */
+.rm-browse-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+.rm-filter-sidebar {
+  width: 100%;
+}
+/* Desktop filter toggle is always shown; mobile one is always hidden at desktop */
+.rm-filter-toggle-desktop { display: inline-flex; }
+.rm-mobile-filter-btn     { display: none !important; }
+
+/* Search wrap — desktop sizing */
+.rm-search-wrap {
+  flex: 0 1 260px;
+  min-width: 220px;
+}
+
+/* Profile page uses a narrower sidebar */
+.profile-split-layout {
+  grid-template-columns: 260px 1fr;
+  gap: 2rem;
+}
+
+/* ── Mobile profile navigation ──────────────────────── */
+/* Section list: hidden on desktop (sidebar handles nav) */
+.mobile-section-list  { display: none; }
+/* Back button: hidden on desktop */
+.mobile-back-btn      { display: none !important; }
+/* Section content: always shown on desktop */
+.mobile-section-content { display: block; }
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .split-layout {
@@ -345,8 +386,106 @@ a {
     gap: 1.75rem;
   }
 
-  .mobile-hide { display: none !important; }
+  /* Profile split layout also collapses to single column and is shorter to prevent page-level scrolling */
+  .profile-split-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    height: calc(100vh - 240px) !important;
+    min-height: unset !important;
+  }
 
+  /* ── Mobile profile drill-down navigation ── */
+  /* Show section list (as the menu screen) */
+  .mobile-section-list { display: block; }
+  /* Show back button when drilled in */
+  .mobile-back-btn { display: flex !important; }
+  /* Section content: hidden until drilled in */
+  .mobile-section-content { display: none; }
+  .mobile-section-content.drilled { display: block; }
+
+  /* ── Roommate requests: stack on mobile ── */
+  .rm-requests-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Roommate browse tab: hide sidebar, show mobile filter btn ── */
+  .rm-browse-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+    width: 100%;
+  }
+  /* Force the main browse grid area to fill full width on mobile */
+  .rm-browse-main {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+  /* grid-2 inside browse also takes full width */
+  .rm-browse-main .grid-2 {
+    width: 100%;
+  }
+  .rm-filter-sidebar      { display: none !important; }
+  .rm-filter-toggle-desktop { display: none !important; }
+  .rm-mobile-filter-btn   { display: flex !important; }
+
+  /* Roommate grid cards: single column on mobile */
+  .grid-2.rm-grid-mobile-single {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Roommate Finder: centre everything on mobile ── */
+  .rm-header-wrap {
+    padding: 1.25rem 1rem 0;
+    text-align: center;
+  }
+  .rm-header-inner {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.875rem;
+  }
+  /* Centre the icon+title row */
+  .rm-header-inner > div:first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  /* Subtitle loses its left indent on mobile */
+  .rm-header-inner p {
+    margin-left: 0 !important;
+    text-align: center;
+  }
+  /* Search bar compact on mobile — reset flex so flex-basis doesn't become the height */
+  .rm-search-wrap {
+    flex: none;
+    width: auto;
+    min-width: unset;
+    max-width: 220px;
+    padding: 0.3rem 0.75rem;
+  }
+  /* Tab bar centred */
+  .rm-tab-bar {
+    justify-content: center;
+  }
+  /* Tab buttons expand equally */
+  .rm-tab-bar .rm-tab-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  /* Body: tighter horizontal padding */
+  .rm-body {
+    padding: 1.25rem 1rem;
+  }
+
+  .mobile-hide { display: none !important; }
+}
+
+.mobile-nav-bar {
+  display: none !important;
+}
+
+@media (max-width: 500px) {
   .mobile-nav-bar {
     position: fixed;
     bottom: 0;
@@ -355,16 +494,20 @@ a {
     background-color: rgba(240, 236, 230, 0.94);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--border-solid);
-    display: flex;
+    display: flex !important;
     justify-content: space-around;
     padding: 0.75rem 0.5rem;
     z-index: 100;
     box-shadow: 0 -4px 20px rgba(181, 92, 60, 0.06);
   }
-}
 
-@media (min-width: 769px) {
-  .mobile-nav-bar { display: none !important; }
+  .desktop-nav-tabs {
+    display: none !important;
+  }
+
+  .auth-chat-container {
+    height: calc(100vh - 144px) !important;
+  }
 }
 
 /* ── Full-screen chat breakout ───────────────────────────── */
@@ -373,4 +516,46 @@ a {
   max-width: none !important;
   margin: 0 !important;
   width: 100% !important;
+}
+
+/* ── Chat Responsive Layout ─────────────────────────────── */
+.chat-back-btn {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  /* Force chat grid into 1 column layout */
+  .auth-chat-container > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* When a chat is NOT selected/active */
+  .auth-chat-container:not(.chat-active) .chat-sidebar {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .auth-chat-container:not(.chat-active) .chat-window {
+    display: none !important;
+  }
+
+  /* When a chat IS selected/active */
+  .auth-chat-container.chat-active .chat-sidebar {
+    display: none !important;
+  }
+  .auth-chat-container.chat-active .chat-window {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .auth-chat-container.chat-active .chat-back-btn {
+    display: block !important;
+  }
+}
+
+/* Chat message report button — visible only on hover */
+.chat-msg-row:hover .chat-report-btn {
+  opacity: 1 !important;
+}
+.chat-report-btn:hover {
+  color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.08) !important;
 }

@@ -15,10 +15,9 @@ interface RoommateFiltersProps {
   onCleanlinessChange: (val: string) => void;
   onHostelChange: (val: string) => void;
   onHideFilters?: () => void;
+  onClearFilters: () => void;
 }
 
-const CARD_BG     = '#f0ece6'; // Linen beige from logo theme
-const CARD_BORDER = '#e0d6cb';
 const TEXT        = '#332721'; // Espresso brown text
 const MUTED       = '#8c7b70'; // Warm beige
 
@@ -52,6 +51,7 @@ export const RoommateFilters = ({
   onCleanlinessChange,
   onHostelChange,
   onHideFilters,
+  onClearFilters,
 }: RoommateFiltersProps) => {
   const genderOptions = [
     { value: 'all', label: 'Any Gender' },
@@ -81,22 +81,20 @@ export const RoommateFilters = ({
 
   return (
     <div
+      className="card"
       style={{
-        background: CARD_BG,
-        border: `1px solid ${CARD_BORDER}`,
-        borderRadius: '16px',
         padding: '1.25rem',
         height: 'fit-content',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
-        boxShadow: '0 2px 12px rgba(51, 39, 33, 0.02)',
+        overflow: 'visible',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${CARD_BORDER}`, paddingBottom: '0.75rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '0.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <SlidersHorizontal size={13} color={MUTED} />
-          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: TEXT }}>Filters</span>
+          <SlidersHorizontal size={14} style={{ color: 'var(--muted)' }} />
+          <h3 style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600 }}>Filters</h3>
         </div>
         {onHideFilters && (
           <button
@@ -182,6 +180,32 @@ export const RoommateFilters = ({
           style={customSelectStyle}
         />
       </div>
+
+      {/* Clear Filters Button */}
+      <button
+        onClick={onClearFilters}
+        style={{
+          width: '100%',
+          padding: '0.625rem 1rem',
+          fontSize: '0.8rem',
+          fontWeight: 700,
+          color: '#b55c3c',
+          background: 'transparent',
+          border: '1px solid #b55c3c',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          marginTop: '0.5rem',
+          transition: 'all 0.15s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(181, 92, 60, 0.08)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent';
+        }}
+      >
+        Clear Filters
+      </button>
     </div>
   );
 };

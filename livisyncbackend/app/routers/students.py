@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Student, Owner, Hostel, PhoneViewLog, MatchRequest, Preferences, BlockedUser, Report
+from ..models import Student, Owner, Hostel, PhoneViewLog, MatchRequest, Preferences, BlockedUser, Report, MessageReport
 from ..schemas import StudentOut, StudentUpdate
 from ..auth import get_current_user
 from pydantic import BaseModel
@@ -35,6 +35,12 @@ class ReportCreate(BaseModel):
     reported_id: uuid.UUID
     reason: str
     description: str
+
+class MessageReportCreate(BaseModel):
+    reported_user_id: uuid.UUID
+    message_id: str
+    message_text: str
+    reason: str
 
 @router.get("/roommates", response_model=List[StudentOut])
 def get_roommates(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
@@ -302,3 +308,19 @@ def submit_report(req: ReportCreate, db: Session = Depends(get_db), current_user
     db.add(new_report)
     db.commit()
     return {"message": "Report submitted successfully"}
+
+@router.post("/message-reports")
+def submit_message_report(req: MessageReportCreate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    if req.reported_user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot report your own message")
+    new_report = MessageReport(
+        reporter_id=current_user.id,
+        reported_user_id=req.reported_user_id,
+        message_id=req.message_id,
+        message_text=req.message_text,
+        reason=req.reason,
+        status="pending"
+    )
+    db.add(new_report)
+    db.commit()
+    return {"message": "Message report submitted successfully"}

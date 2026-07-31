@@ -55,7 +55,7 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const fetchRooms = async () => {

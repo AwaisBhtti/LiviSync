@@ -1,10 +1,11 @@
 import { API_BASE_URL } from '../../config';
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import type { User, Report } from '../../types';
+import type { User, Report, MessageReport } from '../../types';
 
 interface AdminState {
   users: User[];
   reports: Report[];
+  messageReports: MessageReport[];
   loading: boolean;
   error: string | null;
 }
@@ -12,6 +13,7 @@ interface AdminState {
 const initialState: AdminState = {
   users: [],
   reports: [],
+  messageReports: [],
   loading: false,
   error: null,
 };
@@ -58,6 +60,48 @@ export const resolveReport = createAsyncThunk(
       return reportId;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error resolving report');
+    }
+  }
+);
+
+export const fetchMessageReports = createAsyncThunk(
+  'admin/fetchMessageReports',
+  async (token: string, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/message-reports`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch message reports');
+      const data = await response.json();
+      return data.map((r: any) => ({
+        id: r.id,
+        reporterId: r.reporter_id,
+        reportedUserId: r.reported_user_id,
+        messageId: r.message_id,
+        messageText: r.message_text,
+        reason: r.reason,
+        status: r.status,
+        created_at: r.created_at,
+      })) as MessageReport[];
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error fetching message reports');
+    }
+  }
+);
+
+export const resolveMessageReport = createAsyncThunk(
+  'admin/resolveMessageReport',
+  async ({ reportId, token }: { reportId: string; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/message-reports/${reportId}/resolve`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || 'Failed to resolve message report');
+      return reportId;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error resolving message report');
     }
   }
 );
@@ -192,6 +236,14 @@ const adminSlice = createSlice({
       })
       .addCase(deleteUser.fulfilled, (state, action: PayloadAction<string>) => {
         state.users = state.users.filter((u) => u.id !== action.payload);
+      })
+      .addCase(fetchMessageReports.fulfilled, (state, action: PayloadAction<MessageReport[]>) => {
+        state.messageReports = action.payload;
+      })
+      .addCase(resolveMessageReport.fulfilled, (state, action: PayloadAction<string>) => {
+        state.messageReports = state.messageReports.map((r) =>
+          r.id === action.payload ? { ...r, status: 'resolved' as const } : r
+        );
       });
   }
 });

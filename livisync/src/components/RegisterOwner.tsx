@@ -11,7 +11,7 @@ export const RegisterOwner = () => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  
+
   const [verifying, setVerifying] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export const RegisterOwner = () => {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/verify-invite/${token}`);
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.detail || 'Invitation link is invalid or expired.');
         }

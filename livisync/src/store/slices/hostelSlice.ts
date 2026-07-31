@@ -36,8 +36,12 @@ export const fetchHostels = createAsyncThunk(
         description: h.description || '',
         photo: h.photo || '',
         electricityBillIncluded: h.electricity_bill_included,
+        hostelType: h.hostel_type || 'boys',
+        hasCurfew: h.has_curfew || false,
+        curfewTime: h.curfew_time || undefined,
         amenities: h.amenities ? h.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: h.owner_id,
+        ownerName: h.owner_name || 'Unknown Owner',
         isVerified: h.is_verified,
         currentOccupants: h.current_occupants || [],
         rooms: h.rooms ? h.rooms.map((r: any) => ({
@@ -95,6 +99,9 @@ export const addHostel = createAsyncThunk(
           description: newHostel.description,
           photo: newHostel.photo,
           electricity_bill_included: newHostel.electricityBillIncluded,
+          hostel_type: newHostel.hostelType || 'boys',
+          has_curfew: newHostel.hasCurfew || false,
+          curfew_time: newHostel.curfewTime || null,
           amenities: newHostel.amenities
         })
       });
@@ -112,6 +119,9 @@ export const addHostel = createAsyncThunk(
         description: data.description || '',
         photo: data.photo || '',
         electricityBillIncluded: data.electricity_bill_included,
+        hostelType: data.hostel_type || 'boys',
+        hasCurfew: data.has_curfew || false,
+        curfewTime: data.curfew_time || undefined,
         amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
@@ -140,6 +150,9 @@ export const editHostel = createAsyncThunk(
           description: updatedHostel.description,
           photo: updatedHostel.photo,
           electricity_bill_included: updatedHostel.electricityBillIncluded,
+          hostel_type: updatedHostel.hostelType || 'boys',
+          has_curfew: updatedHostel.hasCurfew || false,
+          curfew_time: updatedHostel.curfewTime || null,
           amenities: updatedHostel.amenities
         })
       });
@@ -154,6 +167,9 @@ export const editHostel = createAsyncThunk(
         description: data.description || '',
         photo: data.photo || '',
         electricityBillIncluded: data.electricity_bill_included,
+        hostelType: data.hostel_type || 'boys',
+        hasCurfew: data.has_curfew || false,
+        curfewTime: data.curfew_time || undefined,
         amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,

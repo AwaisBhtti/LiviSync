@@ -9,7 +9,7 @@ import { RoommateFilters } from './roommate/RoommateFilters';
 import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
-import { Users, Search, ChevronRight, Inbox } from 'lucide-react';
+import { Users, Search, Inbox, SlidersHorizontal, X } from 'lucide-react';
 
 
 interface RoommateFinderProps {
@@ -46,6 +46,7 @@ export const RoommateFinder = ({
   const [maxBudget, setMaxBudget] = useState(200000);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'find' | 'requests'>(() => {
     return (sessionStorage.getItem('livisync_roommate_tab') as 'find' | 'requests') || 'find';
@@ -94,6 +95,15 @@ export const RoommateFinder = ({
       !(currentUser.blockedUsers ?? []).includes(r.senderId)
   ).length;
 
+  const handleClearFilters = () => {
+    setFilterSleep('all');
+    setFilterCleanliness('all');
+    setFilterGender('all');
+    setFilterHostel('all');
+    setMaxBudget(200000);
+    setSearchQuery('');
+  };
+
   const handleSubmitConnect = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
@@ -133,8 +143,8 @@ export const RoommateFinder = ({
 
       {/* ── Header ── */}
       <div style={headerStyle}>
-        <div style={headerInnerWrapStyle}>
-          <div style={headerInnerStyle}>
+        <div className="rm-header-wrap" style={headerInnerWrapStyle}>
+          <div className="rm-header-inner" style={headerInnerStyle}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem' }}>
                 <div style={iconBoxStyle}>
@@ -148,7 +158,7 @@ export const RoommateFinder = ({
             </div>
 
             {/* Search */}
-            <div style={searchWrapStyle}>
+            <div className="rm-search-wrap" style={searchWrapStyle}>
               <Search size={15} color="rgba(148,163,184,0.7)" style={{ flexShrink: 0 }} />
               <input
                 className="rm-input"
@@ -162,42 +172,42 @@ export const RoommateFinder = ({
           </div>
 
           {/* Tab bar */}
-          <div style={tabBarStyle}>
-          <button
-            onClick={() => handleTabChange('find')}
-            className="rm-tab-btn"
-            style={tabBtnStyle(activeTab === 'find')}
-          >
-            <Users size={14} />
-            Browse
-          </button>
-          <button
-            onClick={() => handleTabChange('requests')}
-            className="rm-tab-btn"
-            style={tabBtnStyle(activeTab === 'requests')}
-          >
-            <Inbox size={14} />
-            Requests
-            {pendingReceivedCount > 0 && (
-              <span style={tabPillStyle}>{pendingReceivedCount}</span>
-            )}
-          </button>
+          <div className="rm-tab-bar" style={tabBarStyle}>
+            <button
+              onClick={() => handleTabChange('find')}
+              className="rm-tab-btn"
+              style={tabBtnStyle(activeTab === 'find')}
+            >
+              <Users size={14} />
+              Browse
+            </button>
+            <button
+              onClick={() => handleTabChange('requests')}
+              className="rm-tab-btn"
+              style={tabBtnStyle(activeTab === 'requests')}
+            >
+              <Inbox size={14} />
+              Requests
+              {pendingReceivedCount > 0 && (
+                <span style={tabPillStyle}>{pendingReceivedCount}</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
       {/* ── Body ── */}
-      <div style={bodyStyle}>
+      <div className="rm-body" style={bodyStyle}>
         {isProfileIncomplete && (
           <div style={warningBannerStyle}>
             <span>⚠️ <strong>Complete your profile:</strong> You must fill out all your personal details (under Basic & Personal Info) and lifestyle preferences (under Lifestyle and Habits) under the Profile tab in order to connect with other students.</span>
           </div>
         )}
         {activeTab === 'find' ? (
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-            {/* Sidebar */}
+          <div className="rm-browse-layout" style={!showFilters ? { gridTemplateColumns: '1fr' } : undefined}>
+            {/* Desktop sidebar — hidden on mobile via CSS */}
             {showFilters && (
-              <div style={{ width: '220px', flexShrink: 0 }}>
+              <div className="rm-filter-sidebar">
                 <RoommateFilters
                   maxBudget={maxBudget}
                   filterGender={filterGender}
@@ -210,25 +220,108 @@ export const RoommateFinder = ({
                   onSleepChange={setFilterSleep}
                   onCleanlinessChange={setFilterCleanliness}
                   onHostelChange={setFilterHostel}
-                  onHideFilters={() => setShowFilters(false)}
+                  onHideFilters={() => {
+                    if (document.activeElement instanceof HTMLElement) {
+                      document.activeElement.blur();
+                    }
+                    setShowFilters(false);
+                  }}
+                  onClearFilters={handleClearFilters}
                 />
               </div>
             )}
 
             {/* Main grid area */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Filter toggle - only visible when hidden */}
+            <div className="rm-browse-main" style={{ flex: 1, minWidth: 0 }}>
+              {/* Desktop: show filter toggle when sidebar collapsed */}
               {!showFilters && (
                 <button
                   onClick={() => setShowFilters(true)}
-                  className="rm-filter-toggle"
-                  style={filterToggleStyle}
+                  className="btn btn-secondary rm-filter-toggle-desktop"
+                  style={{
+                    marginBottom: '0.875rem',
+                    width: 'fit-content',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.4rem 0.875rem',
+                    fontSize: '0.8rem',
+                  }}
                 >
-                  <ChevronRight
-                    size={13}
-                  />
+                  <SlidersHorizontal size={13} />
                   Show Filters
                 </button>
+              )}
+
+              {/* Mobile: filter toggle bar always visible */}
+              <button
+                className="rm-mobile-filter-btn"
+                onClick={() => setShowMobileFilters(true)}
+                style={{
+                  display: 'none', // shown via CSS at narrow breakpoint
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  width: '100%',
+                  padding: '0.625rem 1rem',
+                  marginBottom: '0.875rem',
+                  background: '#f0ece6',
+                  border: '1px solid #e0d6cb',
+                  borderRadius: '10px',
+                  color: '#332721',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  justifyContent: 'center',
+                }}
+              >
+                <SlidersHorizontal size={14} />
+                Filters
+              </button>
+
+              {/* Mobile filter overlay */}
+              {showMobileFilters && (
+                <div
+                  style={{
+                    position: 'fixed', inset: 0, zIndex: 200,
+                    background: 'rgba(0,0,0,0.4)',
+                    display: 'flex', alignItems: 'flex-end',
+                  }}
+                  onClick={(e) => { if (e.target === e.currentTarget) setShowMobileFilters(false); }}
+                >
+                  <div style={{
+                    background: '#f0ece6',
+                    borderRadius: '20px 20px 0 0',
+                    padding: '1.25rem 1.25rem 2rem',
+                    width: '100%',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#332721' }}>Filters</span>
+                      <button
+                        onClick={() => setShowMobileFilters(false)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#8c7b70' }}
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <RoommateFilters
+                      maxBudget={maxBudget}
+                      filterGender={filterGender}
+                      filterSleep={filterSleep}
+                      filterCleanliness={filterCleanliness}
+                      filterHostel={filterHostel}
+                      hostels={hostels}
+                      onMaxBudgetChange={setMaxBudget}
+                      onGenderChange={setFilterGender}
+                      onSleepChange={setFilterSleep}
+                      onCleanlinessChange={setFilterCleanliness}
+                      onHostelChange={setFilterHostel}
+                      onHideFilters={() => setShowMobileFilters(false)}
+                      onClearFilters={handleClearFilters}
+                    />
+                  </div>
+                </div>
               )}
 
               <RoommateGrid
@@ -345,12 +438,11 @@ const searchWrapStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
-  background: '#faf8f5', // Warm sand background for input
+  background: '#faf8f5',
   border: '1px solid #e0d6cb',
   borderRadius: '10px',
   padding: '0.5rem 0.875rem',
-  minWidth: '220px',
-  flex: '0 1 260px',
+  // flex and minWidth intentionally omitted — controlled via .rm-search-wrap CSS class
 };
 
 const searchInputStyle: React.CSSProperties = {
@@ -405,22 +497,6 @@ const bodyStyle: React.CSSProperties = {
   width: '100%',
   margin: '0 auto',
   padding: '1.5rem 2rem',
-};
-
-const filterToggleStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '0.3rem',
-  marginBottom: '0.875rem',
-  padding: '0.3rem 0.7rem',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  color: '#8c7b70',
-  background: '#f0ece6',
-  border: '1px solid #e0d6cb',
-  borderRadius: '9999px',
-  cursor: 'pointer',
-  transition: 'var(--transition)',
 };
 
 const warningBannerStyle: React.CSSProperties = {

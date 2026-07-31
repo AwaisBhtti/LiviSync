@@ -12,6 +12,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { OwnerPortal } from './components/OwnerPortal';
 import { RegisterOwner } from './components/RegisterOwner';
+import { HostelDetailView } from './components/HostelDetailView';
 import { useAppDispatch, useAppSelector } from './store/store';
 import {
   fetchCurrentUser,
@@ -22,7 +23,7 @@ import {
 import { fetchHostels } from './store/slices/hostelSlice';
 import { fetchRoommates, updateUserInList } from './store/slices/roommateSlice';
 import { fetchMatches } from './store/slices/matchSlice';
-import { fetchReports, fetchUsers } from './store/slices/adminSlice';
+import { fetchReports, fetchUsers, fetchMessageReports } from './store/slices/adminSlice';
 import { showToast, hideToast } from './store/slices/toastSlice';
 import { supabase } from './supabase';
 import { API_BASE_URL } from './config';
@@ -42,7 +43,7 @@ export default function App() {
   const { hostels, loading: hostelsLoading } = useAppSelector((state) => state.hostels);
   const { users: studentRoommates, loading: usersLoading } = useAppSelector((state) => state.roommates);
   const { matchRequests, loading: matchesLoading } = useAppSelector((state) => state.matches);
-  const { users: adminUsers, reports, loading: adminLoading } = useAppSelector((state) => state.admin);
+  const { users: adminUsers, reports, messageReports, loading: adminLoading } = useAppSelector((state) => state.admin);
 
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
@@ -148,6 +149,7 @@ export default function App() {
       } else if (role === 'admin') {
         dispatch(fetchUsers(token));
         dispatch(fetchReports(token));
+        dispatch(fetchMessageReports(token));
       }
     }
   }, [token, currentUser, dispatch]);
@@ -183,7 +185,7 @@ export default function App() {
 
   const { handleBlockUser, handleUnblockUser, handleReportUser } = useUserActions();
   const { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel } = useHostelActions();
-  const { handleToggleUserStatus, handleWarnUser, handleResolveReport, handleDeleteUser } = useAdminActions();
+  const { handleToggleUserStatus, handleWarnUser, handleResolveReport, handleDeleteUser, handleResolveMessageReport } = useAdminActions();
 
   if (loadingData) {
     return <SpinnerLoader />;
@@ -261,6 +263,16 @@ export default function App() {
                 }
               />
               <Route
+                path="/hostels/:id"
+                element={
+                  <HostelDetailView
+                    hostels={hostels}
+                    currentUser={currentUser!}
+                    token={token!}
+                  />
+                }
+              />
+              <Route
                 path="/roommates"
                 element={
                   <RoommateFinder
@@ -284,6 +296,7 @@ export default function App() {
                     currentUser={currentUser!}
                     users={displayUsers}
                     matchRequests={matchRequests}
+                    token={token!}
                     onBlockUser={handleBlockUser}
                     onMessagesRead={fetchUnreadCount}
                     onUnfriend={handleUnfriend}
@@ -316,12 +329,14 @@ export default function App() {
                     <AdminPanel
                       users={adminUsers}
                       reports={reports}
+                      messageReports={messageReports}
                       hostels={hostels}
                       onToggleUserStatus={handleToggleUserStatus}
                       onResolveReport={handleResolveReport}
                       onDeleteUser={handleDeleteUser}
                       onVerifyHostel={handleVerifyHostel}
                       onWarnUser={handleWarnUser}
+                      onResolveMessageReport={handleResolveMessageReport}
                     />
                   ) : (
                     <Navigate to="/hostels" replace />
