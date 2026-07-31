@@ -79,6 +79,9 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
             <p style={{ color: 'var(--muted)', marginTop: '0.5rem', fontSize: '0.9rem', lineHeight: '1.6' }}>
               {selectedHostel.description}
             </p>
+            <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+              Hosted by: {selectedHostel.ownerName || 'Unknown Owner'}
+            </p>
           </div>
 
           <div className="card" style={{ padding: '1.5rem' }}>
@@ -124,9 +127,6 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                 <p style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
                   <MapPin size={14} />
                   {selectedHostel.location}
-                </p>
-                <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)', marginTop: '0.375rem' }}>
-                  👤 Hosted by: {selectedHostel.ownerName || 'Unknown Owner'}
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
