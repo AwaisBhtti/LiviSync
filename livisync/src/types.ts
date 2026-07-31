@@ -100,6 +100,7 @@ export interface Hostel {
   location: string;
   description: string;
   photo?: string;
+  photos?: string[];
   electricityBillIncluded: boolean;
   hostelType: string;
   hasCurfew: boolean;

@@ -85,7 +85,7 @@ export const RoommateFinder = ({
       const matchesSearch = !searchQuery.trim() || u.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesSleep && matchesClean && matchesGender && matchesBudget && matchesHostel && matchesSearch;
     })
-    .map((u) => ({ ...u, score: calculateCompatibility(currentUser.preferences, u.preferences) }))
+    .map((u) => ({ ...u, score: calculateCompatibility(currentUser.preferences, u.preferences, currentUser.budget, u.budget) }))
     .sort((a, b) => b.score - a.score);
 
   const pendingReceivedCount = matchRequests.filter(

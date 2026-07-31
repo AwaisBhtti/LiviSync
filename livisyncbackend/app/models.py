@@ -99,6 +99,7 @@ class Hostel(Base):
     location = Column(String(255), nullable=False)
     description = Column(Text)
     photo = Column(Text, nullable=True)
+    photos = Column(ARRAY(Text), nullable=True)
     electricity_bill_included = Column(Boolean, nullable=False, default=False)
     owner_id = Column(UUID(as_uuid=True), ForeignKey('owners.id', ondelete='SET NULL'), nullable=True)
     is_verified = Column(Boolean, nullable=False, default=False)

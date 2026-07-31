@@ -9,6 +9,9 @@ import { OwnerProfile } from './components/OwnerProfile';
 import { AdminProfile } from './components/AdminProfile';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthScreen } from './components/AuthScreen';
+import { LandingPage } from './components/LandingPage';
+import { TermsOfService } from './components/TermsOfService';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { OwnerPortal } from './components/OwnerPortal';
 import { RegisterOwner } from './components/RegisterOwner';
@@ -29,7 +32,6 @@ import { supabase } from './supabase';
 import { API_BASE_URL } from './config';
 import { AppLayout } from './components/layout/AppLayout';
 import { SpinnerLoader } from './components/layout/SpinnerLoader';
-import { LandingPage } from './components/LandingPage';
 import { useMatchRequests } from './hooks/useMatchRequests';
 import { useUserActions } from './hooks/useUserActions';
 import { useHostelActions } from './hooks/useHostelActions';
@@ -233,6 +235,8 @@ export default function App() {
             path="/"
             element={<LandingPage isAuthenticated={!!token} />}
           />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
 
           <Route element={<ProtectedRoute />}>
             <Route

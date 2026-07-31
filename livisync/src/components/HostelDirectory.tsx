@@ -256,7 +256,7 @@ export const HostelDirectory = ({
                   onClick={() => navigate(`/hostels/${hostel.id}`)}
                 >
                   <img
-                    src={hostel.photo}
+                    src={(hostel.photos && hostel.photos.length > 0) ? hostel.photos[0] : hostel.photo}
                     alt={hostel.name}
                     style={hostelThumbnailStyle}
                   />
