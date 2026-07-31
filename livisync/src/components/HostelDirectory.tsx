@@ -134,6 +134,22 @@ export const HostelDirectory = ({
               </div>
 
               <div className="card" style={{ padding: '1.5rem' }}>
+                <h3>Hostel Rules &amp; Policies</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div>
+                      <strong style={{ fontSize: '0.9rem', display: 'block' }}>Curfew Policy</strong>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+                        {selectedHostel.hasCurfew
+                          ? `Strict curfew in place. Doors close at ${formatCurfewTime(selectedHostel.curfewTime)}.`
+                          : 'No curfew. 24/7 access allowed.'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card" style={{ padding: '1.5rem' }}>
                 <h3>Amenities</h3>
                 <div style={amenitiesGridStyle}>
                   {selectedHostel.amenities.map((amenity, idx) => (
@@ -156,11 +172,6 @@ export const HostelDirectory = ({
                       <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.75rem', fontWeight: 600 }}>
                         {selectedHostel.hostelType ? selectedHostel.hostelType.replace('-', ' ') : 'Boys'} Hostel
                       </span>
-                      {selectedHostel.hasCurfew && (
-                        <span className="badge badge-neutral" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--destructive)', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                          🔒 Curfew: {formatCurfewTime(selectedHostel.curfewTime)}
-                        </span>
-                      )}
                     </h2>
                     <p style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
                       <MapPin size={14} />
@@ -197,19 +208,6 @@ export const HostelDirectory = ({
                     }}>
                       ⚡ Electricity: {selectedHostel.electricityBillIncluded ? 'Included' : 'Not Included'}
                     </span>
-                    {selectedHostel.hasCurfew && (
-                      <span style={{
-                        fontSize: '0.75rem',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                        color: 'var(--destructive)',
-                        border: '1px solid rgba(239, 68, 68, 0.2)',
-                        fontWeight: 600
-                      }}>
-                        🔒 Curfew: {formatCurfewTime(selectedHostel.curfewTime)}
-                      </span>
-                    )}
                   </div>
                 </div>
 
@@ -337,111 +335,111 @@ export const HostelDirectory = ({
                   </button>
                 </div>
 
-              {/* Price Filter */}
-              <div className="form-group">
-                <label className="form-label" style={{ fontSize: '0.75rem' }}>Max Price (PKR): {maxPrice.toLocaleString()}</label>
-                <input
-                  type="range"
-                  min="5000"
-                  max="35000"
-                  step="1000"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  style={{ width: '100%', accentColor: 'var(--primary)' }}
-                />
-              </div>
-
-              {/* Hostel Type Filter (Tabs) */}
-              <div className="form-group">
-                <label className="form-label" style={{ fontSize: '0.75rem' }}>Hostel Category</label>
-                <div style={{ display: 'flex', background: 'var(--card-hover)', borderRadius: 'var(--radius-sm)', padding: '0.2rem', gap: '0.2rem', border: '1px solid var(--border-solid)' }}>
-                  {([
-                    { value: 'all', label: 'All' },
-                    { value: 'boys', label: 'Boys' },
-                    { value: 'girls', label: 'Girls' },
-                    { value: 'co-sharing', label: 'Co-Sharing' }
-                  ]).map((tab) => {
-                    const isActive = selectedType === tab.value;
-                    return (
-                      <button
-                        key={tab.value}
-                        type="button"
-                        onClick={() => setSelectedType(tab.value)}
-                        style={{
-                          flex: 1,
-                          padding: '0.35rem 0.25rem',
-                          fontSize: '0.68rem',
-                          fontWeight: isActive ? 700 : 500,
-                          borderRadius: '4px',
-                          border: 'none',
-                          background: isActive ? 'var(--primary)' : 'transparent',
-                          color: isActive ? 'var(--primary-foreground)' : 'var(--muted)',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                          textAlign: 'center',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {tab.label}
-                      </button>
-                    );
-                  })}
+                {/* Price Filter */}
+                <div className="form-group">
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Max Price (PKR): {maxPrice.toLocaleString()}</label>
+                  <input
+                    type="range"
+                    min="5000"
+                    max="35000"
+                    step="1000"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                    style={{ width: '100%', accentColor: 'var(--primary)' }}
+                  />
                 </div>
-              </div>
 
-              {/* Sharing Type Filter */}
-              <div className="form-group">
-                <label className="form-label" style={{ fontSize: '0.75rem' }}>Room Sharing</label>
-                <CustomSelect
-                  value={selectedSharing}
-                  onChange={setSelectedSharing}
-                  options={[
-                    { value: 'all', label: 'Any Sharing' },
-                    { value: 'single', label: '1 Seater Room' },
-                    { value: 'double', label: '2 Seater Room' },
-                    { value: 'triple', label: '3 Seater Room' },
-                    { value: 'quad', label: '4 Seater Room' },
-                    { value: 'penta', label: '5 Seater Room' },
-                  ]}
-                />
-              </div>
+                {/* Hostel Type Filter (Tabs) */}
+                <div className="form-group">
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Hostel Category</label>
+                  <div style={{ display: 'flex', background: 'var(--card-hover)', borderRadius: 'var(--radius-sm)', padding: '0.2rem', gap: '0.2rem', border: '1px solid var(--border-solid)' }}>
+                    {([
+                      { value: 'all', label: 'All' },
+                      { value: 'boys', label: 'Boys' },
+                      { value: 'girls', label: 'Girls' },
+                      { value: 'co-sharing', label: 'Co-Sharing' }
+                    ]).map((tab) => {
+                      const isActive = selectedType === tab.value;
+                      return (
+                        <button
+                          key={tab.value}
+                          type="button"
+                          onClick={() => setSelectedType(tab.value)}
+                          style={{
+                            flex: 1,
+                            padding: '0.35rem 0.25rem',
+                            fontSize: '0.68rem',
+                            fontWeight: isActive ? 700 : 500,
+                            borderRadius: '4px',
+                            border: 'none',
+                            background: isActive ? 'var(--primary)' : 'transparent',
+                            color: isActive ? 'var(--primary-foreground)' : 'var(--muted)',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            textAlign: 'center',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {tab.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-              {/* Amenities Filter */}
-              <div className="form-group">
-                <label className="form-label" style={{ fontSize: '0.75rem' }}>Must Have Amenity</label>
-                <CustomSelect
-                  value={selectedAmenity}
-                  onChange={setSelectedAmenity}
-                  options={[
-                    { value: 'all', label: 'Any Amenity' },
-                    ...allAmenities.map((amenity) => ({ value: amenity, label: amenity })),
-                  ]}
-                />
-              </div>
+                {/* Sharing Type Filter */}
+                <div className="form-group">
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Room Sharing</label>
+                  <CustomSelect
+                    value={selectedSharing}
+                    onChange={setSelectedSharing}
+                    options={[
+                      { value: 'all', label: 'Any Sharing' },
+                      { value: 'single', label: '1 Seater Room' },
+                      { value: 'double', label: '2 Seater Room' },
+                      { value: 'triple', label: '3 Seater Room' },
+                      { value: 'quad', label: '4 Seater Room' },
+                      { value: 'penta', label: '5 Seater Room' },
+                    ]}
+                  />
+                </div>
 
-              {/* Clear Filters Button */}
-              <button
-                onClick={() => {
-                  setMaxPrice(25000);
-                  setSelectedSharing('all');
-                  setSelectedAmenity('all');
-                  setSelectedType('all');
-                  setSearchQuery('');
-                }}
-                className="btn btn-secondary"
-                style={{
-                  width: '100%',
-                  marginTop: '0.5rem',
-                  fontSize: '0.8rem',
-                  padding: '0.5rem',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                Clear Filters
-              </button>
+                {/* Amenities Filter */}
+                <div className="form-group">
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Must Have Amenity</label>
+                  <CustomSelect
+                    value={selectedAmenity}
+                    onChange={setSelectedAmenity}
+                    options={[
+                      { value: 'all', label: 'Any Amenity' },
+                      ...allAmenities.map((amenity) => ({ value: amenity, label: amenity })),
+                    ]}
+                  />
+                </div>
+
+                {/* Clear Filters Button */}
+                <button
+                  onClick={() => {
+                    setMaxPrice(25000);
+                    setSelectedSharing('all');
+                    setSelectedAmenity('all');
+                    setSelectedType('all');
+                    setSearchQuery('');
+                  }}
+                  className="btn btn-secondary"
+                  style={{
+                    width: '100%',
+                    marginTop: '0.5rem',
+                    fontSize: '0.8rem',
+                    padding: '0.5rem',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  Clear Filters
+                </button>
               </div>
             )}
 
@@ -495,11 +493,6 @@ export const HostelDirectory = ({
                               <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.65rem', fontWeight: 600 }}>
                                 {hostel.hostelType ? hostel.hostelType.replace('-', ' ') : 'Boys'}
                               </span>
-                              {hostel.hasCurfew && (
-                                <span className="badge badge-neutral" style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--destructive)', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                                  🔒 Curfew: {formatCurfewTime(hostel.curfewTime)}
-                                </span>
-                              )}
                             </div>
                             <p style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.125rem' }}>
                               <MapPin size={12} />
