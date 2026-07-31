@@ -109,7 +109,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
         <h3 style={sectionTitleStyle}>Update Password</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '400px' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Current Password</label>
+            <label className="form-label">Current Password <span style={{ color: '#ef4444' }}>*</span></label>
             <input
               type="password"
               className="form-input"
@@ -119,7 +119,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">New Password</label>
+            <label className="form-label">New Password <span style={{ color: '#ef4444' }}>*</span></label>
             <input
               type="password"
               className="form-input"
@@ -129,7 +129,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Confirm New Password</label>
+            <label className="form-label">Confirm New Password <span style={{ color: '#ef4444' }}>*</span></label>
             <input
               type="password"
               className="form-input"
