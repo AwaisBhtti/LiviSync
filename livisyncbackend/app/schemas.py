@@ -14,12 +14,12 @@ class TokenData(BaseModel):
 
 # Preferences Schema
 class PreferencesOut(BaseModel):
-    sleep_schedule: str
-    cleanliness: str
-    smoking: str
-    pets: str
-    guest_tolerance: str
-    noise_tolerance: str
+    sleep_schedule: Optional[str] = None
+    cleanliness: Optional[str] = None
+    smoking: Optional[str] = None
+    pets: Optional[str] = None
+    guest_tolerance: Optional[str] = None
+    noise_tolerance: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -34,12 +34,12 @@ class StudentOut(BaseModel):
     id: UUID
     email: EmailStr
     name: str
-    age: int
-    gender: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
     photo: Optional[str] = None
     bio: Optional[str] = None
-    budget: int
-    location: str
+    budget: Optional[int] = None
+    location: Optional[str] = None
     status: str
     occupation: Optional[str] = None
     institution: Optional[str] = None
@@ -55,20 +55,20 @@ class StudentOut(BaseModel):
 
 class StudentUpdate(BaseModel):
     name: str
-    age: int
-    gender: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
     bio: Optional[str] = None
-    budget: int
-    location: str
+    budget: Optional[int] = None
+    location: Optional[str] = None
     occupation: Optional[str] = None
     institution: Optional[str] = None
     company: Optional[str] = None
-    sleep_schedule: str
-    cleanliness: str
-    smoking: str
-    pets: str
-    guest_tolerance: str
-    noise_tolerance: str
+    sleep_schedule: Optional[str] = None
+    cleanliness: Optional[str] = None
+    smoking: Optional[str] = None
+    pets: Optional[str] = None
+    guest_tolerance: Optional[str] = None
+    noise_tolerance: Optional[str] = None
     hostel_id: Optional[UUID] = None
 
 # Owner Schemas

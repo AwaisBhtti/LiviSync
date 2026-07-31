@@ -10,25 +10,25 @@ interface ProfileTabProps {
 
 export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) => {
   const [name, setName] = useState(currentUser.name);
-  const [age, setAge] = useState(currentUser.age);
-  const [gender, setGender] = useState(currentUser.gender);
+  const [age, setAge] = useState(currentUser.age || '');
+  const [gender, setGender] = useState<any>(currentUser.gender || '');
   const [bio, setBio] = useState(currentUser.bio || '');
   const [location, setLocation] = useState(currentUser.location || '');
   const [occupation, setOccupation] = useState<'student' | 'job'>(currentUser.occupation || 'student');
   const [institution, setInstitution] = useState(currentUser.institution || '');
   const [company, setCompany] = useState(currentUser.company || '');
-  const [budget, setBudget] = useState(currentUser.budget);
+  const [budget, setBudget] = useState(currentUser.budget || '');
   const [hostelId, setHostelId] = useState(currentUser.hostelId || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
       name,
-      age: Number(age),
-      gender,
+      age: age === '' ? undefined : Number(age),
+      gender: gender || undefined,
       bio,
-      budget: Number(budget),
-      location,
+      budget: budget === '' ? undefined : Number(budget),
+      location: location || undefined,
       occupation,
       institution: occupation === 'student' ? institution : '',
       company: occupation === 'job' ? company : '',
@@ -65,7 +65,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
               min={16}
               max={100}
               value={age}
-              onChange={(e) => setAge(Number(e.target.value))}
+              onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
               required
             />
           </div>
@@ -73,6 +73,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
           <div className="form-group">
             <label className="form-label">Gender</label>
             <select className="form-select" value={gender} onChange={(e) => setGender(e.target.value as any)} required>
+              <option value="">Select Gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
               <option value="other">Other</option>
@@ -81,14 +82,10 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
 
           <div className="form-group">
             <label className="form-label">City Location</label>
-            <input
-              type="text"
-              className="form-input"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
-              placeholder="e.g. Islamabad, Lahore"
-            />
+            <select className="form-select" value={location} onChange={(e) => setLocation(e.target.value)} required>
+              <option value="">Select City</option>
+              <option value="Lahore">Lahore</option>
+            </select>
           </div>
         </div>
 
@@ -148,7 +145,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
               min={10000}
               max={200000}
               value={budget}
-              onChange={(e) => setBudget(Number(e.target.value))}
+              onChange={(e) => setBudget(e.target.value === '' ? '' : Number(e.target.value))}
               required
             />
           </div>

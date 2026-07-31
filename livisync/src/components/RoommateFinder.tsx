@@ -37,6 +37,10 @@ export const RoommateFinder = ({
   onAcceptRequest,
   onDeclineRequest,
 }: RoommateFinderProps) => {
+  const isProfileIncomplete = !currentUser.age || !currentUser.gender || !currentUser.location || !currentUser.budget || !currentUser.preferences ||
+    !currentUser.preferences.sleepSchedule || !currentUser.preferences.cleanliness || !currentUser.preferences.smoking || 
+    !currentUser.preferences.pets || !currentUser.preferences.guestTolerance || !currentUser.preferences.noiseTolerance;
+
   const [filterSleep, setFilterSleep] = useState('all');
   const [filterCleanliness, setFilterCleanliness] = useState('all');
   const [filterGender, setFilterGender] = useState('all');
@@ -186,6 +190,11 @@ export const RoommateFinder = ({
 
       {/* ── Body ── */}
       <div style={bodyStyle}>
+        {isProfileIncomplete && (
+          <div style={warningBannerStyle}>
+            <span>⚠️ <strong>Complete your profile:</strong> You must fill out all your personal details (under Basic & Personal Info) and lifestyle preferences (under Lifestyle and Habits) under the Profile tab in order to connect with other students.</span>
+          </div>
+        )}
         {activeTab === 'find' ? (
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
             {/* Sidebar */}
@@ -413,4 +422,18 @@ const filterToggleStyle: React.CSSProperties = {
   borderRadius: '9999px',
   cursor: 'pointer',
   transition: 'var(--transition)',
+};
+
+const warningBannerStyle: React.CSSProperties = {
+  backgroundColor: 'var(--danger-bg)',
+  border: '1px solid var(--danger-glow)',
+  borderRadius: '12px',
+  padding: '1rem 1.25rem',
+  color: 'var(--danger)',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  marginBottom: '1.5rem',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
 };

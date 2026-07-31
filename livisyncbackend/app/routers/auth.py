@@ -32,29 +32,15 @@ def register_student(student_in: StudentCreate, db: Session = Depends(get_db)):
         email=student_in.email,
         hashed_password=hashed_pwd,
         name=student_in.name,
-        age=18,
-        gender="male",
+        age=None,
+        gender=None,
         photo="",
         bio="",
-        budget=0,
-        location="Unknown",
+        budget=None,
+        location=None,
         status="active"
     )
     db.add(db_student)
-    db.commit()
-    db.refresh(db_student)
-
-    # Create preferences with defaults
-    db_prefs = Preferences(
-        student_id=db_student.id,
-        sleep_schedule="flexible",
-        cleanliness="moderate",
-        smoking="no",
-        pets="no",
-        guest_tolerance="weekends",
-        noise_tolerance="moderate"
-    )
-    db.add(db_prefs)
     db.commit()
     db.refresh(db_student)
     return db_student
