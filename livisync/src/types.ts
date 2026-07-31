@@ -102,6 +102,8 @@ export interface Hostel {
   photo?: string;
   electricityBillIncluded: boolean;
   hostelType: string;
+  hasCurfew: boolean;
+  curfewTime?: string;
   amenities: string[];
   ownerId?: string;
   isVerified: boolean;

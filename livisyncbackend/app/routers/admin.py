@@ -42,6 +42,8 @@ class HostelOut(BaseModel):
     owner_id: Optional[uuid.UUID] = None
     is_verified: bool
     hostel_type: str
+    has_curfew: bool
+    curfew_time: Optional[str] = None
 
     class Config:
         from_attributes = True

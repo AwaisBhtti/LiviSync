@@ -28,6 +28,16 @@ export const HostelDirectory = ({
   const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
   const [loadingPhone, setLoadingPhone] = useState<boolean>(false);
 
+  const formatCurfewTime = (timeStr?: string) => {
+    if (!timeStr) return 'Yes';
+    const [hoursStr, minutesStr] = timeStr.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    const displayMinutes = minutesStr || '00';
+    return `${displayHours}:${displayMinutes} ${ampm}`;
+  };
+
   const selectHostel = (hostel: Hostel | null) => {
     setSelectedHostel(hostel);
     setOwnerPhone(null);
@@ -146,6 +156,11 @@ export const HostelDirectory = ({
                       <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.75rem', fontWeight: 600 }}>
                         {selectedHostel.hostelType ? selectedHostel.hostelType.replace('-', ' ') : 'Boys'} Hostel
                       </span>
+                      {selectedHostel.hasCurfew && (
+                        <span className="badge badge-neutral" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--destructive)', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                          🔒 Curfew: {formatCurfewTime(selectedHostel.curfewTime)}
+                        </span>
+                      )}
                     </h2>
                     <p style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
                       <MapPin size={14} />
@@ -168,19 +183,34 @@ export const HostelDirectory = ({
 
                 <hr style={{ border: 0, borderTop: '1px solid var(--border)', margin: '1rem 0' }} />
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <h4 style={{ margin: 0 }}>Available Rooms</h4>
-                  <span style={{
-                    fontSize: '0.75rem',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '4px',
-                    backgroundColor: selectedHostel.electricityBillIncluded ? 'rgba(34, 197, 94, 0.1)' : 'var(--card-hover)',
-                    color: selectedHostel.electricityBillIncluded ? 'var(--success)' : 'var(--muted)',
-                    border: '1px solid ' + (selectedHostel.electricityBillIncluded ? 'rgba(34, 197, 94, 0.2)' : 'var(--border)'),
-                    fontWeight: 600
-                  }}>
-                    ⚡ Electricity: {selectedHostel.electricityBillIncluded ? 'Included' : 'Not Included'}
-                  </span>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      backgroundColor: selectedHostel.electricityBillIncluded ? 'rgba(34, 197, 94, 0.1)' : 'var(--card-hover)',
+                      color: selectedHostel.electricityBillIncluded ? 'var(--success)' : 'var(--muted)',
+                      border: '1px solid ' + (selectedHostel.electricityBillIncluded ? 'rgba(34, 197, 94, 0.2)' : 'var(--border)'),
+                      fontWeight: 600
+                    }}>
+                      ⚡ Electricity: {selectedHostel.electricityBillIncluded ? 'Included' : 'Not Included'}
+                    </span>
+                    {selectedHostel.hasCurfew && (
+                      <span style={{
+                        fontSize: '0.75rem',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                        color: 'var(--destructive)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        fontWeight: 600
+                      }}>
+                        🔒 Curfew: {formatCurfewTime(selectedHostel.curfewTime)}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -465,6 +495,11 @@ export const HostelDirectory = ({
                               <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.65rem', fontWeight: 600 }}>
                                 {hostel.hostelType ? hostel.hostelType.replace('-', ' ') : 'Boys'}
                               </span>
+                              {hostel.hasCurfew && (
+                                <span className="badge badge-neutral" style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--destructive)', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                  🔒 Curfew: {formatCurfewTime(hostel.curfewTime)}
+                                </span>
+                              )}
                             </div>
                             <p style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.125rem' }}>
                               <MapPin size={12} />

@@ -103,6 +103,8 @@ class Hostel(Base):
     owner_id = Column(UUID(as_uuid=True), ForeignKey('owners.id', ondelete='SET NULL'), nullable=True)
     is_verified = Column(Boolean, nullable=False, default=False)
     hostel_type = Column(String(50), nullable=False, default='boys')
+    has_curfew = Column(Boolean, nullable=False, default=False)
+    curfew_time = Column(String(20), nullable=True)
 
     owner = relationship("Owner", back_populates="owned_hostels")
     amenities = relationship("HostelAmenity", back_populates="hostel", cascade="all, delete-orphan")

@@ -40,6 +40,8 @@ class HostelCreate(BaseModel):
     electricity_bill_included: bool
     amenities: List[str]
     hostel_type: str
+    has_curfew: bool
+    curfew_time: Optional[str] = None
 
 @router.get("/hostels")
 def get_my_hostels(db: Session = Depends(get_db), current_user: Owner = Depends(require_owner)):
@@ -54,6 +56,8 @@ def create_hostel(hostel_in: HostelCreate, db: Session = Depends(get_db), curren
         photo=hostel_in.photo,
         electricity_bill_included=hostel_in.electricity_bill_included,
         hostel_type=hostel_in.hostel_type,
+        has_curfew=hostel_in.has_curfew,
+        curfew_time=hostel_in.curfew_time,
         owner_id=current_user.id,
         is_verified=False  # Must be verified by admin
     )
@@ -85,6 +89,8 @@ def update_hostel(hostel_id: uuid.UUID, hostel_in: HostelCreate, db: Session = D
     hostel.photo = hostel_in.photo
     hostel.electricity_bill_included = hostel_in.electricity_bill_included
     hostel.hostel_type = hostel_in.hostel_type
+    hostel.has_curfew = hostel_in.has_curfew
+    hostel.curfew_time = hostel_in.curfew_time
     
     # Re-add amenities
     db.query(HostelAmenity).filter(HostelAmenity.hostel_id == hostel_id).delete()

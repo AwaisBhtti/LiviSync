@@ -39,6 +39,8 @@ export const OwnerPortal = ({
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [electricityBillIncluded, setElectricityBillIncluded] = useState(false);
   const [hostelType, setHostelType] = useState('boys');
+  const [hasCurfew, setHasCurfew] = useState(false);
+  const [curfewTime, setCurfewTime] = useState('22:00');
   const [uploading, setUploading] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
@@ -101,6 +103,8 @@ export const OwnerPortal = ({
     setSelectedAmenities([]);
     setElectricityBillIncluded(false);
     setHostelType('boys');
+    setHasCurfew(false);
+    setCurfewTime('22:00');
     setEditingHostel(null);
   };
 
@@ -113,6 +117,8 @@ export const OwnerPortal = ({
     setSelectedAmenities(hostel.amenities);
     setElectricityBillIncluded(hostel.electricityBillIncluded || false);
     setHostelType(hostel.hostelType || 'boys');
+    setHasCurfew(hostel.hasCurfew || false);
+    setCurfewTime(hostel.curfewTime || '22:00');
     setShowAddForm(true);
   };
 
@@ -135,6 +141,8 @@ export const OwnerPortal = ({
       photo,
       electricityBillIncluded,
       hostelType,
+      hasCurfew,
+      curfewTime: hasCurfew ? curfewTime : undefined,
       amenities: selectedAmenities,
       rooms: editingHostel?.rooms || [],
       currentOccupants: editingHostel?.currentOccupants || [],
@@ -165,6 +173,8 @@ export const OwnerPortal = ({
             photo: hostelData.photo,
             electricity_bill_included: hostelData.electricityBillIncluded,
             hostel_type: hostelData.hostelType,
+            has_curfew: hostelData.hasCurfew,
+            curfew_time: hostelData.curfewTime,
             amenities: hostelData.amenities
           })
         });
@@ -185,6 +195,8 @@ export const OwnerPortal = ({
           photo: data.photo,
           electricityBillIncluded: data.electricity_bill_included,
           hostelType: data.hostel_type,
+          hasCurfew: data.has_curfew,
+          curfewTime: data.curfew_time,
           amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
           rooms: [],
           isVerified: data.is_verified,
@@ -343,6 +355,34 @@ export const OwnerPortal = ({
               <label htmlFor="electricityBillIncluded" style={{ fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
                 Electricity Bill Included in Rent (Applies to all rooms in this hostel)
               </label>
+            </div>
+
+            <div className="form-group" style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="hasCurfew"
+                  checked={hasCurfew}
+                  onChange={(e) => setHasCurfew(e.target.checked)}
+                />
+                <label htmlFor="hasCurfew" style={{ fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
+                  Curfew Rule (This hostel has a strict curfew time)
+                </label>
+              </div>
+
+              {hasCurfew && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '1.5rem', animation: 'fadeIn 0.2s ease' }}>
+                  <label className="form-label" style={{ margin: 0, fontSize: '0.8rem' }}>Set Curfew Time:</label>
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={curfewTime}
+                    onChange={(e) => setCurfewTime(e.target.value)}
+                    style={{ width: 'auto', padding: '0.35rem 0.5rem', fontSize: '0.85rem' }}
+                    required={hasCurfew}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
