@@ -41,6 +41,7 @@ class HostelOut(BaseModel):
     images: Optional[List[str]] = None
     owner_id: Optional[uuid.UUID] = None
     is_verified: bool
+    hostel_type: str
 
     class Config:
         from_attributes = True

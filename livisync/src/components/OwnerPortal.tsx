@@ -37,6 +37,7 @@ export const OwnerPortal = ({
   const [photo, setPhoto] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [electricityBillIncluded, setElectricityBillIncluded] = useState(false);
+  const [hostelType, setHostelType] = useState('boys');
   const [uploading, setUploading] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
@@ -98,6 +99,7 @@ export const OwnerPortal = ({
     setPhoto('');
     setSelectedAmenities([]);
     setElectricityBillIncluded(false);
+    setHostelType('boys');
     setEditingHostel(null);
   };
 
@@ -109,6 +111,7 @@ export const OwnerPortal = ({
     setPhoto(hostel.photo || '');
     setSelectedAmenities(hostel.amenities);
     setElectricityBillIncluded(hostel.electricityBillIncluded || false);
+    setHostelType(hostel.hostelType || 'boys');
     setShowAddForm(true);
   };
 
@@ -130,6 +133,7 @@ export const OwnerPortal = ({
       description,
       photo,
       electricityBillIncluded,
+      hostelType,
       amenities: selectedAmenities,
       rooms: editingHostel?.rooms || [],
       currentOccupants: editingHostel?.currentOccupants || [],
@@ -159,6 +163,7 @@ export const OwnerPortal = ({
             description: hostelData.description,
             photo: hostelData.photo,
             electricity_bill_included: hostelData.electricityBillIncluded,
+            hostel_type: hostelData.hostelType,
             amenities: hostelData.amenities
           })
         });
@@ -178,6 +183,7 @@ export const OwnerPortal = ({
           description: data.description,
           photo: data.photo,
           electricityBillIncluded: data.electricity_bill_included,
+          hostelType: data.hostel_type,
           amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
           rooms: [],
           isVerified: data.is_verified,
@@ -278,6 +284,20 @@ export const OwnerPortal = ({
                 onChange={(e) => setName(e.target.value)}
                 required
               />
+            </div>
+
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label className="form-label">Hostel Category</label>
+              <select
+                className="form-input"
+                value={hostelType}
+                onChange={(e) => setHostelType(e.target.value)}
+                style={{ width: '100%', background: 'var(--input-bg)' }}
+              >
+                <option value="boys">Boys Hostel</option>
+                <option value="girls">Girls Hostel</option>
+                <option value="co-sharing">Co-sharing Hostel</option>
+              </select>
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>

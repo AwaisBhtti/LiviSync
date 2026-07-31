@@ -36,6 +36,7 @@ export const fetchHostels = createAsyncThunk(
         description: h.description || '',
         photo: h.photo || '',
         electricityBillIncluded: h.electricity_bill_included,
+        hostelType: h.hostel_type || 'boys',
         amenities: h.amenities ? h.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: h.owner_id,
         isVerified: h.is_verified,
@@ -95,6 +96,7 @@ export const addHostel = createAsyncThunk(
           description: newHostel.description,
           photo: newHostel.photo,
           electricity_bill_included: newHostel.electricityBillIncluded,
+          hostel_type: newHostel.hostelType || 'boys',
           amenities: newHostel.amenities
         })
       });
@@ -112,6 +114,7 @@ export const addHostel = createAsyncThunk(
         description: data.description || '',
         photo: data.photo || '',
         electricityBillIncluded: data.electricity_bill_included,
+        hostelType: data.hostel_type || 'boys',
         amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
@@ -140,6 +143,7 @@ export const editHostel = createAsyncThunk(
           description: updatedHostel.description,
           photo: updatedHostel.photo,
           electricity_bill_included: updatedHostel.electricityBillIncluded,
+          hostel_type: updatedHostel.hostelType || 'boys',
           amenities: updatedHostel.amenities
         })
       });
@@ -154,6 +158,7 @@ export const editHostel = createAsyncThunk(
         description: data.description || '',
         photo: data.photo || '',
         electricityBillIncluded: data.electricity_bill_included,
+        hostelType: data.hostel_type || 'boys',
         amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: data.owner_id,
         isVerified: data.is_verified,
