@@ -409,6 +409,18 @@ a {
   /* ── Roommate browse tab: hide sidebar, show mobile filter btn ── */
   .rm-browse-layout {
     flex-direction: column;
+    gap: 0;
+    width: 100%;
+  }
+  /* Force the main browse grid area to fill full width on mobile */
+  .rm-browse-main {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+  /* grid-2 inside browse also takes full width */
+  .rm-browse-main .grid-2 {
+    width: 100%;
   }
   .rm-filter-sidebar      { display: none !important; }
   .rm-filter-toggle-desktop { display: none !important; }

@@ -217,7 +217,7 @@ export const RoommateFinder = ({
             )}
 
             {/* Main grid area */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="rm-browse-main" style={{ flex: 1, minWidth: 0 }}>
               {/* Desktop: show filter toggle when sidebar collapsed */}
               {!showFilters && (
                 <button
