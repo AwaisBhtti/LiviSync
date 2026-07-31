@@ -327,10 +327,13 @@ a {
   gap: 2rem;
 }
 
-/* Mobile section tab dropdown — hidden by default, shown on narrow screens */
-.mobile-section-selector {
-  display: none;
-}
+/* ── Mobile profile navigation ──────────────────────── */
+/* Section list: hidden on desktop (sidebar handles nav) */
+.mobile-section-list  { display: none; }
+/* Back button: hidden on desktop */
+.mobile-back-btn      { display: none !important; }
+/* Section content: always shown on desktop */
+.mobile-section-content { display: block; }
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -362,10 +365,14 @@ a {
     gap: 1.5rem;
   }
 
-  /* Show the dropdown section selector in place of the hidden sidebar */
-  .mobile-section-selector {
-    display: block !important;
-  }
+  /* ── Mobile profile drill-down navigation ── */
+  /* Show section list (as the menu screen) */
+  .mobile-section-list { display: block; }
+  /* Show back button when drilled in */
+  .mobile-back-btn { display: flex !important; }
+  /* Section content: hidden until drilled in */
+  .mobile-section-content { display: none; }
+  .mobile-section-content.drilled { display: block; }
 
   .mobile-hide { display: none !important; }
 }
