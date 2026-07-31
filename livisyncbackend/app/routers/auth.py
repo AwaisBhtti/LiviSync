@@ -105,7 +105,9 @@ def get_me(current_user: Union[Student, Owner, Admin] = Depends(get_current_user
                 "institution": current_user.institution,
                 "company": current_user.company,
                 "phone": current_user.phone,
-                "hostel_id": current_user.hostel_id
+                "hostel_id": current_user.hostel_id,
+                "is_profile_complete": current_user.is_profile_complete,
+                "is_email_verified": current_user.is_email_verified,
             },
             "preferences": {
                 "sleep_schedule": current_user.preferences.sleep_schedule if current_user.preferences else "flexible",

@@ -102,9 +102,12 @@ def update_profile(profile_in: StudentUpdate, db: Session = Depends(get_db), cur
         current_user.preferences.guest_tolerance = profile_in.guest_tolerance
         current_user.preferences.noise_tolerance = profile_in.noise_tolerance
 
-    current_user.is_profile_complete = True
+    # Only set flag to True if it isn't already — validation above guarantees everything is complete at this point
+    if not current_user.is_profile_complete:
+        current_user.is_profile_complete = True
+
     db.commit()
-    return {"message": "Profile updated successfully"}
+    return {"message": "Profile updated successfully", "is_profile_complete": current_user.is_profile_complete}
 
 @router.post("/view-phone/{hostel_id}")
 def view_owner_phone(hostel_id: uuid.UUID, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):

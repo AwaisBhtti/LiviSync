@@ -46,19 +46,21 @@ export const fetchCurrentUser = createAsyncThunk(
           id: data.id,
           email: data.email,
           name: data.profile.name || 'New User',
-          age: data.profile.age || 18,
-          gender: data.profile.gender || 'male',
+          age: data.profile.age ?? undefined,
+          gender: data.profile.gender ?? undefined,
           photo: data.profile.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80',
           bio: data.profile.bio || '',
-          budget: data.profile.budget || 0,
+          budget: data.profile.budget ?? undefined,
           location: data.profile.location || '',
           role: 'student',
           status: data.profile.status || 'active',
-          occupation: data.profile.occupation || 'student',
+          occupation: data.profile.occupation || undefined,
           institution: data.profile.institution || '',
           company: data.profile.company || '',
           phone: data.profile.phone || '',
           hostelId: data.profile.hostel_id || undefined,
+          is_profile_complete: data.profile.is_profile_complete ?? false,
+          isProfileComplete: data.profile.is_profile_complete ?? false,
           preferences: {
             sleepSchedule: data.preferences?.sleep_schedule || 'flexible',
             cleanliness: data.preferences?.cleanliness || 'moderate',
@@ -129,7 +131,12 @@ export const updateProfile = createAsyncThunk(
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to update profile on server');
       }
-      return updatedUser;
+      // Merge server-side flags (e.g. is_profile_complete) back onto the local user object
+      return {
+        ...updatedUser,
+        is_profile_complete: data.is_profile_complete ?? updatedUser.is_profile_complete,
+        isProfileComplete: data.is_profile_complete ?? updatedUser.isProfileComplete,
+      };
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error saving profile');
     }
