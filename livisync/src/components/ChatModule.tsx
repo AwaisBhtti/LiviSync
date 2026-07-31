@@ -34,6 +34,7 @@ export const ChatModule = ({
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [showRespondentProfile, setShowRespondentProfile] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const prevActiveChatIdRef = useRef<string | null>(null);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -272,7 +273,33 @@ export const ChatModule = ({
 
   // Auto-scroll chat to bottom
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!activeChatUserId) {
+      prevActiveChatIdRef.current = null;
+      return;
+    }
+
+    const isChatChanged = prevActiveChatIdRef.current !== activeChatUserId;
+    prevActiveChatIdRef.current = activeChatUserId;
+
+    if (isChatChanged) {
+      // Find the element representing 10 messages from the end
+      const targetMsg = document.getElementById('scroll-target-msg');
+      if (targetMsg) {
+        // Place view instantly at that target message
+        targetMsg.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        // Smoothly animate the remaining distance to the bottom
+        const timer = setTimeout(() => {
+          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 60);
+        return () => clearTimeout(timer);
+      } else {
+        // Fallback: jump straight to bottom
+        chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      }
+    } else {
+      // Normal flow: smooth scroll to bottom for sent/received messages
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages, activeChatUserId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -468,9 +495,11 @@ export const ChatModule = ({
                    (messages[activeChatUserId] || []).map((msg, index, arr) => {
                     const isSelf = msg.senderId === currentUser.id;
                     const isLastMsg = index === arr.length - 1;
+                    const scrollTargetIndex = Math.max(0, arr.length - 10);
                     return (
                       <div
                         key={msg.id}
+                        id={index === scrollTargetIndex ? 'scroll-target-msg' : undefined}
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
