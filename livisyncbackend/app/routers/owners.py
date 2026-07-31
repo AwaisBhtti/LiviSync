@@ -37,6 +37,7 @@ class HostelCreate(BaseModel):
     location: str
     description: str
     photo: str
+    photos: Optional[List[str]] = None
     electricity_bill_included: bool
     amenities: List[str]
     hostel_type: str
@@ -54,6 +55,7 @@ def create_hostel(hostel_in: HostelCreate, db: Session = Depends(get_db), curren
         location=hostel_in.location,
         description=hostel_in.description,
         photo=hostel_in.photo,
+        photos=hostel_in.photos,
         electricity_bill_included=hostel_in.electricity_bill_included,
         hostel_type=hostel_in.hostel_type,
         has_curfew=hostel_in.has_curfew,
@@ -87,6 +89,7 @@ def update_hostel(hostel_id: uuid.UUID, hostel_in: HostelCreate, db: Session = D
     hostel.location = hostel_in.location
     hostel.description = hostel_in.description
     hostel.photo = hostel_in.photo
+    hostel.photos = hostel_in.photos
     hostel.electricity_bill_included = hostel_in.electricity_bill_included
     hostel.hostel_type = hostel_in.hostel_type
     hostel.has_curfew = hostel_in.has_curfew

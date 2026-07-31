@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, HOSTEL_PHOTO_LIMIT } from '../config';
 import { useState } from 'react';
 import type { User, Hostel } from '../types';
 import { Plus, Edit2, Trash2, Building, MapPin, ListPlus, X, Info } from 'lucide-react';
@@ -35,7 +35,7 @@ export const OwnerPortal = ({
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
-  const [photo, setPhoto] = useState('');
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [electricityBillIncluded, setElectricityBillIncluded] = useState(false);
   const [hostelType, setHostelType] = useState('boys');
@@ -59,30 +59,40 @@ export const OwnerPortal = ({
   });
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (photoUrls.length + files.length > HOSTEL_PHOTO_LIMIT) {
+      alert(`You can only upload a maximum of ${HOSTEL_PHOTO_LIMIT} photos for a hostel.`);
+      return;
+    }
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
     const token = localStorage.getItem('livisync_token') || '';
+    const newUrls: string[] = [];
 
     try {
-      const response = await fetch(`${API_BASE_URL}/owners/upload-image`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || 'Upload failed');
+        const response = await fetch(`${API_BASE_URL}/owners/upload-image`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || 'Upload failed');
+        }
+        newUrls.push(data.url);
       }
 
-      setPhoto(data.url);
+      setPhotoUrls((prev) => [...prev, ...newUrls]);
     } catch (err: any) {
       alert(err.message || 'Failed to upload photo');
     } finally {
@@ -99,7 +109,7 @@ export const OwnerPortal = ({
     setName('');
     setLocation('');
     setDescription('');
-    setPhoto('');
+    setPhotoUrls([]);
     setSelectedAmenities([]);
     setElectricityBillIncluded(false);
     setHostelType('boys');
@@ -113,7 +123,10 @@ export const OwnerPortal = ({
     setName(hostel.name);
     setLocation(hostel.location);
     setDescription(hostel.description);
-    setPhoto(hostel.photo || '');
+    const urls = hostel.photos && hostel.photos.length > 0 
+      ? hostel.photos 
+      : (hostel.photo ? hostel.photo.split(',').map(p => p.trim()).filter(Boolean) : []);
+    setPhotoUrls(urls);
     setSelectedAmenities(hostel.amenities);
     setElectricityBillIncluded(hostel.electricityBillIncluded || false);
     setHostelType(hostel.hostelType || 'boys');
@@ -133,12 +146,16 @@ export const OwnerPortal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const finalPhotos = photoUrls.filter(u => u.trim().length > 0);
+    const finalPhoto = finalPhotos.length > 0 ? finalPhotos[0] : '';
+
     const hostelData: Hostel = {
       id: editingHostel ? editingHostel.id : `hostel_${Date.now()}`,
       name,
       location,
       description,
-      photo,
+      photo: finalPhoto,
+      photos: finalPhotos,
       electricityBillIncluded,
       hostelType,
       hasCurfew,
@@ -171,6 +188,7 @@ export const OwnerPortal = ({
             location: hostelData.location,
             description: hostelData.description,
             photo: hostelData.photo,
+            photos: hostelData.photos,
             electricity_bill_included: hostelData.electricityBillIncluded,
             hostel_type: hostelData.hostelType,
             has_curfew: hostelData.hasCurfew,
@@ -193,6 +211,7 @@ export const OwnerPortal = ({
           location: data.location,
           description: data.description,
           photo: data.photo,
+          photos: data.photos,
           electricityBillIncluded: data.electricity_bill_included,
           hostelType: data.hostel_type,
           hasCurfew: data.has_curfew,
@@ -325,22 +344,49 @@ export const OwnerPortal = ({
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">Hostel Cover Photo</label>
+              <label className="form-label">Hostel Photos</label>
               <p style={{ color: 'var(--muted)', fontSize: '0.75rem', margin: '0 0 0.5rem 0' }}>
-                💡 <em>Upload a single clear photo showing the front view or main entrance of the building.</em>
+                💡 <em>Select and upload up to {HOSTEL_PHOTO_LIMIT} photos showing the building exterior, common areas, dining hall, etc.</em>
               </p>
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handlePhotoUpload}
-                disabled={uploading}
-                required={!photo}
+                disabled={uploading || photoUrls.length >= HOSTEL_PHOTO_LIMIT}
+                required={photoUrls.length === 0}
                 style={{ width: '100%' }}
               />
               {uploading && <span style={{ color: 'var(--primary)', fontSize: '0.85rem', display: 'block', marginTop: '0.25rem' }}>Uploading to Cloudflare R2...</span>}
-              {photo && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <img src={photo} alt="Hostel Cover" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
+              {photoUrls.length > 0 && (
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                  {photoUrls.map((url, idx) => (
+                    <div key={idx} style={{ position: 'relative', width: '100px', height: '70px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-solid)' }}>
+                      <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button
+                        type="button"
+                        onClick={() => setPhotoUrls(photoUrls.filter((_, i) => i !== idx))}
+                        style={{
+                          position: 'absolute',
+                          top: '2px',
+                          right: '2px',
+                          backgroundColor: 'rgba(220, 38, 38, 0.85)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          padding: 0
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

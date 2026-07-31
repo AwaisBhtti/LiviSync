@@ -150,19 +150,72 @@ export const AdminHostelVerification = ({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '0.5rem' }}>
               {selectedHostel.photo && (
-                <img
-                  src={selectedHostel.photo}
-                  alt={selectedHostel.name}
-                  onClick={() => setLightboxUrl(selectedHostel.photo ?? null)}
-                  style={{
-                    width: '100%',
-                    height: '200px',
-                    objectFit: 'cover',
-                    borderRadius: 'var(--radius)',
-                    border: '1px solid var(--border)',
-                    cursor: 'zoom-in',
-                  }}
-                />
+                <div style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '200px',
+                  borderRadius: 'var(--radius)',
+                  overflow: 'hidden',
+                  border: '1px solid var(--border)',
+                }}>
+                  {(() => {
+                    const hostelPhotos = selectedHostel.photo
+                      ? selectedHostel.photo.split(',').map((p) => p.trim()).filter(Boolean)
+                      : [];
+                    return (
+                      <div style={{
+                        display: 'flex',
+                        overflowX: 'auto',
+                        scrollSnapType: 'x mandatory',
+                        width: '100%',
+                        height: '100%',
+                        scrollBehavior: 'smooth',
+                        WebkitOverflowScrolling: 'touch',
+                      }}>
+                        {hostelPhotos.length === 0 ? (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--secondary)' }}>
+                            No image available
+                          </div>
+                        ) : (
+                          hostelPhotos.map((url, i) => (
+                            <img
+                              key={i}
+                              src={url}
+                              alt={`${selectedHostel.name} view ${i + 1}`}
+                              onClick={() => setLightboxUrl(url)}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                flexShrink: 0,
+                                scrollSnapAlign: 'start',
+                                cursor: 'zoom-in',
+                              }}
+                            />
+                          ))
+                        )}
+                        {hostelPhotos.length > 1 && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '0.5rem',
+                            right: '0.5rem',
+                            backgroundColor: 'rgba(51, 39, 33, 0.75)',
+                            color: '#faf8f5',
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '6px',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            backdropFilter: 'blur(4px)',
+                            zIndex: 10,
+                            pointerEvents: 'none',
+                          }}>
+                            📷 {hostelPhotos.length} Photos
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
               )}
 
               <div>

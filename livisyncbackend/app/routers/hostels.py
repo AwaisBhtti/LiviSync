@@ -28,6 +28,7 @@ def get_hostels(db: Session = Depends(get_db), current_user: Union[Student, Owne
             "location": h.location,
             "description": h.description,
             "photo": h.photo,
+            "photos": h.photos,
             "electricity_bill_included": h.electricity_bill_included,
             "hostel_type": h.hostel_type,
             "owner_id": str(h.owner_id) if h.owner_id else None,
