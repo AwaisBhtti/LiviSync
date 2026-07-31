@@ -1,6 +1,6 @@
 /** RoommateGrid — candidate cards, warm sand and cashmere style. */
 import type { User, MatchRequest } from '../../types';
-import { Check, MapPin, Clock, Sparkles } from 'lucide-react';
+import { Check, MapPin, Clock } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
 
 export type Candidate = User & { score: number };
@@ -13,15 +13,15 @@ interface RoommateGridProps {
   hideScores?: boolean;
 }
 
-const CARD_BG     = '#f0ece6'; // Linen beige
+const CARD_BG = '#f0ece6'; // Linen beige
 const CARD_BORDER = '#e0d6cb';
-const TEXT        = '#332721'; // Espresso brown
-const MUTED       = '#8c7b70'; // Warm beige
+const TEXT = '#332721'; // Espresso brown
+const MUTED = '#8c7b70'; // Warm beige
 
 const getScoreColors = (score: number) => {
   if (score >= 80) return { color: '#b55c3c', bg: 'rgba(181, 92, 60, 0.12)', border: '#b55c3c' };
-  if (score >= 50) return { color: '#d97706', bg: '#fffbeb',  border: 'rgba(217, 119, 6, 0.15)' };
-  return              { color: MUTED,       bg: 'rgba(51, 39, 33, 0.04)',   border: '#e0d6cb' };
+  if (score >= 50) return { color: '#d97706', bg: '#fffbeb', border: 'rgba(217, 119, 6, 0.15)' };
+  return { color: MUTED, bg: 'rgba(51, 39, 33, 0.04)', border: '#e0d6cb' };
 };
 
 export const RoommateGrid = ({
@@ -56,7 +56,6 @@ export const RoommateGrid = ({
           gap: '0.75rem',
         }}
       >
-        <Sparkles size={36} style={{ color: '#b55c3c', opacity: 0.4 }} />
         <p style={{ fontWeight: 700, color: TEXT, fontSize: '1rem' }}>No matches found</p>
         <p style={{ fontSize: '0.85rem' }}>Try adjusting your filters to see more candidates.</p>
       </div>

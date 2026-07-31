@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Building, Users, MessageSquare, User, Shield } from 'lucide-react';
 import type { User as UserType } from '../types';
-import logo from '../assets/logo-n.png';
+import logo from '../assets/logo.png';
 
 interface NavbarProps {
   currentUser: UserType;

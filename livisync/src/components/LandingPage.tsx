@@ -5,7 +5,7 @@ import studentMale from '../assets/student-male.jpg';
 import hostelOrchard from '../assets/hostel-orchard.jpg';
 import hostelStudio from '../assets/hostel-studio.jpg';
 import hostelHeritage from '../assets/hostel-heritage.jpg';
-import logo from '../assets/logo-n.png';
+import logo from '../assets/logo.png';
 
 interface LandingPageProps {
   isAuthenticated: boolean;
@@ -310,11 +310,6 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
         <section id="match" style={heroSectionStyle}>
           {/* Left Content */}
           <div style={{ flex: '1', minWidth: 0 }}>
-            {/* Pill badge */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--card)', border: '1px solid var(--border-solid)', borderRadius: '9999px', padding: '0.3rem 0.9rem', marginBottom: '2rem', animation: 'zoom-in 0.6s 0.05s cubic-bezier(0.19,1,0.22,1) both' }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#059669', animation: 'slow-pulse 2s infinite' }} />
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', letterSpacing: '0.03em' }}>Now live · Pakistan's first lifestyle-first platform</span>
-            </div>
 
             <h1 style={heroTitleStyle}>
               <span className="hero-title-word">Find&nbsp;</span>
@@ -331,10 +326,10 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
 
             <div className="hero-btns" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <MagneticBtn href={isAuthenticated ? '/roommates' : '/login'} style={primaryHeroButtonStyle}>
-                <span style={{ marginRight: '0.5rem' }}>✦</span> Discover Matches
+                Discover Matches
               </MagneticBtn>
               <MagneticBtn href={isAuthenticated ? '/hostels' : '/login'} style={secondaryHeroButtonStyle}>
-                Browse Verified Hostels →
+                Browse Verified Hostels
               </MagneticBtn>
             </div>
 
@@ -412,7 +407,7 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
               animation: 'float-card 4s 1s ease-in-out infinite',
               zIndex: 2,
             }}>
-              ✦ 3 new matches!
+              3 new matches!
             </div>
 
             {/* Floating badge 2 — bottom-left */}
@@ -426,7 +421,6 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
               zIndex: 2,
               display: 'flex', alignItems: 'center', gap: '0.5rem',
             }}>
-              <span style={{ color: '#059669', fontSize: '1rem' }}>●</span>
               12 rooms available
             </div>
           </div>
