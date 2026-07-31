@@ -106,6 +106,7 @@ export interface Hostel {
   curfewTime?: string;
   amenities: string[];
   ownerId?: string;
+  ownerName?: string;
   isVerified: boolean;
   rooms: Room[];
   currentOccupants?: string[];

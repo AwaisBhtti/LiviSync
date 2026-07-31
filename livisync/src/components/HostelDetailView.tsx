@@ -125,6 +125,9 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                   <MapPin size={14} />
                   {selectedHostel.location}
                 </p>
+                <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)', marginTop: '0.375rem' }}>
+                  👤 Hosted by: {selectedHostel.ownerName || 'Unknown Owner'}
+                </p>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>

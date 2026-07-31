@@ -41,6 +41,7 @@ export const fetchHostels = createAsyncThunk(
         curfewTime: h.curfew_time || undefined,
         amenities: h.amenities ? h.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: h.owner_id,
+        ownerName: h.owner_name || 'Unknown Owner',
         isVerified: h.is_verified,
         currentOccupants: h.current_occupants || [],
         rooms: h.rooms ? h.rooms.map((r: any) => ({
