@@ -161,6 +161,9 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
               onChange={(e) => setBudget(e.target.value === '' ? '' : Number(e.target.value))}
               required
             />
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
+              Note: Just visible to you.
+            </p>
           </div>
 
           <div className="form-group">

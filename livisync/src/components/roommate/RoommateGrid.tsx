@@ -181,7 +181,7 @@ export const RoommateGrid = ({
             >
               <span style={{ fontSize: '0.8rem', color: MUTED, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <MapPin size={12} />
-                {candidate.location || 'Islamabad'} · PKR {(candidate.budget ?? 0).toLocaleString()}/mo
+                {candidate.location || 'Islamabad'}
               </span>
 
               {reqStatus === 'accepted' && (

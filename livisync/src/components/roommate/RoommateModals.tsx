@@ -105,7 +105,7 @@ export const RoommateModals = ({
 }: RoommateModalsProps) => {
   if (!selectedUser) return null;
 
-  const score = calculateCompatibility(currentUser.preferences, selectedUser.preferences);
+  const score = calculateCompatibility(currentUser.preferences, selectedUser.preferences, currentUser.budget, selectedUser.budget);
 
   const getRequestStatus = () => {
     const req = matchRequests.find(
@@ -168,9 +168,6 @@ export const RoommateModals = ({
                           🎓 Studying at: <strong>{selectedUser.institution}</strong>
                         </p>
                       )}
-                  <p style={{ fontWeight: 600, fontSize: '0.9rem', marginTop: '0.25rem' }}>
-                    Max Budget: PKR {(selectedUser.budget ?? 0).toLocaleString()}/mo
-                  </p>
                 </div>
                 {!hideScores && (
                   <div style={scoreStyle(score)}>

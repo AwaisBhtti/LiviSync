@@ -70,9 +70,7 @@ export const RoommateRequestsPanel = ({
           <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {person.name}
           </h4>
-          <span style={{ fontSize: '0.72rem', color: MUTED }}>
-            PKR {(person.budget ?? 0).toLocaleString()}/mo
-          </span>
+
         </div>
         {/* Status badge */}
         {side === 'sent' && (

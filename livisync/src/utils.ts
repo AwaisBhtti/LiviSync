@@ -1,9 +1,26 @@
 import type { Preferences } from './types';
 
-export function calculateCompatibility(prefA?: Preferences, prefB?: Preferences): number {
+export function calculateCompatibility(prefA?: Preferences, prefB?: Preferences, budgetA?: number, budgetB?: number): number {
   if (!prefA || !prefB) return 0;
   let score = 0;
   let maxScore = 0;
+
+  // 0. Budget (Weight: 20)
+  if (budgetA !== undefined && budgetB !== undefined && budgetA > 0 && budgetB > 0) {
+    maxScore += 20;
+    const diff = Math.abs(budgetA - budgetB);
+    if (diff <= 5000) {
+      score += 20;
+    } else if (diff <= 10000) {
+      score += 15;
+    } else if (diff <= 20000) {
+      score += 10;
+    } else if (diff <= 30000) {
+      score += 5;
+    } else {
+      score += 0;
+    }
+  }
 
   // 1. Cleanliness (Weight: 20)
   maxScore += 20;

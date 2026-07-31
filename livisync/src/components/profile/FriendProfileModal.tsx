@@ -239,9 +239,7 @@ export const FriendProfileModal = ({
                 Details
               </h5>
               <p style={{ margin: 0, fontSize: '0.875rem' }}>📍 Preferred Location: {selectedUser.location}</p>
-              <p style={{ margin: 0, fontSize: '0.875rem' }}>
-                💰 Max Budget: PKR {selectedUser.budget?.toLocaleString()} / mo
-              </p>
+
               <p style={{ margin: 0, fontSize: '0.875rem', textTransform: 'capitalize' }}>
                 💼 Occupation: {selectedUser.occupation || 'student'}
                 {selectedUser.institution && ` at ${selectedUser.institution}`}
