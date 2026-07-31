@@ -506,7 +506,7 @@ a {
   }
 
   .auth-chat-container {
-    height: calc(100vh - 134px) !important;
+    height: calc(100vh - 144px) !important;
   }
 }
 
