@@ -490,7 +490,7 @@ export const ChatModule = ({
                             )}
                           </span>
                         </div>
-                        {isLastMsg && isSelf && (
+                        {isLastMsg && isSelf && (msg as any).status !== 'sending' && (
                           <span style={{
                             fontSize: '0.65rem',
                             color: 'var(--muted)',
