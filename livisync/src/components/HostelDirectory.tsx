@@ -20,7 +20,7 @@ export const HostelDirectory = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [maxPrice, setMaxPrice] = useState<number>(25000);
   const [selectedSharing, setSelectedSharing] = useState<string>('all');
-  const [selectedAmenity, setSelectedAmenity] = useState<string>('all');
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [showFilters, setShowFilters] = useState<boolean>(true);
 
@@ -44,8 +44,8 @@ export const HostelDirectory = ({
       ));
 
     const matchesAmenity =
-      selectedAmenity === 'all' ||
-      host.amenities.includes(selectedAmenity);
+      selectedAmenities.length === 0 ||
+      selectedAmenities.every((a) => host.amenities.includes(a));
 
     const matchesType =
       selectedType === 'all' ||
@@ -179,17 +179,40 @@ export const HostelDirectory = ({
               />
             </div>
 
-            {/* Amenities Filter */}
+            {/* Amenities Filter (Multi-select AND logic) */}
             <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem' }}>Must Have Amenity</label>
-              <CustomSelect
-                value={selectedAmenity}
-                onChange={setSelectedAmenity}
-                options={[
-                  { value: 'all', label: 'Any Amenity' },
-                  ...allAmenities.map((amenity) => ({ value: amenity, label: amenity })),
-                ]}
-              />
+              <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.5rem', display: 'block' }}>Must Have Amenities</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                {allAmenities.map((amenity) => {
+                  const isSelected = selectedAmenities.includes(amenity);
+                  return (
+                    <button
+                      key={amenity}
+                      onClick={() => {
+                        setSelectedAmenities(prev => 
+                          isSelected ? prev.filter(a => a !== amenity) : [...prev, amenity]
+                        );
+                      }}
+                      style={{
+                        padding: '0.25rem 0.6rem',
+                        fontSize: '0.7rem',
+                        fontWeight: isSelected ? 600 : 500,
+                        backgroundColor: isSelected ? 'var(--primary)' : 'transparent',
+                        color: isSelected ? 'white' : 'var(--muted)',
+                        border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {amenity}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Clear Filters Button */}
@@ -197,7 +220,7 @@ export const HostelDirectory = ({
               onClick={() => {
                 setMaxPrice(25000);
                 setSelectedSharing('all');
-                setSelectedAmenity('all');
+                setSelectedAmenities([]);
                 setSelectedType('all');
                 setSearchQuery('');
               }}
