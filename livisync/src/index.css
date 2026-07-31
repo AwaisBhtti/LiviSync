@@ -504,6 +504,10 @@ a {
   .desktop-nav-tabs {
     display: none !important;
   }
+
+  .auth-chat-container {
+    height: calc(100vh - 134px) !important;
+  }
 }
 
 /* ── Full-screen chat breakout ───────────────────────────── */
