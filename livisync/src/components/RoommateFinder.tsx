@@ -9,7 +9,7 @@ import { RoommateFilters } from './roommate/RoommateFilters';
 import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
-import { Users, Search, ChevronRight, Inbox } from 'lucide-react';
+import { Users, Search, ChevronRight, Inbox, SlidersHorizontal, X } from 'lucide-react';
 
 
 interface RoommateFinderProps {
@@ -46,6 +46,7 @@ export const RoommateFinder = ({
   const [maxBudget, setMaxBudget] = useState(200000);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'find' | 'requests'>(() => {
     return (sessionStorage.getItem('livisync_roommate_tab') as 'find' | 'requests') || 'find';
@@ -194,10 +195,10 @@ export const RoommateFinder = ({
           </div>
         )}
         {activeTab === 'find' ? (
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-            {/* Sidebar */}
+          <div className="rm-browse-layout">
+            {/* Desktop sidebar — hidden on mobile via CSS */}
             {showFilters && (
-              <div style={{ width: '220px', flexShrink: 0 }}>
+              <div className="rm-filter-sidebar">
                 <RoommateFilters
                   maxBudget={maxBudget}
                   filterGender={filterGender}
@@ -217,18 +218,86 @@ export const RoommateFinder = ({
 
             {/* Main grid area */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Filter toggle - only visible when hidden */}
+              {/* Desktop: show filter toggle when sidebar collapsed */}
               {!showFilters && (
                 <button
                   onClick={() => setShowFilters(true)}
-                  className="rm-filter-toggle"
+                  className="rm-filter-toggle rm-filter-toggle-desktop"
                   style={filterToggleStyle}
                 >
-                  <ChevronRight
-                    size={13}
-                  />
+                  <ChevronRight size={13} />
                   Show Filters
                 </button>
+              )}
+
+              {/* Mobile: filter toggle bar always visible */}
+              <button
+                className="rm-mobile-filter-btn"
+                onClick={() => setShowMobileFilters(true)}
+                style={{
+                  display: 'none', // shown via CSS at narrow breakpoint
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  width: '100%',
+                  padding: '0.625rem 1rem',
+                  marginBottom: '0.875rem',
+                  background: '#f0ece6',
+                  border: '1px solid #e0d6cb',
+                  borderRadius: '10px',
+                  color: '#332721',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  justifyContent: 'center',
+                }}
+              >
+                <SlidersHorizontal size={14} />
+                Filters
+              </button>
+
+              {/* Mobile filter overlay */}
+              {showMobileFilters && (
+                <div
+                  style={{
+                    position: 'fixed', inset: 0, zIndex: 200,
+                    background: 'rgba(0,0,0,0.4)',
+                    display: 'flex', alignItems: 'flex-end',
+                  }}
+                  onClick={(e) => { if (e.target === e.currentTarget) setShowMobileFilters(false); }}
+                >
+                  <div style={{
+                    background: '#f0ece6',
+                    borderRadius: '20px 20px 0 0',
+                    padding: '1.25rem 1.25rem 2rem',
+                    width: '100%',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#332721' }}>Filters</span>
+                      <button
+                        onClick={() => setShowMobileFilters(false)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#8c7b70' }}
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <RoommateFilters
+                      maxBudget={maxBudget}
+                      filterGender={filterGender}
+                      filterSleep={filterSleep}
+                      filterCleanliness={filterCleanliness}
+                      filterHostel={filterHostel}
+                      hostels={hostels}
+                      onMaxBudgetChange={setMaxBudget}
+                      onGenderChange={setFilterGender}
+                      onSleepChange={setFilterSleep}
+                      onCleanlinessChange={setFilterCleanliness}
+                      onHostelChange={setFilterHostel}
+                      onHideFilters={() => setShowMobileFilters(false)}
+                    />
+                  </div>
+                </div>
               )}
 
               <RoommateGrid

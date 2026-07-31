@@ -321,6 +321,27 @@ a {
   gap: 2.5rem;
 }
 
+/* ── Roommate requests side-by-side → stacked on mobile ─ */
+.rm-requests-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* ── Roommate browse tab layout ─────────────────────── */
+.rm-browse-layout {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.rm-filter-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+}
+/* Desktop filter toggle is always shown; mobile one is always hidden at desktop */
+.rm-filter-toggle-desktop { display: inline-flex; }
+.rm-mobile-filter-btn     { display: none !important; }
+
 /* Profile page uses a narrower sidebar */
 .profile-split-layout {
   grid-template-columns: 260px 1fr;
@@ -373,6 +394,24 @@ a {
   /* Section content: hidden until drilled in */
   .mobile-section-content { display: none; }
   .mobile-section-content.drilled { display: block; }
+
+  /* ── Roommate requests: stack on mobile ── */
+  .rm-requests-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Roommate browse tab: hide sidebar, show mobile filter btn ── */
+  .rm-browse-layout {
+    flex-direction: column;
+  }
+  .rm-filter-sidebar      { display: none !important; }
+  .rm-filter-toggle-desktop { display: none !important; }
+  .rm-mobile-filter-btn   { display: flex !important; }
+
+  /* Roommate grid cards: single column on mobile */
+  .grid-2.rm-grid-mobile-single {
+    grid-template-columns: 1fr;
+  }
 
   .mobile-hide { display: none !important; }
 }
