@@ -9,7 +9,7 @@ import { RoommateFilters } from './roommate/RoommateFilters';
 import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
-import { Users, Search, ChevronLeft, Inbox } from 'lucide-react';
+import { Users, Search, ChevronRight, Inbox } from 'lucide-react';
 
 
 interface RoommateFinderProps {
@@ -37,6 +37,8 @@ export const RoommateFinder = ({
   onAcceptRequest,
   onDeclineRequest,
 }: RoommateFinderProps) => {
+  const isProfileIncomplete = currentUser.role === 'student' && !(currentUser.isProfileComplete || currentUser.is_profile_complete);
+
   const [filterSleep, setFilterSleep] = useState('all');
   const [filterCleanliness, setFilterCleanliness] = useState('all');
   const [filterGender, setFilterGender] = useState('all');
@@ -186,6 +188,11 @@ export const RoommateFinder = ({
 
       {/* ── Body ── */}
       <div style={bodyStyle}>
+        {isProfileIncomplete && (
+          <div style={warningBannerStyle}>
+            <span>⚠️ <strong>Complete your profile:</strong> You must fill out all your personal details (under Basic & Personal Info) and lifestyle preferences (under Lifestyle and Habits) under the Profile tab in order to connect with other students.</span>
+          </div>
+        )}
         {activeTab === 'find' ? (
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
             {/* Sidebar */}
@@ -203,33 +210,33 @@ export const RoommateFinder = ({
                   onSleepChange={setFilterSleep}
                   onCleanlinessChange={setFilterCleanliness}
                   onHostelChange={setFilterHostel}
+                  onHideFilters={() => setShowFilters(false)}
                 />
               </div>
             )}
 
             {/* Main grid area */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Filter toggle */}
-              <button
-                onClick={() => setShowFilters((v) => !v)}
-                className="rm-filter-toggle"
-                style={filterToggleStyle}
-              >
-                <ChevronLeft
-                  size={13}
-                  style={{
-                    transition: 'transform 0.25s',
-                    transform: showFilters ? 'rotate(0deg)' : 'rotate(180deg)',
-                  }}
-                />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </button>
+              {/* Filter toggle - only visible when hidden */}
+              {!showFilters && (
+                <button
+                  onClick={() => setShowFilters(true)}
+                  className="rm-filter-toggle"
+                  style={filterToggleStyle}
+                >
+                  <ChevronRight
+                    size={13}
+                  />
+                  Show Filters
+                </button>
+              )}
 
               <RoommateGrid
                 candidates={candidates}
                 matchRequests={matchRequests}
                 currentUserId={currentUser.id}
                 onSelectCandidate={setSelectedUser}
+                hideScores={isProfileIncomplete}
               />
             </div>
           </div>
@@ -265,6 +272,7 @@ export const RoommateFinder = ({
         onReportDescChange={setReportDesc}
         onSubmitConnect={handleSubmitConnect}
         onSubmitReport={handleSubmitReport}
+        hideScores={isProfileIncomplete}
       />
     </div>
   );
@@ -413,4 +421,18 @@ const filterToggleStyle: React.CSSProperties = {
   borderRadius: '9999px',
   cursor: 'pointer',
   transition: 'var(--transition)',
+};
+
+const warningBannerStyle: React.CSSProperties = {
+  backgroundColor: 'var(--danger-bg)',
+  border: '1px solid var(--danger-glow)',
+  borderRadius: '12px',
+  padding: '1rem 1.25rem',
+  color: 'var(--danger)',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  marginBottom: '1.5rem',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
 };

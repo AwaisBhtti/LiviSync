@@ -9,12 +9,12 @@ interface LifestyleTabProps {
 
 export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
   const [preferences, setPreferences] = useState<Preferences>({
-    sleepSchedule: currentUser.preferences?.sleepSchedule || 'flexible',
-    cleanliness: currentUser.preferences?.cleanliness || 'moderate',
-    smoking: currentUser.preferences?.smoking || 'no',
-    pets: currentUser.preferences?.pets || 'no',
-    guestTolerance: currentUser.preferences?.guestTolerance || 'weekends',
-    noiseTolerance: currentUser.preferences?.noiseTolerance || 'moderate',
+    sleepSchedule: (currentUser.preferences?.sleepSchedule || '') as any,
+    cleanliness: (currentUser.preferences?.cleanliness || '') as any,
+    smoking: (currentUser.preferences?.smoking || '') as any,
+    pets: (currentUser.preferences?.pets || '') as any,
+    guestTolerance: (currentUser.preferences?.guestTolerance || '') as any,
+    noiseTolerance: (currentUser.preferences?.noiseTolerance || '') as any,
   });
 
   const handlePrefChange = (key: keyof Preferences, value: string) => {
@@ -42,7 +42,8 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
         <div style={formGridStyle}>
           <div className="form-group">
             <label className="form-label">Sleep Schedule</label>
-            <select className="form-select" value={preferences.sleepSchedule} onChange={(e) => handlePrefChange('sleepSchedule', e.target.value)}>
+            <select className="form-select" value={preferences.sleepSchedule} onChange={(e) => handlePrefChange('sleepSchedule', e.target.value)} required>
+              <option value="">Select Sleep Schedule</option>
               <option value="flexible">Flexible</option>
               <option value="early-bird">Early Bird</option>
               <option value="night-owl">Night Owl</option>
@@ -51,7 +52,8 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
 
           <div className="form-group">
             <label className="form-label">Cleanliness Level</label>
-            <select className="form-select" value={preferences.cleanliness} onChange={(e) => handlePrefChange('cleanliness', e.target.value)}>
+            <select className="form-select" value={preferences.cleanliness} onChange={(e) => handlePrefChange('cleanliness', e.target.value)} required>
+              <option value="">Select Cleanliness Level</option>
               <option value="moderate">Moderate</option>
               <option value="meticulous">Meticulous</option>
               <option value="relaxed">Relaxed</option>
@@ -60,7 +62,8 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
 
           <div className="form-group">
             <label className="form-label">Smoking Allowed</label>
-            <select className="form-select" value={preferences.smoking} onChange={(e) => handlePrefChange('smoking', e.target.value)}>
+            <select className="form-select" value={preferences.smoking} onChange={(e) => handlePrefChange('smoking', e.target.value)} required>
+              <option value="">Select Smoking Rule</option>
               <option value="no">No</option>
               <option value="yes">Yes</option>
               <option value="outside-only">Outside Only</option>
@@ -69,7 +72,8 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
 
           <div className="form-group">
             <label className="form-label">Pet Tolerance</label>
-            <select className="form-select" value={preferences.pets} onChange={(e) => handlePrefChange('pets', e.target.value)}>
+            <select className="form-select" value={preferences.pets} onChange={(e) => handlePrefChange('pets', e.target.value)} required>
+              <option value="">Select Pet Rule</option>
               <option value="no">No</option>
               <option value="yes">Yes</option>
               <option value="likes-but-no-own">Likes pets, but no own pets</option>
@@ -78,7 +82,8 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
 
           <div className="form-group">
             <label className="form-label">Guest Tolerance</label>
-            <select className="form-select" value={preferences.guestTolerance} onChange={(e) => handlePrefChange('guestTolerance', e.target.value)}>
+            <select className="form-select" value={preferences.guestTolerance} onChange={(e) => handlePrefChange('guestTolerance', e.target.value)} required>
+              <option value="">Select Guest Tolerance</option>
               <option value="weekends">Weekends Only</option>
               <option value="rarely">Rarely</option>
               <option value="anytime">Anytime</option>
@@ -87,7 +92,8 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
 
           <div className="form-group">
             <label className="form-label">Noise Tolerance</label>
-            <select className="form-select" value={preferences.noiseTolerance} onChange={(e) => handlePrefChange('noiseTolerance', e.target.value)}>
+            <select className="form-select" value={preferences.noiseTolerance} onChange={(e) => handlePrefChange('noiseTolerance', e.target.value)} required>
+              <option value="">Select Noise Tolerance</option>
               <option value="moderate">Moderate</option>
               <option value="silent">Silent</option>
               <option value="lively">Lively</option>

@@ -14,6 +14,7 @@ interface RoommateFiltersProps {
   onSleepChange: (val: string) => void;
   onCleanlinessChange: (val: string) => void;
   onHostelChange: (val: string) => void;
+  onHideFilters?: () => void;
 }
 
 const CARD_BG     = '#f0ece6'; // Linen beige from logo theme
@@ -50,6 +51,7 @@ export const RoommateFilters = ({
   onSleepChange,
   onCleanlinessChange,
   onHostelChange,
+  onHideFilters,
 }: RoommateFiltersProps) => {
   const genderOptions = [
     { value: 'all', label: 'Any Gender' },
@@ -91,9 +93,33 @@ export const RoommateFilters = ({
         boxShadow: '0 2px 12px rgba(51, 39, 33, 0.02)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: `1px solid ${CARD_BORDER}`, paddingBottom: '0.75rem' }}>
-        <SlidersHorizontal size={13} color={MUTED} />
-        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: TEXT }}>Filters</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${CARD_BORDER}`, paddingBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <SlidersHorizontal size={13} color={MUTED} />
+          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: TEXT }}>Filters</span>
+        </div>
+        {onHideFilters && (
+          <button
+            onClick={onHideFilters}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: MUTED,
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '0.2rem 0.4rem',
+              borderRadius: '4px',
+              transition: 'var(--transition)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(51, 39, 33, 0.05)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            Hide
+          </button>
+        )}
       </div>
 
       {/* Budget */}

@@ -32,29 +32,15 @@ def register_student(student_in: StudentCreate, db: Session = Depends(get_db)):
         email=student_in.email,
         hashed_password=hashed_pwd,
         name=student_in.name,
-        age=18,
-        gender="male",
+        age=None,
+        gender=None,
         photo="",
         bio="",
-        budget=0,
-        location="Unknown",
+        budget=None,
+        location=None,
         status="active"
     )
     db.add(db_student)
-    db.commit()
-    db.refresh(db_student)
-
-    # Create preferences with defaults
-    db_prefs = Preferences(
-        student_id=db_student.id,
-        sleep_schedule="flexible",
-        cleanliness="moderate",
-        smoking="no",
-        pets="no",
-        guest_tolerance="weekends",
-        noise_tolerance="moderate"
-    )
-    db.add(db_prefs)
     db.commit()
     db.refresh(db_student)
     return db_student
@@ -119,7 +105,9 @@ def get_me(current_user: Union[Student, Owner, Admin] = Depends(get_current_user
                 "institution": current_user.institution,
                 "company": current_user.company,
                 "phone": current_user.phone,
-                "hostel_id": current_user.hostel_id
+                "hostel_id": current_user.hostel_id,
+                "is_profile_complete": current_user.is_profile_complete,
+                "is_email_verified": current_user.is_email_verified,
             },
             "preferences": {
                 "sleep_schedule": current_user.preferences.sleep_schedule if current_user.preferences else "flexible",

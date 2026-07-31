@@ -28,6 +28,8 @@ export interface Student {
   hostelId?: string;
   isEmailVerified?: boolean;
   is_email_verified?: boolean;
+  isProfileComplete?: boolean;
+  is_profile_complete?: boolean;
   supabaseToken?: string;
 }
 

@@ -11,14 +11,15 @@ class Student(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
     name = Column(String(100), nullable=False)
-    age = Column(Integer, nullable=False)
-    gender = Column(String(10), nullable=False)
+    age = Column(Integer, nullable=True)
+    gender = Column(String(10), nullable=True)
     photo = Column(Text)
     bio = Column(Text)
-    budget = Column(Integer, nullable=False)
-    location = Column(String(100), nullable=False)
+    budget = Column(Integer, nullable=True)
+    location = Column(String(100), nullable=True)
     status = Column(String(10), nullable=False, default='active')
     is_email_verified = Column(Boolean, nullable=False, default=False)
+    is_profile_complete = Column(Boolean, nullable=False, default=False)
     
     # Student specific fields
     occupation = Column(String(10), nullable=True)  # 'student' or 'job'
@@ -71,12 +72,12 @@ class Preferences(Base):
     __tablename__ = 'preferences'
 
     student_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), primary_key=True)
-    sleep_schedule = Column(String(20), nullable=False)
-    cleanliness = Column(String(20), nullable=False)
-    smoking = Column(String(20), nullable=False)
-    pets = Column(String(20), nullable=False)
-    guest_tolerance = Column(String(20), nullable=False)
-    noise_tolerance = Column(String(20), nullable=False, default='moderate')
+    sleep_schedule = Column(String(20), nullable=True)
+    cleanliness = Column(String(20), nullable=True)
+    smoking = Column(String(20), nullable=True)
+    pets = Column(String(20), nullable=True)
+    guest_tolerance = Column(String(20), nullable=True)
+    noise_tolerance = Column(String(20), nullable=True, default=None)
 
     __table_args__ = (
         CheckConstraint("sleep_schedule IN ('early-bird', 'night-owl', 'flexible')", name="sleep_schedule_check"),

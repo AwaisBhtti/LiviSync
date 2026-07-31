@@ -46,11 +46,31 @@ def get_roommates(db: Session = Depends(get_db), current_user: Student = Depends
     
     return db.query(Student).filter(
         Student.status == "active",
+        Student.is_profile_complete == True,
         ~Student.id.in_(exclude_ids)
     ).all()
 
 @router.put("/profile")
 def update_profile(profile_in: StudentUpdate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    # Validate that none of the required fields are null or empty
+    if (
+        not profile_in.name or not profile_in.name.strip() or
+        profile_in.age is None or profile_in.age < 16 or profile_in.age > 100 or
+        not profile_in.gender or profile_in.gender not in ['male', 'female', 'other'] or
+        profile_in.budget is None or profile_in.budget <= 0 or
+        not profile_in.location or not profile_in.location.strip() or
+        not profile_in.sleep_schedule or
+        not profile_in.cleanliness or
+        not profile_in.smoking or
+        not profile_in.pets or
+        not profile_in.guest_tolerance or
+        not profile_in.noise_tolerance
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="All profile and preference fields must be completed with valid data."
+        )
+
     current_user.name = profile_in.name
     current_user.age = profile_in.age
     current_user.gender = profile_in.gender
@@ -82,8 +102,12 @@ def update_profile(profile_in: StudentUpdate, db: Session = Depends(get_db), cur
         current_user.preferences.guest_tolerance = profile_in.guest_tolerance
         current_user.preferences.noise_tolerance = profile_in.noise_tolerance
 
+    # Only set flag to True if it isn't already — validation above guarantees everything is complete at this point
+    if not current_user.is_profile_complete:
+        current_user.is_profile_complete = True
+
     db.commit()
-    return {"message": "Profile updated successfully"}
+    return {"message": "Profile updated successfully", "is_profile_complete": current_user.is_profile_complete}
 
 @router.post("/view-phone/{hostel_id}")
 def view_owner_phone(hostel_id: uuid.UUID, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
@@ -120,6 +144,13 @@ def get_my_matches(db: Session = Depends(get_db), current_user: Student = Depend
 
 @router.post("/matches")
 def send_match_request(req_in: MatchRequestCreate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    # Check if sender has completed their profile
+    if not current_user.is_profile_complete:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You must complete your profile (age, gender, location, budget, and lifestyle preferences) before connecting with other roommates."
+        )
+
     # Check if a block exists between these two users
     block_exists = db.query(BlockedUser).filter(
         ((BlockedUser.user_id == current_user.id) & (BlockedUser.blocked_user_id == req_in.receiver_id)) |
@@ -136,6 +167,13 @@ def send_match_request(req_in: MatchRequestCreate, db: Session = Depends(get_db)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Receiver student not found"
+        )
+    
+    # Check if receiver profile is complete
+    if not receiver.is_profile_complete:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The recipient has not completed their profile yet."
         )
     
     # Check if request already exists
@@ -160,6 +198,13 @@ def send_match_request(req_in: MatchRequestCreate, db: Session = Depends(get_db)
 
 @router.put("/matches/{request_id}")
 def respond_match_request(request_id: uuid.UUID, req_in: MatchStatusUpdate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    # Check if responder has completed their profile
+    if not current_user.is_profile_complete:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You must complete your profile (age, gender, location, budget, and lifestyle preferences) before connecting with other roommates."
+        )
+
     req = db.query(MatchRequest).filter(MatchRequest.id == request_id).first()
     if not req:
         raise HTTPException(

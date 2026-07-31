@@ -8,8 +8,17 @@ export function useMatchRequests() {
   const { token, currentUser } = useAppSelector((state) => state.auth);
   const { matchRequests } = useAppSelector((state) => state.matches);
 
+  const isProfileIncomplete = (user: any) => {
+    if (!user || user.role !== 'student') return false;
+    return !(user.isProfileComplete || user.is_profile_complete);
+  };
+
   const handleSendRequest = async (receiverId: string, message: string) => {
     if (!currentUser || !token) return;
+    if (isProfileIncomplete(currentUser)) {
+      dispatch(showToast({ message: 'You must complete your profile and lifestyle preferences in order to connect with roommates.', type: 'error' }));
+      return;
+    }
     try {
       await matchApi.sendMatchRequest(receiverId, message);
       dispatch(fetchMatches({ token, role: currentUser.role }));
@@ -21,6 +30,10 @@ export function useMatchRequests() {
 
   const handleAcceptRequest = async (reqId: string) => {
     if (!currentUser || !token) return;
+    if (isProfileIncomplete(currentUser)) {
+      dispatch(showToast({ message: 'You must complete your profile and lifestyle preferences in order to connect with roommates.', type: 'error' }));
+      return;
+    }
     try {
       await matchApi.updateMatchStatus(reqId, 'accepted');
       dispatch(acceptRequest(reqId));

@@ -1,6 +1,6 @@
 /** RoommateGrid — candidate cards, warm sand and cashmere style. */
 import type { User, MatchRequest } from '../../types';
-import { Check, MapPin, Clock, Sparkles } from 'lucide-react';
+import { Check, MapPin, Clock } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
 
 export type Candidate = User & { score: number };
@@ -10,17 +10,18 @@ interface RoommateGridProps {
   matchRequests: MatchRequest[];
   currentUserId: string;
   onSelectCandidate: (user: User) => void;
+  hideScores?: boolean;
 }
 
-const CARD_BG     = '#f0ece6'; // Linen beige
+const CARD_BG = '#f0ece6'; // Linen beige
 const CARD_BORDER = '#e0d6cb';
-const TEXT        = '#332721'; // Espresso brown
-const MUTED       = '#8c7b70'; // Warm beige
+const TEXT = '#332721'; // Espresso brown
+const MUTED = '#8c7b70'; // Warm beige
 
 const getScoreColors = (score: number) => {
   if (score >= 80) return { color: '#b55c3c', bg: 'rgba(181, 92, 60, 0.12)', border: '#b55c3c' };
-  if (score >= 50) return { color: '#d97706', bg: '#fffbeb',  border: 'rgba(217, 119, 6, 0.15)' };
-  return              { color: MUTED,       bg: 'rgba(51, 39, 33, 0.04)',   border: '#e0d6cb' };
+  if (score >= 50) return { color: '#d97706', bg: '#fffbeb', border: 'rgba(217, 119, 6, 0.15)' };
+  return { color: MUTED, bg: 'rgba(51, 39, 33, 0.04)', border: '#e0d6cb' };
 };
 
 export const RoommateGrid = ({
@@ -28,6 +29,7 @@ export const RoommateGrid = ({
   matchRequests,
   currentUserId,
   onSelectCandidate,
+  hideScores = false,
 }: RoommateGridProps) => {
   const getRequestStatus = (userId: string) => {
     const req = matchRequests.find(
@@ -54,7 +56,6 @@ export const RoommateGrid = ({
           gap: '0.75rem',
         }}
       >
-        <Sparkles size={36} style={{ color: '#b55c3c', opacity: 0.4 }} />
         <p style={{ fontWeight: 700, color: TEXT, fontSize: '1rem' }}>No matches found</p>
         <p style={{ fontSize: '0.85rem' }}>Try adjusting your filters to see more candidates.</p>
       </div>
@@ -66,7 +67,7 @@ export const RoommateGrid = ({
       {candidates.map((candidate) => {
         const reqStatus = getRequestStatus(candidate.id);
         const occupationDisplay = candidate.occupation === 'job' ? 'Job Holder' : 'Student';
-        const { color, bg, border } = getScoreColors(candidate.score);
+        const { color } = getScoreColors(candidate.score);
         const sleepLabel = candidate.preferences?.sleepSchedule?.replace('-', ' ') ?? null;
 
         return (
@@ -148,24 +149,21 @@ export const RoommateGrid = ({
               </div>
 
               {/* Score badge */}
-              <div
-                style={{
-                  flexShrink: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '50%',
-                  border: `1.5px solid ${border}`,
-                  background: bg,
-                  color,
-                }}
-              >
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, lineHeight: 1 }}>{candidate.score}%</span>
-                <span style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, marginTop: '1px' }}>match</span>
-              </div>
+              {!hideScores && (
+                <div
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color,
+                  }}
+                >
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, lineHeight: 1 }}>{candidate.score}%</span>
+                  <span style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, marginTop: '1px' }}>match</span>
+                </div>
+              )}
             </div>
 
             {/* Bio */}
