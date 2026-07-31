@@ -469,20 +469,26 @@ export const ChatModule = ({
                     const isSelf = msg.senderId === currentUser.id;
                     const isLastMsg = index === arr.length - 1;
                     return (
-                      <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSelf ? 'flex-end' : 'flex-start' }}>
-                        <div style={msgRowStyle(isSelf)}>
-                          <div style={msgBubbleStyle(isSelf)}>
-                            <p style={{ fontSize: '0.875rem' }}>{msg.text}</p>
-                            <span style={msgTimeStyle(isSelf)}>
-                              {new Date(msg.timestamp).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                              {(msg as any).status === 'sending' && (
-                                <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
-                              )}
-                            </span>
-                          </div>
+                      <div
+                        key={msg.id}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: isSelf ? 'flex-end' : 'flex-start',
+                          width: '100%',
+                        }}
+                      >
+                        <div style={msgBubbleStyle(isSelf)}>
+                          <p style={{ fontSize: '0.875rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.text}</p>
+                          <span style={msgTimeStyle(isSelf)}>
+                            {new Date(msg.timestamp).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                            {(msg as any).status === 'sending' && (
+                              <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
+                            )}
+                          </span>
                         </div>
                         {isLastMsg && isSelf && (
                           <span style={{
@@ -713,10 +719,6 @@ const chatEmptyFeedStyle: React.CSSProperties = {
   textAlign: 'center',
 };
 
-const msgRowStyle = (isSelf: boolean): React.CSSProperties => ({
-  display: 'flex',
-  justifyContent: isSelf ? 'flex-end' : 'flex-start',
-});
 
 const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
   maxWidth: '70%',
