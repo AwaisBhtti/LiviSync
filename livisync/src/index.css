@@ -346,7 +346,13 @@ a {
   }
 
   .mobile-hide { display: none !important; }
+}
 
+.mobile-nav-bar {
+  display: none !important;
+}
+
+@media (max-width: 500px) {
   .mobile-nav-bar {
     position: fixed;
     bottom: 0;
@@ -355,16 +361,16 @@ a {
     background-color: rgba(240, 236, 230, 0.94);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--border-solid);
-    display: flex;
+    display: flex !important;
     justify-content: space-around;
     padding: 0.75rem 0.5rem;
     z-index: 100;
     box-shadow: 0 -4px 20px rgba(181, 92, 60, 0.06);
   }
-}
 
-@media (min-width: 769px) {
-  .mobile-nav-bar { display: none !important; }
+  .desktop-nav-tabs {
+    display: none !important;
+  }
 }
 
 /* ── Full-screen chat breakout ───────────────────────────── */
