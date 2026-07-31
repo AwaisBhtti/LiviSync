@@ -9,7 +9,7 @@ import { RoommateFilters } from './roommate/RoommateFilters';
 import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
-import { Users, Search, ChevronLeft, Inbox } from 'lucide-react';
+import { Users, Search, ChevronRight, Inbox } from 'lucide-react';
 
 
 interface RoommateFinderProps {
@@ -210,27 +210,26 @@ export const RoommateFinder = ({
                   onSleepChange={setFilterSleep}
                   onCleanlinessChange={setFilterCleanliness}
                   onHostelChange={setFilterHostel}
+                  onHideFilters={() => setShowFilters(false)}
                 />
               </div>
             )}
 
             {/* Main grid area */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Filter toggle */}
-              <button
-                onClick={() => setShowFilters((v) => !v)}
-                className="rm-filter-toggle"
-                style={filterToggleStyle}
-              >
-                <ChevronLeft
-                  size={13}
-                  style={{
-                    transition: 'transform 0.25s',
-                    transform: showFilters ? 'rotate(0deg)' : 'rotate(180deg)',
-                  }}
-                />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </button>
+              {/* Filter toggle - only visible when hidden */}
+              {!showFilters && (
+                <button
+                  onClick={() => setShowFilters(true)}
+                  className="rm-filter-toggle"
+                  style={filterToggleStyle}
+                >
+                  <ChevronRight
+                    size={13}
+                  />
+                  Show Filters
+                </button>
+              )}
 
               <RoommateGrid
                 candidates={candidates}
