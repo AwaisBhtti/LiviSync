@@ -1,6 +1,5 @@
 import type { Hostel } from '../../types';
 import { SlidersHorizontal } from 'lucide-react';
-import { colors } from '../../styles/colors';
 import { CustomSelect } from '../ui/CustomSelect';
 
 interface RoommateFiltersProps {
@@ -17,10 +16,10 @@ interface RoommateFiltersProps {
   onHostelChange: (val: string) => void;
 }
 
-const CARD_BG     = colors.roommateMinimal.card;
-const CARD_BORDER = colors.roommateMinimal.border;
-const TEXT        = colors.roommateMinimal.text;
-const MUTED       = colors.roommateMinimal.muted;
+const CARD_BG     = '#f0ece6'; // Linen beige from logo theme
+const CARD_BORDER = '#e0d6cb';
+const TEXT        = '#332721'; // Espresso brown text
+const MUTED       = '#8c7b70'; // Warm beige
 
 const labelStyle: React.CSSProperties = {
   fontSize: '0.7rem',
@@ -30,6 +29,13 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: '0.06em',
   marginBottom: '0.35rem',
   display: 'block',
+};
+
+const customSelectStyle: React.CSSProperties = {
+  background: '#faf8f5', // Warm sand
+  border: '1px solid #e0d6cb',
+  color: '#332721',
+  boxShadow: 'none',
 };
 
 export const RoommateFilters = ({
@@ -77,12 +83,12 @@ export const RoommateFilters = ({
         background: CARD_BG,
         border: `1px solid ${CARD_BORDER}`,
         borderRadius: '16px',
-        padding: '1.125rem',
+        padding: '1.25rem',
         height: 'fit-content',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
-        boxShadow: '0 4px 15px -3px rgba(0,0,0,0.02), 0 2px 6px -2px rgba(0,0,0,0.02)',
+        boxShadow: '0 2px 12px rgba(51, 39, 33, 0.02)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: `1px solid ${CARD_BORDER}`, paddingBottom: '0.75rem' }}>
@@ -93,7 +99,7 @@ export const RoommateFilters = ({
       {/* Budget */}
       <div>
         <label style={labelStyle}>Max Budget</label>
-        <p style={{ fontSize: '0.8rem', color: TEXT, fontWeight: 600, marginBottom: '0.4rem' }}>
+        <p style={{ fontSize: '0.85rem', color: TEXT, fontWeight: 600, marginBottom: '0.4rem' }}>
           PKR {maxBudget.toLocaleString()}
         </p>
         <input
@@ -103,7 +109,7 @@ export const RoommateFilters = ({
           step="5000"
           value={maxBudget}
           onChange={(e) => onMaxBudgetChange(Number(e.target.value))}
-          style={{ width: '100%', accentColor: 'var(--primary)', cursor: 'pointer' }}
+          style={{ width: '100%', accentColor: '#b55c3c', cursor: 'pointer' }}
         />
       </div>
 
@@ -114,6 +120,7 @@ export const RoommateFilters = ({
           value={filterGender}
           onChange={onGenderChange}
           options={genderOptions}
+          style={customSelectStyle}
         />
       </div>
 
@@ -124,6 +131,7 @@ export const RoommateFilters = ({
           value={filterSleep}
           onChange={onSleepChange}
           options={sleepOptions}
+          style={customSelectStyle}
         />
       </div>
 
@@ -134,6 +142,7 @@ export const RoommateFilters = ({
           value={filterCleanliness}
           onChange={onCleanlinessChange}
           options={cleanlinessOptions}
+          style={customSelectStyle}
         />
       </div>
 
@@ -144,6 +153,7 @@ export const RoommateFilters = ({
           value={filterHostel}
           onChange={onHostelChange}
           options={hostelOptions}
+          style={customSelectStyle}
         />
       </div>
     </div>
