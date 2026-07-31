@@ -15,6 +15,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -336,6 +337,29 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
                 </button>
               </div>
             </div>
+
+            {!isLogin && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  required
+                  style={{ marginTop: '0.2rem', accentColor: '#c4a682', cursor: 'pointer' }}
+                />
+                <label htmlFor="terms" style={{ color: '#c8b8ad', fontSize: '0.85rem', lineHeight: '1.4', cursor: 'pointer' }}>
+                  I agree to the{' '}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#faf8f5', textDecoration: 'underline' }}>
+                    Privacy Policy
+                  </a>{' '}
+                  and{' '}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#faf8f5', textDecoration: 'underline' }}>
+                    Terms of Service
+                  </a>.
+                </label>
+              </div>
+            )}
 
             <button type="submit" className="auth-netflix-submit" disabled={loading}>
               {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}

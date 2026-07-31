@@ -592,13 +592,11 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
               </div>
             </div>
 
-            <div style={footerBottomStyle}>
-              <div style={{ display: 'flex', gap: '2rem', fontSize: '0.8rem' }}>
-                <a href="#" className="landing-link" style={{ textDecoration: 'none', color: 'var(--muted)' }}>Privacy Policy</a>
-                <a href="#" className="landing-link" style={{ textDecoration: 'none', color: 'var(--muted)' }}>Terms of Service</a>
-                <a href="#" className="landing-link" style={{ textDecoration: 'none', color: 'var(--muted)' }}>Safety Guide</a>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--muted)', opacity: 0.8, margin: 0 }}>
+            <div style={{ ...footerBottomStyle, flexDirection: 'column', justifyContent: 'center', textAlign: 'center', gap: '0.5rem' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--muted)', margin: 0 }}>
+                By using LiviSync, you agree to our <Link to="/terms" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Privacy Policy</Link>.
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--muted)', margin: 0 }}>
                 © {new Date().getFullYear()} LiviSync. All rights reserved.
               </p>
             </div>
