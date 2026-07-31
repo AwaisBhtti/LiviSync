@@ -37,9 +37,7 @@ export const RoommateFinder = ({
   onAcceptRequest,
   onDeclineRequest,
 }: RoommateFinderProps) => {
-  const isProfileIncomplete = !currentUser.age || !currentUser.gender || !currentUser.location || !currentUser.budget || !currentUser.preferences ||
-    !currentUser.preferences.sleepSchedule || !currentUser.preferences.cleanliness || !currentUser.preferences.smoking || 
-    !currentUser.preferences.pets || !currentUser.preferences.guestTolerance || !currentUser.preferences.noiseTolerance;
+  const isProfileIncomplete = currentUser.role === 'student' && !(currentUser.isProfileComplete || currentUser.is_profile_complete);
 
   const [filterSleep, setFilterSleep] = useState('all');
   const [filterCleanliness, setFilterCleanliness] = useState('all');
@@ -239,6 +237,7 @@ export const RoommateFinder = ({
                 matchRequests={matchRequests}
                 currentUserId={currentUser.id}
                 onSelectCandidate={setSelectedUser}
+                hideScores={isProfileIncomplete}
               />
             </div>
           </div>
@@ -274,6 +273,7 @@ export const RoommateFinder = ({
         onReportDescChange={setReportDesc}
         onSubmitConnect={handleSubmitConnect}
         onSubmitReport={handleSubmitReport}
+        hideScores={isProfileIncomplete}
       />
     </div>
   );

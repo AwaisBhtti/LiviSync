@@ -46,6 +46,7 @@ def get_roommates(db: Session = Depends(get_db), current_user: Student = Depends
     
     return db.query(Student).filter(
         Student.status == "active",
+        Student.is_profile_complete == True,
         ~Student.id.in_(exclude_ids)
     ).all()
 
@@ -101,6 +102,7 @@ def update_profile(profile_in: StudentUpdate, db: Session = Depends(get_db), cur
         current_user.preferences.guest_tolerance = profile_in.guest_tolerance
         current_user.preferences.noise_tolerance = profile_in.noise_tolerance
 
+    current_user.is_profile_complete = True
     db.commit()
     return {"message": "Profile updated successfully"}
 
@@ -140,19 +142,7 @@ def get_my_matches(db: Session = Depends(get_db), current_user: Student = Depend
 @router.post("/matches")
 def send_match_request(req_in: MatchRequestCreate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
     # Check if sender has completed their profile
-    if (
-        current_user.age is None or 
-        not current_user.gender or 
-        not current_user.location or 
-        current_user.budget is None or 
-        not current_user.preferences or
-        not current_user.preferences.sleep_schedule or
-        not current_user.preferences.cleanliness or
-        not current_user.preferences.smoking or
-        not current_user.preferences.pets or
-        not current_user.preferences.guest_tolerance or
-        not current_user.preferences.noise_tolerance
-    ):
+    if not current_user.is_profile_complete:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You must complete your profile (age, gender, location, budget, and lifestyle preferences) before connecting with other roommates."
@@ -177,19 +167,7 @@ def send_match_request(req_in: MatchRequestCreate, db: Session = Depends(get_db)
         )
     
     # Check if receiver profile is complete
-    if (
-        receiver.age is None or 
-        not receiver.gender or 
-        not receiver.location or 
-        receiver.budget is None or 
-        not receiver.preferences or
-        not receiver.preferences.sleep_schedule or
-        not receiver.preferences.cleanliness or
-        not receiver.preferences.smoking or
-        not receiver.preferences.pets or
-        not receiver.preferences.guest_tolerance or
-        not receiver.preferences.noise_tolerance
-    ):
+    if not receiver.is_profile_complete:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The recipient has not completed their profile yet."
@@ -218,19 +196,7 @@ def send_match_request(req_in: MatchRequestCreate, db: Session = Depends(get_db)
 @router.put("/matches/{request_id}")
 def respond_match_request(request_id: uuid.UUID, req_in: MatchStatusUpdate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
     # Check if responder has completed their profile
-    if (
-        current_user.age is None or 
-        not current_user.gender or 
-        not current_user.location or 
-        current_user.budget is None or 
-        not current_user.preferences or
-        not current_user.preferences.sleep_schedule or
-        not current_user.preferences.cleanliness or
-        not current_user.preferences.smoking or
-        not current_user.preferences.pets or
-        not current_user.preferences.guest_tolerance or
-        not current_user.preferences.noise_tolerance
-    ):
+    if not current_user.is_profile_complete:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You must complete your profile (age, gender, location, budget, and lifestyle preferences) before connecting with other roommates."

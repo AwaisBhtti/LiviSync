@@ -19,6 +19,7 @@ class Student(Base):
     location = Column(String(100), nullable=True)
     status = Column(String(10), nullable=False, default='active')
     is_email_verified = Column(Boolean, nullable=False, default=False)
+    is_profile_complete = Column(Boolean, nullable=False, default=False)
     
     # Student specific fields
     occupation = Column(String(10), nullable=True)  # 'student' or 'job'

@@ -10,9 +10,7 @@ export function useMatchRequests() {
 
   const isProfileIncomplete = (user: any) => {
     if (!user || user.role !== 'student') return false;
-    return !user.age || !user.gender || !user.location || !user.budget || !user.preferences ||
-      !user.preferences.sleepSchedule || !user.preferences.cleanliness || !user.preferences.smoking || 
-      !user.preferences.pets || !user.preferences.guestTolerance || !user.preferences.noiseTolerance;
+    return !(user.isProfileComplete || user.is_profile_complete);
   };
 
   const handleSendRequest = async (receiverId: string, message: string) => {

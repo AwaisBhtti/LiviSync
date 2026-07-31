@@ -27,6 +27,7 @@ interface RoommateModalsProps {
   onReportDescChange: (val: string) => void;
   onSubmitConnect: (e: React.FormEvent) => void;
   onSubmitReport: (e: React.FormEvent) => void;
+  hideScores?: boolean;
 }
 
 const modalOverlay: React.CSSProperties = {
@@ -99,6 +100,7 @@ export const RoommateModals = ({
   onReportDescChange,
   onSubmitConnect,
   onSubmitReport,
+  hideScores = false,
 }: RoommateModalsProps) => {
   if (!selectedUser) return null;
 
@@ -169,12 +171,14 @@ export const RoommateModals = ({
                     Max Budget: PKR {(selectedUser.budget ?? 0).toLocaleString()}/mo
                   </p>
                 </div>
-                <div style={scoreStyle(score)}>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{score}%</h3>
-                  <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 600 }}>
-                    Compatibility
-                  </span>
-                </div>
+                {!hideScores && (
+                  <div style={scoreStyle(score)}>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{score}%</h3>
+                    <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 600 }}>
+                      Compatibility
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* About */}

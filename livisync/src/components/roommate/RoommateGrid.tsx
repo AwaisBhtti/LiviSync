@@ -10,6 +10,7 @@ interface RoommateGridProps {
   matchRequests: MatchRequest[];
   currentUserId: string;
   onSelectCandidate: (user: User) => void;
+  hideScores?: boolean;
 }
 
 const CARD_BG     = '#f0ece6'; // Linen beige
@@ -28,6 +29,7 @@ export const RoommateGrid = ({
   matchRequests,
   currentUserId,
   onSelectCandidate,
+  hideScores = false,
 }: RoommateGridProps) => {
   const getRequestStatus = (userId: string) => {
     const req = matchRequests.find(
@@ -148,24 +150,26 @@ export const RoommateGrid = ({
               </div>
 
               {/* Score badge */}
-              <div
-                style={{
-                  flexShrink: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '50%',
-                  border: `1.5px solid ${border}`,
-                  background: bg,
-                  color,
-                }}
-              >
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, lineHeight: 1 }}>{candidate.score}%</span>
-                <span style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, marginTop: '1px' }}>match</span>
-              </div>
+              {!hideScores && (
+                <div
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '50%',
+                    border: `1.5px solid ${border}`,
+                    background: bg,
+                    color,
+                  }}
+                >
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, lineHeight: 1 }}>{candidate.score}%</span>
+                  <span style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, marginTop: '1px' }}>match</span>
+                </div>
+              )}
             </div>
 
             {/* Bio */}
