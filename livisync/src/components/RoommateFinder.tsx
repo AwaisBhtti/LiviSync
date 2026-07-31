@@ -9,7 +9,7 @@ import { RoommateFilters } from './roommate/RoommateFilters';
 import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
-import { Users, Search, ChevronRight, Inbox, SlidersHorizontal, X } from 'lucide-react';
+import { Users, Search, Inbox, SlidersHorizontal, X } from 'lucide-react';
 
 
 interface RoommateFinderProps {
@@ -173,28 +173,28 @@ export const RoommateFinder = ({
 
           {/* Tab bar */}
           <div className="rm-tab-bar" style={tabBarStyle}>
-          <button
-            onClick={() => handleTabChange('find')}
-            className="rm-tab-btn"
-            style={tabBtnStyle(activeTab === 'find')}
-          >
-            <Users size={14} />
-            Browse
-          </button>
-          <button
-            onClick={() => handleTabChange('requests')}
-            className="rm-tab-btn"
-            style={tabBtnStyle(activeTab === 'requests')}
-          >
-            <Inbox size={14} />
-            Requests
-            {pendingReceivedCount > 0 && (
-              <span style={tabPillStyle}>{pendingReceivedCount}</span>
-            )}
-          </button>
+            <button
+              onClick={() => handleTabChange('find')}
+              className="rm-tab-btn"
+              style={tabBtnStyle(activeTab === 'find')}
+            >
+              <Users size={14} />
+              Browse
+            </button>
+            <button
+              onClick={() => handleTabChange('requests')}
+              className="rm-tab-btn"
+              style={tabBtnStyle(activeTab === 'requests')}
+            >
+              <Inbox size={14} />
+              Requests
+              {pendingReceivedCount > 0 && (
+                <span style={tabPillStyle}>{pendingReceivedCount}</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
       {/* ── Body ── */}
       <div className="rm-body" style={bodyStyle}>
@@ -204,7 +204,7 @@ export const RoommateFinder = ({
           </div>
         )}
         {activeTab === 'find' ? (
-          <div className="rm-browse-layout">
+          <div className="rm-browse-layout" style={!showFilters ? { gridTemplateColumns: '1fr' } : undefined}>
             {/* Desktop sidebar — hidden on mobile via CSS */}
             {showFilters && (
               <div className="rm-filter-sidebar">
@@ -220,7 +220,12 @@ export const RoommateFinder = ({
                   onSleepChange={setFilterSleep}
                   onCleanlinessChange={setFilterCleanliness}
                   onHostelChange={setFilterHostel}
-                  onHideFilters={() => setShowFilters(false)}
+                  onHideFilters={() => {
+                    if (document.activeElement instanceof HTMLElement) {
+                      document.activeElement.blur();
+                    }
+                    setShowFilters(false);
+                  }}
                   onClearFilters={handleClearFilters}
                 />
               </div>
@@ -232,10 +237,18 @@ export const RoommateFinder = ({
               {!showFilters && (
                 <button
                   onClick={() => setShowFilters(true)}
-                  className="rm-filter-toggle rm-filter-toggle-desktop"
-                  style={filterToggleStyle}
+                  className="btn btn-secondary rm-filter-toggle-desktop"
+                  style={{
+                    marginBottom: '0.875rem',
+                    width: 'fit-content',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.4rem 0.875rem',
+                    fontSize: '0.8rem',
+                  }}
                 >
-                  <ChevronRight size={13} />
+                  <SlidersHorizontal size={13} />
                   Show Filters
                 </button>
               )}
@@ -484,22 +497,6 @@ const bodyStyle: React.CSSProperties = {
   width: '100%',
   margin: '0 auto',
   padding: '1.5rem 2rem',
-};
-
-const filterToggleStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '0.3rem',
-  marginBottom: '0.875rem',
-  padding: '0.3rem 0.7rem',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  color: '#8c7b70',
-  background: '#f0ece6',
-  border: '1px solid #e0d6cb',
-  borderRadius: '9999px',
-  cursor: 'pointer',
-  transition: 'var(--transition)',
 };
 
 const warningBannerStyle: React.CSSProperties = {

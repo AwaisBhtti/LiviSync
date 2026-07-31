@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import type { Hostel, User } from '../types';
-import { Search, MapPin, Check, ArrowLeft } from 'lucide-react';
+import { Search, MapPin, Check, ArrowLeft, SlidersHorizontal } from 'lucide-react';
 import { ImageLightbox } from './ImageLightbox';
 import { BUILTIN_AMENITIES } from './Amenities';
 import { CustomSelect } from './ui/CustomSelect';
@@ -24,6 +24,7 @@ export const HostelDirectory = ({
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [selectedAmenity, setSelectedAmenity] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState<boolean>(true);
   const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
   const [loadingPhone, setLoadingPhone] = useState<boolean>(false);
 
@@ -272,12 +273,39 @@ export const HostelDirectory = ({
           </div>
 
           {/* Directory Content Layout */}
-          <div className="split-layout">
+          <div className="split-layout" style={!showFilters ? { gridTemplateColumns: '1fr' } : undefined}>
             {/* Filters Column */}
-            <div className="card" style={{ padding: '1.25rem', height: 'fit-content', overflow: 'visible' }}>
-              <h3 style={{ fontSize: '0.95rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                Filters
-              </h3>
+            {showFilters && (
+              <div className="card" style={{ padding: '1.25rem', height: 'fit-content', overflow: 'visible', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <SlidersHorizontal size={14} style={{ color: 'var(--muted)' }} />
+                    <h3 style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600 }}>Filters</h3>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.currentTarget.blur();
+                      setShowFilters(false);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--muted)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '0.2rem 0.4rem',
+                      borderRadius: '4px',
+                      transition: 'var(--transition)',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--card-hover)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    Hide
+                  </button>
+                </div>
 
               {/* Price Filter */}
               <div className="form-group">
@@ -384,10 +412,29 @@ export const HostelDirectory = ({
               >
                 Clear Filters
               </button>
-            </div>
+              </div>
+            )}
 
             {/* Hostels List Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minWidth: 0 }}>
+              {!showFilters && (
+                <button
+                  onClick={() => setShowFilters(true)}
+                  className="btn btn-secondary"
+                  style={{
+                    marginBottom: '0.5rem',
+                    width: 'fit-content',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.4rem 0.875rem',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  <SlidersHorizontal size={13} />
+                  Show Filters
+                </button>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--muted)' }}>
                 <span>Showing {filteredHostels.length} hostels</span>
               </div>
