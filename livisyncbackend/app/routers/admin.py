@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from ..database import get_db
-from ..models import Admin, Student, Owner, Hostel, InviteToken, Report, MatchRequest
+from ..models import Admin, Student, Owner, Hostel, InviteToken, Report, MatchRequest, MessageReport
 from ..auth import get_current_user
 from ..email_utils import send_invitation_email, send_warning_email, send_suspension_email, send_reactivation_email
 from pydantic import BaseModel, EmailStr
@@ -26,6 +26,19 @@ class ReportOut(BaseModel):
     reported_id: uuid.UUID
     reason: str
     description: Optional[str] = None
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class MessageReportOut(BaseModel):
+    id: uuid.UUID
+    reporter_id: uuid.UUID
+    reported_user_id: uuid.UUID
+    message_id: str
+    message_text: str
+    reason: str
     status: str
     created_at: datetime
 
@@ -256,3 +269,16 @@ def revoke_invitation(token: str, db: Session = Depends(get_db), admin: Admin = 
     invite.is_used = True
     db.commit()
     return {"message": "Invitation revoked successfully."}
+
+@router.get("/message-reports", response_model=List[MessageReportOut])
+def get_all_message_reports(db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    return db.query(MessageReport).order_by(MessageReport.created_at.desc()).all()
+
+@router.put("/message-reports/{report_id}/resolve")
+def resolve_message_report(report_id: uuid.UUID, db: Session = Depends(get_db), admin: Admin = Depends(require_admin)):
+    report = db.query(MessageReport).filter(MessageReport.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message report not found")
+    report.status = "resolved"
+    db.commit()
+    return {"message": "Message report resolved successfully."}

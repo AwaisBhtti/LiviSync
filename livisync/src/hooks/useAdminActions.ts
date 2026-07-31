@@ -3,7 +3,7 @@
  * Extracted from App.tsx.
  */
 import { useAppDispatch, useAppSelector } from '../store/store';
-import { toggleUserStatus, deleteUser, warnUser, resolveReport } from '../store/slices/adminSlice';
+import { toggleUserStatus, deleteUser, warnUser, resolveReport, resolveMessageReport } from '../store/slices/adminSlice';
 import { removeMatchesForUser } from '../store/slices/matchSlice';
 import { showToast } from '../store/slices/toastSlice';
 
@@ -65,5 +65,15 @@ export function useAdminActions() {
     }
   };
 
-  return { handleToggleUserStatus, handleWarnUser, handleResolveReport, handleDeleteUser };
+  const handleResolveMessageReport = async (reportId: string) => {
+    if (!token) return;
+    try {
+      await dispatch(resolveMessageReport({ reportId, token })).unwrap();
+      dispatch(showToast({ message: 'Message report resolved!', type: 'success' }));
+    } catch (err: any) {
+      dispatch(showToast({ message: err || 'Error resolving message report.', type: 'error' }));
+    }
+  };
+
+  return { handleToggleUserStatus, handleWarnUser, handleResolveReport, handleDeleteUser, handleResolveMessageReport };
 }

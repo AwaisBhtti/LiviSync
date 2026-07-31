@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MatchRequest, User, Message } from '../types';
-import { Send, ArrowLeft, MessageSquare, Clock } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, Clock, Flag } from 'lucide-react';
 import { supabase } from '../supabase';
 import { API_BASE_URL } from '../config';
 import { ConfirmationModal } from './ConfirmationModal';
 import { FriendProfileModal } from './profile/FriendProfileModal';
+import { ReportMessageModal } from './chat/ReportMessageModal';
 import { showToast } from '../store/slices/toastSlice';
 import { useAppDispatch } from '../store/store';
 
@@ -12,6 +13,7 @@ interface ChatModuleProps {
   currentUser: User;
   users: User[];
   matchRequests: MatchRequest[];
+  token: string;
   onBlockUser: (targetId: string) => void;
   onMessagesRead: () => void;
   onUnfriend: (matchRequestId: string) => Promise<void>;
@@ -22,6 +24,7 @@ export const ChatModule = ({
   currentUser,
   users,
   matchRequests,
+  token,
   onBlockUser,
   onMessagesRead,
   onUnfriend,
@@ -49,6 +52,13 @@ export const ChatModule = ({
     message: '',
     onConfirm: () => {},
   });
+
+  const [reportingMessage, setReportingMessage] = useState<{
+    messageId: string;
+    messageText: string;
+    reportedUserId: string;
+    reportedUserName: string;
+  } | null>(null);
 
   const appendOrMergeMessage = (peerId: string, newMessage: Message & { status?: string }) => {
     setMessages((prev) => {
@@ -507,17 +517,48 @@ export const ChatModule = ({
                           width: '100%',
                         }}
                       >
-                        <div style={msgBubbleStyle(isSelf)}>
-                          <p style={{ fontSize: '0.875rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.text}</p>
-                          <span style={msgTimeStyle(isSelf)}>
-                            {new Date(msg.timestamp).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                            {(msg as any).status === 'sending' && (
-                              <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
-                            )}
-                          </span>
+                        <div
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', maxWidth: '70%', flexDirection: isSelf ? 'row-reverse' : 'row' }}
+                          className="chat-msg-row"
+                        >
+                          <div style={msgBubbleStyle(isSelf)}>
+                            <p style={{ fontSize: '0.875rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.text}</p>
+                            <span style={msgTimeStyle(isSelf)}>
+                              {new Date(msg.timestamp).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                              {(msg as any).status === 'sending' && (
+                                <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
+                              )}
+                            </span>
+                          </div>
+                          {!isSelf && (
+                            <button
+                              className="chat-report-btn"
+                              title="Report message"
+                              onClick={() => setReportingMessage({
+                                messageId: msg.id,
+                                messageText: msg.text,
+                                reportedUserId: msg.senderId,
+                                reportedUserName: getRespondent()?.name || 'User',
+                              })}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'var(--muted)',
+                                padding: '0.25rem',
+                                borderRadius: '4px',
+                                opacity: 0,
+                                transition: 'opacity 0.15s ease, color 0.15s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Flag size={13} />
+                            </button>
+                          )}
                         </div>
                         {isLastMsg && isSelf && (msg as any).status !== 'sending' && (
                           <span style={{
@@ -617,6 +658,16 @@ export const ChatModule = ({
           isDanger={confirmModal.isDanger}
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
+      {reportingMessage && (
+        <ReportMessageModal
+          messageId={reportingMessage.messageId}
+          messageText={reportingMessage.messageText}
+          reportedUserId={reportingMessage.reportedUserId}
+          reportedUserName={reportingMessage.reportedUserName}
+          token={token}
+          onClose={() => setReportingMessage(null)}
         />
       )}
     </div>
@@ -750,7 +801,8 @@ const chatEmptyFeedStyle: React.CSSProperties = {
 
 
 const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
-  maxWidth: '70%',
+  flex: 1,
+  minWidth: 0,
   padding: '0.75rem 1rem',
   borderRadius: isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
   background: isSelf ? 'var(--gradient-brand)' : 'var(--card)',

@@ -3,10 +3,11 @@
  * Business logic is delegated to child components; layout is kept here.
  */
 import { useState } from 'react';
-import type { User, Report, Hostel } from '../types';
+import type { User, Report, MessageReport, Hostel } from '../types';
 import { pageHeaderStyle, modalOverlayStyle, modalContentStyle, DEFAULT_AVATAR } from '../styles/commonStyles';
 import { AdminStats } from './admin/AdminStats';
 import { AdminReportsTable } from './admin/AdminReportsTable';
+import { AdminMessageReportsTable } from './admin/AdminMessageReportsTable';
 import { AdminUsersTable } from './admin/AdminUsersTable';
 import { AdminInviteSection } from './admin/AdminInviteSection';
 import { AdminHostelVerification } from './admin/AdminHostelVerification';
@@ -14,23 +15,27 @@ import { AdminHostelVerification } from './admin/AdminHostelVerification';
 interface AdminPanelProps {
   users: User[];
   reports: Report[];
+  messageReports: MessageReport[];
   hostels: Hostel[];
   onToggleUserStatus: (userId: string) => void;
   onResolveReport: (reportId: string) => void;
   onWarnUser: (reportId: string) => void;
   onDeleteUser: (userId: string) => void;
   onVerifyHostel: (hostelId: string) => void;
+  onResolveMessageReport: (reportId: string) => void;
 }
 
 export const AdminPanel = ({
   users,
   reports,
+  messageReports,
   hostels,
   onToggleUserStatus,
   onResolveReport,
   onWarnUser,
   onDeleteUser,
   onVerifyHostel,
+  onResolveMessageReport,
 }: AdminPanelProps) => {
   const [selectedUserDetail, setSelectedUserDetail] = useState<User | null>(null);
 
@@ -55,6 +60,13 @@ export const AdminPanel = ({
         onWarnUser={onWarnUser}
         onToggleUserStatus={onToggleUserStatus}
         onSelectUser={setSelectedUserDetail}
+      />
+
+      {/* Message Reports */}
+      <AdminMessageReportsTable
+        messageReports={messageReports}
+        users={users}
+        onResolve={onResolveMessageReport}
       />
 
       {/* Student & Owner Directories */}

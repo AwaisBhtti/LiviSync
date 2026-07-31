@@ -138,3 +138,14 @@ export interface Report {
   status: 'pending' | 'resolved';
   created_at: string;
 }
+
+export interface MessageReport {
+  id: string;
+  reporterId: string;
+  reportedUserId: string;
+  messageId: string;
+  messageText: string;
+  reason: string;
+  status: 'pending' | 'resolved';
+  created_at: string;
+}

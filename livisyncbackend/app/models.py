@@ -217,3 +217,21 @@ class PhoneViewLog(Base):
     student_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
     hostel_id = Column(UUID(as_uuid=True), ForeignKey('hostels.id', ondelete='CASCADE'), nullable=False)
     viewed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class MessageReport(Base):
+    __tablename__ = 'message_reports'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reporter_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
+    reported_user_id = Column(UUID(as_uuid=True), ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
+    message_id = Column(String(255), nullable=False)
+    message_text = Column(Text, nullable=False)
+    reason = Column(String(50), nullable=False)
+    status = Column(String(10), nullable=False, default='pending')
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("reason IN ('harassment', 'hate-speech', 'spam', 'threats', 'inappropriate', 'other')", name="message_report_reason_check"),
+        CheckConstraint("status IN ('pending', 'resolved')", name="message_report_status_check"),
+    )
