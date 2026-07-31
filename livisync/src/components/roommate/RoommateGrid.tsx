@@ -1,6 +1,6 @@
 /** RoommateGrid — candidate cards, warm sand and cashmere style. */
 import type { User, MatchRequest } from '../../types';
-import { Check, MapPin, Clock } from 'lucide-react';
+import { Check, MapPin } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
 
 export type Candidate = User & { score: number };
@@ -68,7 +68,6 @@ export const RoommateGrid = ({
         const reqStatus = getRequestStatus(candidate.id);
         const occupationDisplay = candidate.occupation === 'job' ? 'Job Holder' : 'Student';
         const { color } = getScoreColors(candidate.score);
-        const sleepLabel = candidate.preferences?.sleepSchedule?.replace('-', ' ') ?? null;
 
         return (
           <div
@@ -132,19 +131,7 @@ export const RoommateGrid = ({
                   <span style={{ opacity: 0.5 }}>·</span>
                   <span style={{ textTransform: 'capitalize' }}>{candidate.gender ?? 'N/A'}</span>
                   <span style={{ opacity: 0.5 }}>·</span>
-                  <span
-                    style={{
-                      background: 'rgba(181, 92, 60, 0.12)',
-                      color: '#b55c3c',
-                      border: '1px solid rgba(181, 92, 60, 0.2)',
-                      borderRadius: '20px',
-                      padding: '0.1rem 0.5rem',
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {occupationDisplay}
-                  </span>
+                  <span style={{ fontWeight: 600 }}>{occupationDisplay}</span>
                 </p>
               </div>
 
@@ -181,23 +168,6 @@ export const RoommateGrid = ({
               {candidate.bio || 'No biography provided.'}
             </p>
 
-            {/* Habit chips */}
-            {(sleepLabel || candidate.preferences?.cleanliness) && (
-              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                {sleepLabel && (
-                  <span style={chipStyle}>
-                    <Clock size={12} />
-                    {sleepLabel}
-                  </span>
-                )}
-                {candidate.preferences?.cleanliness && (
-                  <span style={chipStyle}>
-                    ✦ {candidate.preferences.cleanliness}
-                  </span>
-                )}
-              </div>
-            )}
-
             {/* Footer */}
             <div
               style={{
@@ -224,7 +194,7 @@ export const RoommateGrid = ({
                   color: '#b55c3c',
                   fontSize: '0.75rem',
                   fontWeight: 700,
-                  background: 'rgba(181, 92, 60, 0.12)',
+                  background: 'transparent',
                   border: '1px solid rgba(181, 92, 60, 0.25)',
                   borderRadius: '20px',
                   padding: '0.15rem 0.5rem',
@@ -234,7 +204,7 @@ export const RoommateGrid = ({
               )}
               {!reqStatus && (
                 <span style={{ color: '#b55c3c', fontSize: '0.8rem', fontWeight: 600 }}>
-                  View Profile →
+                  View Profile
                 </span>
               )}
             </div>
@@ -243,18 +213,4 @@ export const RoommateGrid = ({
       })}
     </div>
   );
-};
-
-const chipStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '0.25rem',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  color: MUTED,
-  background: '#faf8f5', // Warm sand
-  border: '1px solid #e0d6cb',
-  borderRadius: '20px',
-  padding: '0.2rem 0.6rem',
-  textTransform: 'capitalize',
 };
