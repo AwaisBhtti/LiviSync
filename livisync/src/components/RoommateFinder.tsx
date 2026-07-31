@@ -134,8 +134,8 @@ export const RoommateFinder = ({
 
       {/* ── Header ── */}
       <div style={headerStyle}>
-        <div style={headerInnerWrapStyle}>
-          <div style={headerInnerStyle}>
+        <div className="rm-header-wrap" style={headerInnerWrapStyle}>
+          <div className="rm-header-inner" style={headerInnerStyle}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem' }}>
                 <div style={iconBoxStyle}>
@@ -149,7 +149,7 @@ export const RoommateFinder = ({
             </div>
 
             {/* Search */}
-            <div style={searchWrapStyle}>
+            <div className="rm-search-wrap" style={searchWrapStyle}>
               <Search size={15} color="rgba(148,163,184,0.7)" style={{ flexShrink: 0 }} />
               <input
                 className="rm-input"
@@ -163,7 +163,7 @@ export const RoommateFinder = ({
           </div>
 
           {/* Tab bar */}
-          <div style={tabBarStyle}>
+          <div className="rm-tab-bar" style={tabBarStyle}>
           <button
             onClick={() => handleTabChange('find')}
             className="rm-tab-btn"
@@ -188,7 +188,7 @@ export const RoommateFinder = ({
     </div>
 
       {/* ── Body ── */}
-      <div style={bodyStyle}>
+      <div className="rm-body" style={bodyStyle}>
         {isProfileIncomplete && (
           <div style={warningBannerStyle}>
             <span>⚠️ <strong>Complete your profile:</strong> You must fill out all your personal details (under Basic & Personal Info) and lifestyle preferences (under Lifestyle and Habits) under the Profile tab in order to connect with other students.</span>
@@ -414,12 +414,11 @@ const searchWrapStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
-  background: '#faf8f5', // Warm sand background for input
+  background: '#faf8f5',
   border: '1px solid #e0d6cb',
   borderRadius: '10px',
   padding: '0.5rem 0.875rem',
-  minWidth: '220px',
-  flex: '0 1 260px',
+  // flex and minWidth intentionally omitted — controlled via .rm-search-wrap CSS class
 };
 
 const searchInputStyle: React.CSSProperties = {

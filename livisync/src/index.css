@@ -342,6 +342,12 @@ a {
 .rm-filter-toggle-desktop { display: inline-flex; }
 .rm-mobile-filter-btn     { display: none !important; }
 
+/* Search wrap — desktop sizing */
+.rm-search-wrap {
+  flex: 0 1 260px;
+  min-width: 220px;
+}
+
 /* Profile page uses a narrower sidebar */
 .profile-split-layout {
   grid-template-columns: 260px 1fr;
@@ -411,6 +417,51 @@ a {
   /* Roommate grid cards: single column on mobile */
   .grid-2.rm-grid-mobile-single {
     grid-template-columns: 1fr;
+  }
+
+  /* ── Roommate Finder: centre everything on mobile ── */
+  .rm-header-wrap {
+    padding: 1.25rem 1rem 0;
+    text-align: center;
+  }
+  .rm-header-inner {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.875rem;
+  }
+  /* Centre the icon+title row */
+  .rm-header-inner > div:first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  /* Subtitle loses its left indent on mobile */
+  .rm-header-inner p {
+    margin-left: 0 !important;
+    text-align: center;
+  }
+  /* Search bar compact on mobile — reset flex so flex-basis doesn't become the height */
+  .rm-search-wrap {
+    flex: none;
+    width: auto;
+    min-width: unset;
+    max-width: 220px;
+    padding: 0.3rem 0.75rem;
+  }
+  /* Tab bar centred */
+  .rm-tab-bar {
+    justify-content: center;
+  }
+  /* Tab buttons expand equally */
+  .rm-tab-bar .rm-tab-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  /* Body: tighter horizontal padding */
+  .rm-body {
+    padding: 1.25rem 1rem;
   }
 
   .mobile-hide { display: none !important; }
