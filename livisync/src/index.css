@@ -386,10 +386,12 @@ a {
     gap: 1.75rem;
   }
 
-  /* Profile split layout also collapses to single column */
+  /* Profile split layout also collapses to single column and is shorter to prevent page-level scrolling */
   .profile-split-layout {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+    height: calc(100vh - 240px) !important;
+    min-height: unset !important;
   }
 
   /* ── Mobile profile drill-down navigation ── */
