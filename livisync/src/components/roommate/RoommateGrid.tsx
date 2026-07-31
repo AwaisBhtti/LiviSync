@@ -67,7 +67,7 @@ export const RoommateGrid = ({
       {candidates.map((candidate) => {
         const reqStatus = getRequestStatus(candidate.id);
         const occupationDisplay = candidate.occupation === 'job' ? 'Job Holder' : 'Student';
-        const { color, bg, border } = getScoreColors(candidate.score);
+        const { color } = getScoreColors(candidate.score);
         const sleepLabel = candidate.preferences?.sleepSchedule?.replace('-', ' ') ?? null;
 
         return (
@@ -157,11 +157,6 @@ export const RoommateGrid = ({
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '50%',
-                    border: `1.5px solid ${border}`,
-                    background: bg,
                     color,
                   }}
                 >
