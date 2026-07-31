@@ -172,7 +172,7 @@ export const ChatModule = ({
     });
   }, [activeMatchesIds]);
 
-  // Subscribe to realtime message insert broadcasts globally for all our chats
+  // Subscribe to realtime message insert and update broadcasts globally for all our chats
   useEffect(() => {
     const channel = supabase
       .channel('chat-global-module')
@@ -211,6 +211,24 @@ export const ChatModule = ({
                 });
               }).catch(err => console.error(err));
             }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages' },
+        (payload) => {
+          const updatedMsg = payload.new as any;
+          if (updatedMsg && (updatedMsg.sender_id === currentUser.id || updatedMsg.receiver_id === currentUser.id)) {
+            const peerId = updatedMsg.sender_id === currentUser.id ? updatedMsg.receiver_id : updatedMsg.sender_id;
+            setMessages((prev) => {
+              const peerChatMsgs = prev[peerId] || [];
+              const updated = peerChatMsgs.map(m => m.id === updatedMsg.id ? { ...m, read: updatedMsg.is_read } : m);
+              return {
+                ...prev,
+                [peerId]: updated
+              };
+            });
           }
         }
       )
@@ -328,11 +346,11 @@ export const ChatModule = ({
   };
 
   return (
-    <div style={containerStyle} className="auth-chat-container">
+    <div style={containerStyle} className={`auth-chat-container ${activeChatUserId ? 'chat-active' : ''}`}>
       {/* Wrap everything in a single unified dashboard */}
       <div style={{ ...chatGridStyle, height: '100%' }}>
         {/* Left Side: Inbox Lists (Active Chats Only) */}
-        <div style={inboxListStyle(!!activeChatUserId)}>
+        <div className="chat-sidebar" style={inboxListStyle()}>
           {/* Section: Active Chats */}
           <div style={sectionStyle}>
             <h3 style={sectionHeaderStyle}>Roommate Chats ({activeMatches.length})</h3>
@@ -384,12 +402,13 @@ export const ChatModule = ({
         </div>
 
         {/* Right Side: Active Chat Window */}
-        <div style={chatWindowStyle(!!activeChatUserId)}>
+        <div className="chat-window" style={chatWindowStyle()}>
           {activeChatUserId ? (
             <>
               {/* Chat Header */}
               <div style={chatHeaderStyle}>
                 <button
+                  className="chat-back-btn"
                   style={backButtonStyle}
                   onClick={() => setActiveChatUserId(null)}
                 >
@@ -446,22 +465,37 @@ export const ChatModule = ({
                     </p>
                   </div>
                 ) : (
-                  (messages[activeChatUserId] || []).map((msg) => {
+                   (messages[activeChatUserId] || []).map((msg, index, arr) => {
                     const isSelf = msg.senderId === currentUser.id;
+                    const isLastMsg = index === arr.length - 1;
                     return (
-                      <div key={msg.id} style={msgRowStyle(isSelf)}>
-                        <div style={msgBubbleStyle(isSelf)}>
-                          <p style={{ fontSize: '0.875rem' }}>{msg.text}</p>
-                          <span style={msgTimeStyle(isSelf)}>
-                            {new Date(msg.timestamp).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                            {(msg as any).status === 'sending' && (
-                              <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
-                            )}
-                          </span>
+                      <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSelf ? 'flex-end' : 'flex-start' }}>
+                        <div style={msgRowStyle(isSelf)}>
+                          <div style={msgBubbleStyle(isSelf)}>
+                            <p style={{ fontSize: '0.875rem' }}>{msg.text}</p>
+                            <span style={msgTimeStyle(isSelf)}>
+                              {new Date(msg.timestamp).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                              {(msg as any).status === 'sending' && (
+                                <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
+                              )}
+                            </span>
+                          </div>
                         </div>
+                        {isLastMsg && isSelf && (
+                          <span style={{
+                            fontSize: '0.65rem',
+                            color: 'var(--muted)',
+                            marginTop: '0.2rem',
+                            marginRight: '0.25rem',
+                            fontWeight: 600,
+                            letterSpacing: '0.02em',
+                          }}>
+                            {msg.read ? 'Read' : 'Delivered'}
+                          </span>
+                        )}
                       </div>
                     );
                   })
@@ -569,36 +603,22 @@ const chatGridStyle: React.CSSProperties = {
   height: '100%',
 };
 
-const inboxListStyle = (isChatActive: boolean): React.CSSProperties => {
-  const base: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    overflowY: 'auto',
-    height: '100%',
-    borderRight: '1px solid var(--border-solid)',
-    backgroundColor: 'var(--card)',
-  };
-  // Responsive check
-  if (isChatActive && window.innerWidth <= 768) {
-    return { ...base, display: 'none' };
-  }
-  return base;
-};
+const inboxListStyle = (): React.CSSProperties => ({
+  display: 'flex',
+  flexDirection: 'column',
+  overflowY: 'auto',
+  height: '100%',
+  borderRight: '1px solid var(--border-solid)',
+  backgroundColor: 'var(--card)',
+});
 
-const chatWindowStyle = (isChatActive: boolean): React.CSSProperties => {
-  const base: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
-    overflow: 'hidden',
-    backgroundColor: 'var(--background)',
-  };
-  // Responsive check
-  if (!isChatActive && window.innerWidth <= 768) {
-    return { ...base, display: 'none' };
-  }
-  return base;
-};
+const chatWindowStyle = (): React.CSSProperties => ({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  overflow: 'hidden',
+  backgroundColor: 'var(--background)',
+});
 
 const sectionStyle: React.CSSProperties = {
   padding: '1.25rem',
@@ -672,7 +692,6 @@ const backButtonStyle: React.CSSProperties = {
   border: 'none',
   cursor: 'pointer',
   color: 'var(--muted)',
-  display: window.innerWidth <= 768 ? 'block' : 'none',
 };
 
 const chatMessagesStyle: React.CSSProperties = {

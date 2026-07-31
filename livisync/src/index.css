@@ -380,3 +380,36 @@ a {
   margin: 0 !important;
   width: 100% !important;
 }
+
+/* ── Chat Responsive Layout ─────────────────────────────── */
+.chat-back-btn {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  /* Force chat grid into 1 column layout */
+  .auth-chat-container > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* When a chat is NOT selected/active */
+  .auth-chat-container:not(.chat-active) .chat-sidebar {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .auth-chat-container:not(.chat-active) .chat-window {
+    display: none !important;
+  }
+
+  /* When a chat IS selected/active */
+  .auth-chat-container.chat-active .chat-sidebar {
+    display: none !important;
+  }
+  .auth-chat-container.chat-active .chat-window {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .auth-chat-container.chat-active .chat-back-btn {
+    display: block !important;
+  }
+}
