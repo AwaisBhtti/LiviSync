@@ -55,7 +55,7 @@ export const OwnerPortal = ({
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,8 +123,8 @@ export const OwnerPortal = ({
     setName(hostel.name);
     setLocation(hostel.location);
     setDescription(hostel.description);
-    const urls = hostel.photos && hostel.photos.length > 0 
-      ? hostel.photos 
+    const urls = hostel.photos && hostel.photos.length > 0
+      ? hostel.photos
       : (hostel.photo ? hostel.photo.split(',').map(p => p.trim()).filter(Boolean) : []);
     setPhotoUrls(urls);
     setSelectedAmenities(hostel.amenities);
