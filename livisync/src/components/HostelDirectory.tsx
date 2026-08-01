@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Hostel, User } from '../types';
-import { Search, MapPin, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { BUILTIN_AMENITIES } from './Amenities';
-import { CustomSelect } from './ui/CustomSelect';
+import { useRevealContainer } from '../hooks/useReveal';
 
 interface HostelDirectoryProps {
   hostels: Hostel[];
@@ -12,29 +11,65 @@ interface HostelDirectoryProps {
   token: string | null;
 }
 
-export const HostelDirectory = ({
-  hostels,
-  currentUser,
-}: HostelDirectoryProps) => {
+const SHARING_OPTIONS = [
+  { value: 'all', label: 'All rooms' },
+  { value: 'single', label: 'Single' },
+  { value: 'double', label: 'Double' },
+  { value: 'triple', label: 'Triple' },
+  { value: 'quad', label: 'Quad' },
+  { value: 'penta', label: 'Penta' },
+];
+
+const TYPE_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'boys', label: 'Boys' },
+  { value: 'girls', label: 'Girls' },
+  { value: 'co-sharing', label: 'Co-Sharing' },
+];
+
+/** Cheapest → dearest rent across a hostel's rooms, formatted for the card overlay. */
+const priceLabel = (hostel: Hostel) => {
+  if (!hostel.rooms || hostel.rooms.length === 0) return 'Rent N/A';
+  const prices = hostel.rooms.map((r) => r.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max
+    ? `PKR ${min.toLocaleString()}`
+    : `PKR ${min.toLocaleString()}–${max.toLocaleString()}`;
+};
+
+/** Seats still open across the hostel, phrased the way the directory cards read. */
+const seatsLabel = (hostel: Hostel) => {
+  const seats = (hostel.rooms ?? []).reduce((sum, r) => sum + (r.seatsAvailable ?? 0), 0);
+  if (seats === 0) return 'Waitlist open';
+  return seats === 1 ? '1 seat left' : `${seats} seats left`;
+};
+
+/** The sharing types that still have a free seat, e.g. "Double · Triple". */
+const sharingLabel = (hostel: Hostel) => {
+  const types = Array.from(
+    new Set((hostel.rooms ?? []).filter((r) => r.seatsAvailable > 0).map((r) => r.sharingType))
+  );
+  if (types.length === 0) return 'Full';
+  return types.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(' · ');
+};
+
+export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [maxPrice, setMaxPrice] = useState<number>(25000);
   const [selectedSharing, setSelectedSharing] = useState<string>('all');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState<boolean>(true);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
 
-  // Use all built-in amenities for filters
-  const allAmenities = BUILTIN_AMENITIES;
-
-  // Filter hostels
   const filteredHostels = hostels.filter((host) => {
     const matchesSearch =
       host.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       host.location.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesPrice = host.rooms && host.rooms.length > 0
-      ? host.rooms.some(r => r.price <= maxPrice)
+      ? host.rooms.some((r) => r.price <= maxPrice)
       : true;
 
     const matchesSharing =
@@ -56,63 +91,95 @@ export const HostelDirectory = ({
     return matchesSearch && matchesPrice && matchesSharing && matchesAmenity && matchesType && isVisible;
   });
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Header & Search */}
-      <div style={heroHeaderStyle}>
-        <h1>Find Hostel Residences</h1>
-        <p style={{ color: 'var(--muted)' }}>Search and filter top hostels near your campus by name or location.</p>
+  const gridRef = useRevealContainer<HTMLDivElement>([filteredHostels.length, selectedSharing, selectedType]);
 
-        <div style={searchContainerStyle}>
-          <Search size={18} style={{ color: 'var(--muted)', marginLeft: '1rem' }} />
+  const activeAdvanced =
+    maxPrice !== 25000 || selectedAmenities.length > 0 || selectedType !== 'all';
+
+  const clearFilters = () => {
+    setMaxPrice(25000);
+    setSelectedSharing('all');
+    setSelectedAmenities([]);
+    setSelectedType('all');
+    setSearchQuery('');
+  };
+
+  return (
+    <div style={{ paddingTop: '1.5rem' }}>
+      <style>{`
+        .hd-card { cursor: pointer; }
+        .hd-card img { transition: transform 1.1s var(--ease-organic); }
+        .hd-card:hover img { transform: scale(1.05); }
+        .hd-search:focus-within { border-color: var(--color-accent); }
+        @media (max-width: 640px) {
+          .hd-filter-bar { flex-direction: column; align-items: stretch !important; }
+          .hd-count { margin-left: 0 !important; }
+        }
+      `}</style>
+
+      {/* ── Header ── */}
+      <div style={eyebrowStyle}>Hostel directory</div>
+      <h1 className="display" style={pageTitleStyle}>
+        Verified living spaces, inspected in person.
+      </h1>
+      <p style={pageLeadStyle}>
+        Search, filter and open a listing to see room details, availability, sharing options and
+        whether the electricity bill is included.
+      </p>
+
+      {/* ── Filter bar ── */}
+      <div className="hd-filter-bar" style={filterBarStyle}>
+        <div className="hd-search" style={searchWrapStyle}>
+          <Search size={16} strokeWidth={2.75} style={{ color: 'var(--muted)', flexShrink: 0 }} />
           <input
             type="text"
-            placeholder="Search by hostel name or city area (e.g. Islamabad, Gulberg)..."
+            placeholder="Search name or area…"
             style={searchInputStyle}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {SHARING_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={selectedSharing === opt.value ? 'pill pill-active' : 'pill'}
+              onClick={() => setSelectedSharing(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          className={showFilters || activeAdvanced ? 'pill pill-active' : 'pill'}
+          onClick={() => setShowFilters((v) => !v)}
+        >
+          <SlidersHorizontal size={13} strokeWidth={2.75} />
+          Filters
+        </button>
+
+        <div className="hd-count" style={countStyle}>
+          {filteredHostels.length} {filteredHostels.length === 1 ? 'listing' : 'listings'}
+        </div>
       </div>
 
-      {/* Directory Content Layout */}
-      <div className="split-layout" style={!showFilters ? { gridTemplateColumns: '1fr' } : undefined}>
-        {/* Filters Column */}
-        {showFilters && (
-          <div className="card" style={{ padding: '1.25rem', height: 'fit-content', overflow: 'visible', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '0.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <SlidersHorizontal size={14} style={{ color: 'var(--muted)' }} />
-                <h3 style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600 }}>Filters</h3>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.currentTarget.blur();
-                  setShowFilters(false);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--muted)',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '0.2rem 0.4rem',
-                  borderRadius: '4px',
-                  transition: 'var(--transition)',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--card-hover)')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-              >
-                Hide
-              </button>
-            </div>
+      {/* ── Advanced filters ── */}
+      {showFilters && (
+        <div style={advancedPanelStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div style={advancedTitleStyle}>Refine</div>
+            <button type="button" onClick={() => setShowFilters(false)} style={closeBtnStyle} aria-label="Hide filters">
+              <X size={16} strokeWidth={2.75} />
+            </button>
+          </div>
 
-            {/* Price Filter */}
-            <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem' }}>Max Price (PKR): {maxPrice.toLocaleString()}</label>
+          <div style={advancedGridStyle}>
+            <div>
+              <label className="form-label">Max price · PKR {maxPrice.toLocaleString()}</label>
               <input
                 type="range"
                 min="5000"
@@ -120,294 +187,312 @@ export const HostelDirectory = ({
                 step="1000"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
-                style={{ width: '100%', accentColor: 'var(--primary)' }}
+                style={{ width: '100%' }}
               />
             </div>
 
-            {/* Hostel Type Filter (Tabs) */}
-            <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem' }}>Hostel Category</label>
-              <div style={{ display: 'flex', background: 'var(--card-hover)', borderRadius: 'var(--radius-sm)', padding: '0.2rem', gap: '0.2rem', border: '1px solid var(--border-solid)' }}>
-                {([
-                  { value: 'all', label: 'All' },
-                  { value: 'boys', label: 'Boys' },
-                  { value: 'girls', label: 'Girls' },
-                  { value: 'co-sharing', label: 'Co-Sharing' }
-                ]).map((tab) => {
-                  const isActive = selectedType === tab.value;
-                  return (
-                    <button
-                      key={tab.value}
-                      type="button"
-                      onClick={() => setSelectedType(tab.value)}
-                      style={{
-                        flex: 1,
-                        padding: '0.35rem 0.25rem',
-                        fontSize: '0.68rem',
-                        fontWeight: isActive ? 700 : 500,
-                        borderRadius: '4px',
-                        border: 'none',
-                        background: isActive ? 'var(--primary)' : 'transparent',
-                        color: isActive ? 'var(--primary-foreground)' : 'var(--muted)',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        textAlign: 'center',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
+            <div>
+              <label className="form-label">Hostel category</label>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {TYPE_OPTIONS.map((tab) => (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    className={selectedType === tab.value ? 'pill pill-active' : 'pill'}
+                    onClick={() => setSelectedType(tab.value)}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
             </div>
+          </div>
 
-            {/* Sharing Type Filter */}
-            <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem' }}>Room Sharing</label>
-              <CustomSelect
-                value={selectedSharing}
-                onChange={setSelectedSharing}
-                options={[
-                  { value: 'all', label: 'Any Sharing' },
-                  { value: 'single', label: '1 Seater Room' },
-                  { value: 'double', label: '2 Seater Room' },
-                  { value: 'triple', label: '3 Seater Room' },
-                  { value: 'quad', label: '4 Seater Room' },
-                  { value: 'penta', label: '5 Seater Room' },
-                ]}
-              />
+          <div style={{ marginTop: '1.5rem' }}>
+            <label className="form-label">Must have amenities</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {BUILTIN_AMENITIES.map((amenity) => {
+                const isSelected = selectedAmenities.includes(amenity);
+                return (
+                  <button
+                    key={amenity}
+                    type="button"
+                    onClick={() =>
+                      setSelectedAmenities((prev) =>
+                        isSelected ? prev.filter((a) => a !== amenity) : [...prev, amenity]
+                      )
+                    }
+                    style={amenityChipStyle(isSelected)}
+                  >
+                    {amenity}
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Amenities Filter (Multi-select AND logic) */}
-            <div className="form-group">
-              <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.5rem', display: 'block' }}>Must Have Amenities</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                {allAmenities.map((amenity) => {
-                  const isSelected = selectedAmenities.includes(amenity);
-                  return (
-                    <button
-                      key={amenity}
-                      onClick={() => {
-                        setSelectedAmenities(prev => 
-                          isSelected ? prev.filter(a => a !== amenity) : [...prev, amenity]
-                        );
-                      }}
-                      style={{
-                        padding: '0.25rem 0.6rem',
-                        fontSize: '0.7rem',
-                        fontWeight: isSelected ? 600 : 500,
-                        backgroundColor: isSelected ? 'var(--primary)' : 'transparent',
-                        color: isSelected ? 'white' : 'var(--muted)',
-                        border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {amenity}
-                    </button>
-                  );
-                })}
+          <button type="button" onClick={clearFilters} className="btn btn-secondary" style={{ marginTop: '1.5rem' }}>
+            Clear filters
+          </button>
+        </div>
+      )}
+
+      {/* ── Listings ── */}
+      {filteredHostels.length === 0 ? (
+        <div style={emptyStateStyle}>
+          No hostels matched your search parameters. Try adjusting your filters.
+        </div>
+      ) : (
+        <div ref={gridRef} style={gridStyle}>
+          {filteredHostels.map((hostel, i) => (
+            <div
+              key={hostel.id}
+              className="reveal hd-card"
+              data-reveal
+              data-delay={((i % 3) * 0.06).toFixed(2)}
+              onClick={() => navigate(`/hostels/${hostel.id}`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/hostels/${hostel.id}`); }}
+            >
+              <div style={cardImageWrapStyle}>
+                <img
+                  src={(hostel.photos && hostel.photos.length > 0) ? hostel.photos[0] : hostel.photo}
+                  alt={hostel.name}
+                  className="washed"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+                <div style={{ position: 'absolute', top: '14px', left: '14px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {hostel.isVerified && <span style={verifiedTagStyle}>Verified</span>}
+                  <span style={typeTagStyle}>
+                    {(hostel.hostelType || 'boys').replace('-', ' ')}
+                  </span>
+                </div>
+                <div style={cardOverlayStyle}>
+                  <span style={{ fontSize: '0.6875rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                    {sharingLabel(hostel)}
+                  </span>
+                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: '0.9375rem', color: 'var(--color-accent-300)', whiteSpace: 'nowrap' }}>
+                    {priceLabel(hostel)}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Clear Filters Button */}
-            <button
-              onClick={() => {
-                setMaxPrice(25000);
-                setSelectedSharing('all');
-                setSelectedAmenities([]);
-                setSelectedType('all');
-                setSearchQuery('');
-              }}
-              className="btn btn-secondary"
-              style={{
-                width: '100%',
-                marginTop: '0.5rem',
-                fontSize: '0.8rem',
-                padding: '0.5rem',
-                fontWeight: 700,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              Clear Filters
-            </button>
-          </div>
-        )}
-
-        {/* Hostels List Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minWidth: 0 }}>
-          {!showFilters && (
-            <button
-              onClick={() => setShowFilters(true)}
-              className="btn btn-secondary"
-              style={{
-                marginBottom: '0.5rem',
-                width: 'fit-content',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.4rem 0.875rem',
-                fontSize: '0.8rem',
-              }}
-            >
-              <SlidersHorizontal size={13} />
-              Show Filters
-            </button>
-          )}
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--muted)' }}>
-            <span>Showing {filteredHostels.length} hostels</span>
-          </div>
-
-          {filteredHostels.length === 0 ? (
-            <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--muted)' }}>
-              No hostels matched your search parameters. Try adjusting your filters.
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {filteredHostels.map((hostel) => (
-                <div
-                  key={hostel.id}
-                  className="card"
-                  style={hostelRowCardStyle}
-                  onClick={() => navigate(`/hostels/${hostel.id}`)}
-                >
-                  <img
-                    src={(hostel.photos && hostel.photos.length > 0) ? hostel.photos[0] : hostel.photo}
-                    alt={hostel.name}
-                    style={hostelThumbnailStyle}
-                  />
-                  <div style={hostelInfoStyle}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <h3 style={{ fontSize: '1.05rem', fontWeight: 600 }}>{hostel.name}</h3>
-                          <span className="badge badge-neutral" style={{ textTransform: 'capitalize', fontSize: '0.65rem', fontWeight: 600 }}>
-                            {hostel.hostelType ? hostel.hostelType.replace('-', ' ') : 'Boys'}
-                          </span>
-                        </div>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.125rem' }}>
-                          <MapPin size={12} />
-                          {hostel.location}
-                        </p>
-                      </div>
-                      <span style={{ fontSize: '0.95rem', fontWeight: 700 }}>
-                        {(() => {
-                          if (!hostel.rooms || hostel.rooms.length === 0) return 'Rent N/A';
-                          const prices = hostel.rooms.map(r => r.price);
-                          const min = Math.min(...prices);
-                          const max = Math.max(...prices);
-                          return min === max ? `PKR ${min.toLocaleString()}/mo` : `PKR ${min.toLocaleString()} - ${max.toLocaleString()}/mo`;
-                        })()}
-                      </span>
-                    </div>
-
-                    <p style={hostelDescSnippetStyle}>
-                      {hostel.description}
-                    </p>
-
-                    <div style={hostelFooterStyle}>
-                      <div style={amenitiesRowStyle}>
-                        {hostel.amenities.slice(0, 3).map((amenity, idx) => (
-                          <span key={idx} className="badge badge-neutral" style={{ fontSize: '0.7rem' }}>
-                            {amenity}
-                          </span>
-                        ))}
-                        {hostel.amenities.length > 3 && (
-                          <span className="badge badge-neutral" style={{ fontSize: '0.7rem' }}>
-                            +{hostel.amenities.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
+              <div style={cardFooterStyle}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1875rem' }}>{hostel.name}</div>
+                  <div style={{ fontSize: '0.84rem', color: 'var(--color-neutral-600)', marginTop: '3px' }}>
+                    {hostel.location}
                   </div>
                 </div>
-              ))}
+                <div style={seatsStyle}>{seatsLabel(hostel)}</div>
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
-// Styles
-const heroHeaderStyle: React.CSSProperties = {
-  backgroundColor: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  padding: '2rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const eyebrowStyle: React.CSSProperties = {
+  fontSize: '0.75rem',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: 'var(--color-accent-700)',
+  marginBottom: '22px',
+  animation: 'ls-fade 0.7s ease both',
 };
 
-const searchContainerStyle: React.CSSProperties = {
+const pageTitleStyle: React.CSSProperties = {
+  fontSize: 'clamp(40px, 6vw, 92px)',
+  lineHeight: 0.9,
+  margin: '0 0 18px',
+  maxWidth: '20ch',
+  animation: 'ls-rise 0.9s var(--ease-organic) both',
+};
+
+const pageLeadStyle: React.CSSProperties = {
+  fontSize: '1.03rem',
+  color: 'var(--color-neutral-700)',
+  maxWidth: '56ch',
+  margin: '0 0 40px',
+  animation: 'ls-fade 0.9s ease 0.15s both',
+};
+
+const filterBarStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '12px',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  padding: '18px',
+  background: 'var(--color-surface)',
+  borderRadius: 'calc(var(--radius-lg) * 1.1)',
+  boxShadow: 'var(--shadow-sm)',
+  animation: 'ls-fade 0.9s ease 0.25s both',
+};
+
+const searchWrapStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  backgroundColor: 'var(--background)',
-  marginTop: '1rem',
+  gap: '10px',
+  flex: 1,
+  minWidth: '220px',
+  background: 'var(--color-bg)',
+  border: '1px solid var(--color-divider)',
+  borderRadius: 'var(--radius-pill)',
+  padding: '0 16px',
+  height: '42px',
+  transition: 'var(--transition)',
 };
 
 const searchInputStyle: React.CSSProperties = {
   width: '100%',
-  padding: '0.75rem 1rem',
   border: 'none',
   background: 'none',
   outline: 'none',
-  fontSize: '0.9rem',
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.875rem',
   color: 'var(--foreground)',
 };
 
-const hostelRowCardStyle: React.CSSProperties = {
-  display: 'flex',
-  cursor: 'pointer',
-  height: '160px',
+const countStyle: React.CSSProperties = {
+  fontSize: '0.6875rem',
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  color: 'var(--color-neutral-600)',
+  marginLeft: 'auto',
 };
 
-const hostelThumbnailStyle: React.CSSProperties = {
-  width: '200px',
-  height: '100%',
-  objectFit: 'cover',
-  borderRight: '1px solid var(--border)',
+const advancedPanelStyle: React.CSSProperties = {
+  marginTop: '16px',
+  padding: '26px',
+  background: 'var(--color-surface)',
+  borderRadius: 'calc(var(--radius-lg) * 1.1)',
+  boxShadow: 'var(--shadow-sm)',
+  animation: 'ls-fade 0.4s ease both',
 };
 
-const hostelInfoStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '1.25rem',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
-  minWidth: 0,
+const advancedTitleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-heading)',
+  fontSize: '1.125rem',
 };
 
-const hostelDescSnippetStyle: React.CSSProperties = {
+const closeBtnStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '32px',
+  height: '32px',
+  borderRadius: 'var(--radius-pill)',
+  border: 'none',
+  background: 'transparent',
   color: 'var(--muted)',
-  fontSize: '0.85rem',
-  overflow: 'hidden',
-  display: '-webkit-box',
-  WebkitLineClamp: 2,
-  WebkitBoxOrient: 'vertical',
-  lineHeight: '1.4',
-  margin: '0.5rem 0',
+  cursor: 'pointer',
 };
 
-const hostelFooterStyle: React.CSSProperties = {
+const advancedGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+  gap: '1.5rem',
+};
+
+const amenityChipStyle = (selected: boolean): React.CSSProperties => ({
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.75rem',
+  fontWeight: 700,
+  letterSpacing: '0.04em',
+  padding: '8px 14px',
+  borderRadius: 'var(--radius-pill)',
+  border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-divider)'}`,
+  background: selected ? 'var(--color-accent-100)' : 'transparent',
+  color: selected ? 'var(--color-accent-800)' : 'var(--color-neutral-600)',
+  cursor: 'pointer',
+  transition: 'var(--transition)',
+});
+
+const gridStyle: React.CSSProperties = {
+  display: 'grid',
+  // min() keeps a single card from overflowing viewports narrower than the track
+  gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))',
+  gap: '28px',
+  marginTop: '44px',
+};
+
+const cardImageWrapStyle: React.CSSProperties = {
+  position: 'relative',
+  borderRadius: 'var(--radius-lg)',
+  overflow: 'hidden',
+  aspectRatio: '4/5',
+  background: 'var(--color-neutral-200)',
+};
+
+const verifiedTagStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  background: 'var(--color-bg)',
+  color: 'var(--color-text)',
+  fontWeight: 700,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  fontSize: '0.625rem',
+  padding: '4px 10px',
+  borderRadius: 'var(--radius-pill)',
+};
+
+const typeTagStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  background: 'var(--color-accent-2-100)',
+  color: 'var(--color-accent-2-800)',
+  fontWeight: 700,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  fontSize: '0.625rem',
+  padding: '4px 10px',
+  borderRadius: 'var(--radius-pill)',
+};
+
+const cardOverlayStyle: React.CSSProperties = {
+  position: 'absolute',
+  bottom: '14px',
+  left: '14px',
+  right: '14px',
+  background: 'rgba(32, 30, 29, 0.82)',
+  color: 'var(--color-bg)',
+  borderRadius: 'var(--radius-md)',
+  padding: '12px 14px',
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  marginTop: '0.5rem',
+  gap: '10px',
 };
 
-const amenitiesRowStyle: React.CSSProperties = {
+const cardFooterStyle: React.CSSProperties = {
   display: 'flex',
-  gap: '0.375rem',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: '14px',
+  marginTop: '16px',
+};
+
+const seatsStyle: React.CSSProperties = {
+  fontSize: '0.66rem',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  color: 'var(--color-accent-700)',
+  textAlign: 'right',
+  paddingTop: '4px',
+  whiteSpace: 'nowrap',
+};
+
+const emptyStateStyle: React.CSSProperties = {
+  marginTop: '44px',
+  padding: '4rem 2rem',
+  textAlign: 'center',
+  color: 'var(--muted)',
+  background: 'var(--color-surface)',
+  borderRadius: 'calc(var(--radius-lg) * 1.15)',
 };
