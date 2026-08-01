@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Hostel, User } from '../types';
 import { MapPin, Check, ArrowLeft, Grid, Info, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -17,7 +17,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
   const selectedHostel = hostels.find((h) => h.id === id);
 
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
-  const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
   const [loadingPhone, setLoadingPhone] = useState<boolean>(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -64,12 +64,10 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
     );
   }
 
-  const allPhotos = selectedHostel.photos && selectedHostel.photos.length > 0 
-    ? selectedHostel.photos 
+  const allPhotos = selectedHostel.photos && selectedHostel.photos.length > 0
+    ? selectedHostel.photos
     : (selectedHostel.photo ? selectedHostel.photo.split(',').map(p => p.trim()).filter(Boolean) : []);
-  
-  const displayPhoto = allPhotos.length > 0 ? allPhotos[currentPhotoIndex] : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80';
-  
+
   // Calculate price range
   let priceStr = 'N/A';
   if (selectedHostel.rooms && selectedHostel.rooms.length > 0) {
@@ -79,79 +77,20 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
     priceStr = min === max ? `PKR ${min.toLocaleString()}` : `PKR ${min.toLocaleString()} - ${max.toLocaleString()}`;
   }
 
-  const handlePrevPhoto = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentPhotoIndex(prev => Math.max(0, prev - 1));
-  };
-
-  const handleNextPhoto = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentPhotoIndex(prev => Math.min(allPhotos.length - 1, prev + 1));
-  };
-
   const [isHovered, setIsHovered] = useState(false);
-  const isDraggingRef = useRef(false);
-  const dragStartRef = useRef<number | null>(null);
-  const minSwipeDistance = 50;
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    dragStartRef.current = e.targetTouches[0].clientX;
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const end = e.changedTouches[0].clientX;
-    const start = dragStartRef.current;
-    if (start === null) return;
-    const distance = start - end;
-    if (distance > minSwipeDistance) {
-      setCurrentPhotoIndex(prev => Math.min(allPhotos.length - 1, prev + 1));
-    } else if (distance < -minSwipeDistance) {
-      setCurrentPhotoIndex(prev => Math.max(0, prev - 1));
-    } else if (Math.abs(distance) < 5) {
-      if (allPhotos.length > 0) { setLightboxImages(allPhotos); setLightboxOpen(true); }
+  const handleContainerClick = () => {
+    if (allPhotos.length > 0) {
+      setLightboxImages(allPhotos);
+      setLightboxOpen(true);
     }
-    dragStartRef.current = null;
-  };
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    isDraggingRef.current = true;
-    dragStartRef.current = startX;
-
-    const onMove = (ev: MouseEvent) => {
-      // track continuously via closure — no state needed
-    };
-
-    const onUp = (ev: MouseEvent) => {
-      isDraggingRef.current = false;
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-
-      const distance = startX - ev.clientX;
-      if (Math.abs(distance) > minSwipeDistance) {
-        if (distance > 0) {
-          // swiped left → next
-          setCurrentPhotoIndex(prev => Math.min(allPhotos.length - 1, prev + 1));
-        } else {
-          // swiped right → prev
-          setCurrentPhotoIndex(prev => Math.max(0, prev - 1));
-        }
-      } else if (Math.abs(distance) < 5) {
-        // click → open lightbox
-        if (allPhotos.length > 0) { setLightboxImages(allPhotos); setLightboxOpen(true); }
-      }
-    };
-
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
   };
 
   return (
     <div style={detailsPageStyle}>
       {/* Top Navigation */}
       <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button 
+        <button
           onClick={() => navigate('/hostels')}
           style={{
             display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none',
@@ -189,57 +128,82 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
 
       {/* Main Content Layout */}
       <div style={contentGridStyle}>
-        
+
         {/* Left Column: Image Slider & Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          
+
           {/* Main Photo Slider */}
-          <div 
-            style={{...mainPhotoStyle, backgroundImage: `url(${displayPhoto})`}}
+          <div
+            style={mainPhotoContainerStyle}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            onMouseDown={onMouseDown}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-            onDragStart={(e) => e.preventDefault()}
+            onClick={handleContainerClick}
           >
-            {allPhotos.length === 0 && (
-               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', color: 'white' }}>
-                 No photos available
-               </div>
+            {allPhotos.length === 0 ? (
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', color: 'white' }}>
+                No photos available
+              </div>
+            ) : (
+              <div
+                className="photo-scroll-container"
+                style={scrollContainerStyle}
+                onScroll={(e) => {
+                  const target = e.currentTarget;
+                  const index = Math.round(target.scrollLeft / target.clientWidth);
+                  setCurrentPhotoIndex(index);
+                }}
+              >
+                {allPhotos.map((photo, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      ...photoSlideStyle,
+                      backgroundImage: `url(${photo})`
+                    }}
+                  />
+                ))}
+              </div>
             )}
 
             {allPhotos.length > 1 && (
               <>
                 {currentPhotoIndex > 0 && (
-                  <button 
-                    style={{...sliderArrowLeftStyle, opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s'}} 
-                    onClick={handlePrevPhoto}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onMouseUp={(e) => e.stopPropagation()}
+                  <button
+                    style={{ ...sliderArrowLeftStyle, opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const container = e.currentTarget.parentElement?.querySelector('.photo-scroll-container');
+                      if (container) {
+                        container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
+                      }
+                    }}
                   >
                     <ChevronLeft size={24} />
                   </button>
                 )}
-                
+
                 {currentPhotoIndex < allPhotos.length - 1 && (
-                  <button 
-                    style={{...sliderArrowRightStyle, opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s'}} 
-                    onClick={handleNextPhoto}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onMouseUp={(e) => e.stopPropagation()}
+                  <button
+                    style={{ ...sliderArrowRightStyle, opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const container = e.currentTarget.parentElement?.querySelector('.photo-scroll-container');
+                      if (container) {
+                        container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
+                      }
+                    }}
                   >
                     <ChevronRight size={24} />
                   </button>
                 )}
-                
+
                 {/* Dot Indicators */}
                 <div style={dotIndicatorContainerStyle}>
                   {allPhotos.map((_, idx) => (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       style={{
-                        ...dotStyle, 
+                        ...dotStyle,
                         width: currentPhotoIndex === idx ? '16px' : '6px',
                         backgroundColor: currentPhotoIndex === idx ? 'white' : 'rgba(255,255,255,0.5)'
                       }}
@@ -250,7 +214,8 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
             )}
 
             {allPhotos.length > 0 && (
-              <button 
+              <button
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
                   setLightboxImages(allPhotos);
@@ -270,13 +235,13 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
               {selectedHostel.description || 'No description provided.'}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--card-hover)', borderRadius: '12px' }}>
-               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 600 }}>
-                 {selectedHostel.ownerName ? selectedHostel.ownerName.charAt(0).toUpperCase() : 'U'}
-               </div>
-               <div>
-                 <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Hosted by {selectedHostel.ownerName || 'Unknown Owner'}</h4>
-                 <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--muted)' }}>LiviSync Verified Owner</p>
-               </div>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 600 }}>
+                {selectedHostel.ownerName ? selectedHostel.ownerName.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div>
+                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Hosted by {selectedHostel.ownerName || 'Unknown Owner'}</h4>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--muted)' }}>LiviSync Verified Owner</p>
+              </div>
             </div>
           </section>
 
@@ -305,7 +270,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={ruleItemStyle}>
                 <div style={ruleIconWrapperStyle}>
-                   <Info size={20} style={{ color: 'var(--primary)' }} />
+                  <Info size={20} style={{ color: 'var(--primary)' }} />
                 </div>
                 <div>
                   <strong style={{ fontSize: '1rem', display: 'block', marginBottom: '0.25rem' }}>Curfew Policy</strong>
@@ -359,7 +324,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                           {room.description}
                         </p>
                       )}
-                      
+
                       {/* Room specific images */}
                       {room.images && room.images.length > 0 && (
                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
@@ -367,7 +332,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                             <img
                               key={i}
                               src={img}
-                              alt={`Room view ${i+1}`}
+                              alt={`Room view ${i + 1}`}
                               onClick={() => {
                                 setLightboxImages([img]);
                                 setLightboxOpen(true);
@@ -379,15 +344,15 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                         </div>
                       )}
                     </div>
-                    
+
                     <div style={{ textAlign: 'right', minWidth: '120px' }}>
                       <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--primary)' }}>
                         PKR {room.price.toLocaleString()}
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '0.5rem' }}>per month</div>
-                      <div style={{ 
+                      <div style={{
                         display: 'inline-block',
-                        fontSize: '0.85rem', fontWeight: 600, 
+                        fontSize: '0.85rem', fontWeight: 600,
                         padding: '0.25rem 0.6rem', borderRadius: '6px',
                         backgroundColor: room.seatsAvailable > 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                         color: room.seatsAvailable > 0 ? 'var(--success)' : 'var(--danger)'
@@ -418,18 +383,18 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
             </div>
 
             {selectedHostel.rooms && selectedHostel.rooms.length > 0 && (
-               <div style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '1.5rem', backgroundColor: 'var(--bg-color)' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                   <span style={{ color: 'var(--muted)' }}>Total Rooms</span>
-                   <span style={{ fontWeight: 600 }}>{selectedHostel.rooms.length}</span>
-                 </div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                   <span style={{ color: 'var(--muted)' }}>Available Beds</span>
-                   <span style={{ fontWeight: 600, color: 'var(--success)' }}>
-                     {selectedHostel.rooms.reduce((acc, r) => acc + r.seatsAvailable, 0)}
-                   </span>
-                 </div>
-               </div>
+              <div style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '1.5rem', backgroundColor: 'var(--bg-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                  <span style={{ color: 'var(--muted)' }}>Total Rooms</span>
+                  <span style={{ fontWeight: 600 }}>{selectedHostel.rooms.length}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                  <span style={{ color: 'var(--muted)' }}>Available Slots</span>
+                  <span style={{ fontWeight: 600, color: 'var(--success)' }}>
+                    {selectedHostel.rooms.reduce((acc, r) => acc + r.seatsAvailable, 0)}
+                  </span>
+                </div>
+              </div>
             )}
 
             {currentUser.role !== 'admin' && currentUser.role !== 'owner' ? (
@@ -463,15 +428,15 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
       </div>
 
       {lightboxOpen && (
-        <ImageLightbox 
-          images={lightboxImages || allPhotos} 
+        <ImageLightbox
+          images={lightboxImages}
           onClose={() => {
             setLightboxOpen(false);
-            setLightboxImages(null);
-          }} 
+            setLightboxImages([]);
+          }}
         />
       )}
-      
+
       <style>{`
         .room-card {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -516,16 +481,32 @@ const detailsPageStyle: React.CSSProperties = {
   padding: '0 1rem 4rem 1rem',
 };
 
-const mainPhotoStyle: React.CSSProperties = {
+const mainPhotoContainerStyle: React.CSSProperties = {
   width: '100%',
   height: '450px',
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  cursor: 'pointer',
-  transition: 'filter 0.2s',
   position: 'relative',
   borderRadius: '16px',
   overflow: 'hidden',
+};
+
+const scrollContainerStyle: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  overflowX: 'auto',
+  scrollSnapType: 'x mandatory',
+  scrollBehavior: 'smooth',
+  WebkitOverflowScrolling: 'touch',
+  cursor: 'pointer',
+};
+
+const photoSlideStyle: React.CSSProperties = {
+  flex: '0 0 100%',
+  width: '100%',
+  height: '100%',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  scrollSnapAlign: 'start',
 };
 
 const sliderArrowLeftStyle: React.CSSProperties = {
@@ -698,7 +679,7 @@ const phoneDisplayBoxStyle: React.CSSProperties = {
   fontWeight: 700,
 };
 
-// Responsive handling
+// Responsive handling and scrollbar hiding
 if (typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.innerHTML = `
@@ -706,6 +687,13 @@ if (typeof document !== 'undefined') {
       .split-layout, .details-content-grid {
          grid-template-columns: 1fr !important;
       }
+    }
+    .photo-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+    .photo-scroll-container {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   `;
   document.head.appendChild(style);
