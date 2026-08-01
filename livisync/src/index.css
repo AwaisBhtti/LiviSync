@@ -719,6 +719,45 @@ table th {
   }
 }
 
+/* ── Hostel detail view ─────────────────────────────────── */
+.photo-scroll-container::-webkit-scrollbar { display: none; }
+.photo-scroll-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (max-width: 900px) {
+  /* Drop the fixed 380px booking rail below the content instead of
+     squeezing both columns into a phone-width viewport. */
+  .details-content-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+  }
+  /* Stacked, the sidebar has nothing left to stick to */
+  .details-sticky-sidebar {
+    position: static !important;
+    top: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .details-photo {
+    height: 260px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+  .details-title {
+    font-size: 1.75rem !important;
+  }
+  .details-content-grid {
+    gap: 2rem !important;
+  }
+  /* Room rows: price drops under the details rather than fighting for width */
+  .details-room-price {
+    text-align: left !important;
+    min-width: 0 !important;
+  }
+}
+
 /* ── Full-screen chat breakout ───────────────────────────── */
 .main-content:has(.auth-chat-container) {
   padding: 0 !important;

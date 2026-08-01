@@ -58,7 +58,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
   if (!selectedHostel) {
     return (
       <div style={{ padding: '4rem 2rem', textAlign: 'center', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--text)' }}>Hostel Not Found</h2>
+        <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--foreground)' }}>Hostel Not Found</h2>
         <button className="btn btn-primary" onClick={() => navigate('/hostels')}>Back to Directory</button>
       </div>
     );
@@ -103,10 +103,10 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
 
       {/* Hero Header Section */}
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.5rem', lineHeight: 1.2 }}>
+        <h1 className="details-title" style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.5rem', lineHeight: 1.2 }}>
           {selectedHostel.name}
         </h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--muted)', fontSize: '0.9rem', fontWeight: 500 }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem 1rem', color: 'var(--muted)', fontSize: '0.9rem', fontWeight: 500 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             <MapPin size={16} style={{ color: 'var(--primary)' }} />
             {selectedHostel.location}
@@ -127,13 +127,14 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
       </div>
 
       {/* Main Content Layout */}
-      <div style={contentGridStyle}>
+      <div className="details-content-grid" style={contentGridStyle}>
 
         {/* Left Column: Image Slider & Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
           {/* Main Photo Slider */}
           <div
+            className="details-photo"
             style={mainPhotoContainerStyle}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -231,7 +232,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
           {/* About Section */}
           <section>
             <h2 style={sectionHeadingStyle}>About this hostel</h2>
-            <p style={{ color: 'var(--text)', fontSize: '1.05rem', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
+            <p style={{ color: 'var(--foreground)', fontSize: '1.05rem', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
               {selectedHostel.description || 'No description provided.'}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--card-hover)', borderRadius: '12px' }}>
@@ -345,7 +346,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                       )}
                     </div>
 
-                    <div style={{ textAlign: 'right', minWidth: '120px' }}>
+                    <div className="details-room-price" style={{ textAlign: 'right', minWidth: '120px' }}>
                       <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--primary)' }}>
                         PKR {room.price.toLocaleString()}
                       </div>
@@ -374,9 +375,9 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
 
         {/* Right Column: Sticky Pricing & Contact Sidebar */}
         <div>
-          <div style={stickySidebarStyle}>
+          <div className="details-sticky-sidebar" style={stickySidebarStyle}>
             <div style={{ marginBottom: '1.5rem' }}>
-              <span style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text)' }}>
+              <span style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--foreground)' }}>
                 {priceStr}
               </span>
               <span style={{ fontSize: '0.9rem', color: 'var(--muted)', marginLeft: '0.25rem' }}>/ month</span>
@@ -515,7 +516,7 @@ const sliderArrowLeftStyle: React.CSSProperties = {
   top: '50%',
   transform: 'translateY(-50%)',
   backgroundColor: 'var(--glass-bg)',
-  color: 'black',
+  color: 'var(--color-text)',
   border: 'none',
   borderRadius: '50%',
   width: '40px',
@@ -557,8 +558,8 @@ const showAllPhotosBtnStyle: React.CSSProperties = {
   bottom: '1.5rem',
   right: '1.5rem',
   backgroundColor: 'var(--card)',
-  color: 'black',
-  border: '1px solid rgba(0,0,0,0.1)',
+  color: 'var(--color-text)',
+  border: 'none',
   borderRadius: '8px',
   padding: '0.5rem 1rem',
   fontSize: '0.9rem',
@@ -581,7 +582,7 @@ const sectionHeadingStyle: React.CSSProperties = {
   fontSize: '1.5rem',
   fontWeight: 700,
   marginBottom: '1.25rem',
-  color: 'var(--text)',
+  color: 'var(--foreground)',
 };
 
 const dividerStyle: React.CSSProperties = {
@@ -619,7 +620,7 @@ const ruleIconWrapperStyle: React.CSSProperties = {
   width: '40px',
   height: '40px',
   borderRadius: '50%',
-  backgroundColor: 'rgba(59, 130, 246, 0.1)', /* assuming primary is blueish */
+  backgroundColor: 'var(--color-accent-100)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -638,7 +639,7 @@ const roomBadgeStyle: React.CSSProperties = {
   padding: '0.25rem 0.6rem',
   backgroundColor: 'var(--card-hover)',
   borderRadius: '6px',
-  color: 'var(--text)',
+  color: 'var(--foreground)',
   fontWeight: 500,
   border: '1px solid var(--border)',
 };
@@ -667,8 +668,8 @@ const primaryButtonStyle: React.CSSProperties = {
 };
 
 const phoneDisplayBoxStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(34, 197, 94, 0.1)',
-  border: '1px solid rgba(34, 197, 94, 0.3)',
+  backgroundColor: 'var(--color-accent-2-100)',
+  border: '1px solid var(--color-accent-2-300)',
   borderRadius: '8px',
   padding: '1rem',
   display: 'flex',
@@ -679,22 +680,5 @@ const phoneDisplayBoxStyle: React.CSSProperties = {
   fontWeight: 700,
 };
 
-// Responsive handling and scrollbar hiding
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.innerHTML = `
-    @media (max-width: 900px) {
-      .split-layout, .details-content-grid {
-         grid-template-columns: 1fr !important;
-      }
-    }
-    .photo-scroll-container::-webkit-scrollbar {
-      display: none;
-    }
-    .photo-scroll-container {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-  `;
-  document.head.appendChild(style);
-}
+// Responsive rules and scrollbar hiding now live in index.css alongside the
+// rest of the layout system, rather than being injected at import time.
