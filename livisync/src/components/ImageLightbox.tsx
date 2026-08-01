@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ImageLightboxProps {
   images?: string[];
@@ -68,7 +68,7 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
       style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        backgroundColor: 'rgba(32, 30, 29, 0.95)',
         backdropFilter: 'blur(10px)',
         display: 'flex',
         flexDirection: 'column',
