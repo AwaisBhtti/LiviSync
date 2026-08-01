@@ -384,8 +384,14 @@ export const ChatModule = ({
 
   return (
     <div style={containerStyle} className={`auth-chat-container ${activeChatUserId ? 'chat-active' : ''}`}>
+      {/* Page header — eyebrow over the display headline */}
+      <div className="chat-page-header" style={pageHeaderStyle}>
+        <div style={eyebrowStyle}>Inbox</div>
+        <h1 className="display" style={inboxTitleStyle}>Talk first. Share numbers later.</h1>
+      </div>
+
       {/* Wrap everything in a single unified dashboard */}
-      <div style={{ ...chatGridStyle, height: '100%' }}>
+      <div style={chatGridStyle}>
         {/* Left Side: Inbox Lists (Active Chats Only) */}
         <div className="chat-sidebar" style={inboxListStyle()}>
           {/* Section: Active Chats */}
@@ -674,19 +680,49 @@ export const ChatModule = ({
   );
 };
 
-// Styles
+// ─── Styles — Organic inbox: rounded two-pane shell on the cream ground ───────
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  height: 'calc(100vh - 74px)',
+  height: 'calc(100vh - 76px)',
   width: '100%',
+  maxWidth: '1240px',
+  margin: '0 auto',
+  padding: '2rem 1.5rem 1.5rem',
+};
+
+const pageHeaderStyle: React.CSSProperties = {
+  flexShrink: 0,
+};
+
+const eyebrowStyle: React.CSSProperties = {
+  fontSize: '0.75rem',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: 'var(--color-accent-700)',
+  marginBottom: '18px',
+  animation: 'ls-fade 0.7s ease both',
+};
+
+const inboxTitleStyle: React.CSSProperties = {
+  fontSize: 'clamp(30px, 4.4vw, 68px)',
+  lineHeight: 0.9,
+  margin: '0 0 28px',
+  maxWidth: '22ch',
+  animation: 'ls-rise 0.9s var(--ease-organic) both',
 };
 
 const chatGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '320px 1fr',
-  gap: 0,
-  height: '100%',
+  gap: '2px',
+  flex: 1,
+  minHeight: 0,
+  background: 'var(--color-divider)',
+  borderRadius: 'calc(var(--radius-lg) * 1.15)',
+  overflow: 'hidden',
+  boxShadow: 'var(--shadow-lg)',
+  animation: 'ls-fade 0.9s ease 0.18s both',
 };
 
 const inboxListStyle = (): React.CSSProperties => ({
@@ -694,8 +730,7 @@ const inboxListStyle = (): React.CSSProperties => ({
   flexDirection: 'column',
   overflowY: 'auto',
   height: '100%',
-  borderRight: '1px solid var(--border-solid)',
-  backgroundColor: 'var(--card)',
+  backgroundColor: 'var(--color-surface)',
 });
 
 const chatWindowStyle = (): React.CSSProperties => ({
@@ -703,7 +738,7 @@ const chatWindowStyle = (): React.CSSProperties => ({
   flexDirection: 'column',
   height: '100%',
   overflow: 'hidden',
-  backgroundColor: 'var(--background)',
+  backgroundColor: 'var(--color-bg)',
 });
 
 const sectionStyle: React.CSSProperties = {
@@ -711,11 +746,13 @@ const sectionStyle: React.CSSProperties = {
 };
 
 const sectionHeaderStyle: React.CSSProperties = {
-  fontSize: '0.85rem',
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.6875rem',
+  fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  color: 'var(--muted)',
-  marginBottom: '0.75rem',
+  letterSpacing: '0.16em',
+  color: 'var(--color-neutral-600)',
+  marginBottom: '1rem',
 };
 
 const emptyTextStyle: React.CSSProperties = {
@@ -733,31 +770,29 @@ const listStyle: React.CSSProperties = {
 
 
 const avatarStyle: React.CSSProperties = {
-  width: '40px',
-  height: '40px',
-  borderRadius: '50%',
+  width: '42px',
+  height: '42px',
+  borderRadius: 'var(--radius-pill)',
   objectFit: 'cover',
-  border: '2px solid white',
-  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
+  flexShrink: 0,
 };
 
 const chatRowStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '0.875rem',
-  padding: '0.75rem 1rem',
-  borderRadius: 'var(--radius-sm)',
+  gap: '0.75rem',
+  padding: '0.875rem 1rem',
+  borderRadius: 'var(--radius-lg)',
   cursor: 'pointer',
-  transition: 'var(--transition)',
-  backgroundColor: isActive ? 'var(--primary-glow-light)' : 'var(--card)',
-  border: isActive ? '1px solid var(--primary-glow)' : '1px solid var(--border-solid)',
-  boxShadow: isActive ? 'var(--shadow)' : 'none',
+  transition: 'background 0.3s ease',
+  backgroundColor: isActive ? 'var(--color-accent-100)' : 'transparent',
+  border: 'none',
   marginBottom: '0.25rem',
 });
 
 const chatPreviewTextStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  color: 'var(--muted)',
+  fontSize: '0.78rem',
+  color: 'var(--color-neutral-600)',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -767,10 +802,10 @@ const chatPreviewTextStyle: React.CSSProperties = {
 const chatHeaderStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.75rem',
-  padding: '0.875rem 1.25rem',
-  borderBottom: '1px solid var(--border-solid)',
-  backgroundColor: 'var(--card)',
+  gap: '0.875rem',
+  padding: '1.125rem 1.5rem',
+  borderBottom: '1px solid var(--color-divider)',
+  backgroundColor: 'var(--color-surface)',
 };
 
 const backButtonStyle: React.CSSProperties = {
@@ -803,12 +838,14 @@ const chatEmptyFeedStyle: React.CSSProperties = {
 const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
   flex: 1,
   minWidth: 0,
-  padding: '0.75rem 1rem',
-  borderRadius: isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-  background: isSelf ? 'var(--gradient-brand)' : 'var(--card)',
-  color: isSelf ? 'var(--primary-foreground)' : 'var(--foreground)',
-  boxShadow: 'var(--shadow-sm)',
-  border: isSelf ? 'none' : '1px solid var(--border-solid)',
+  padding: '0.8125rem 1.125rem',
+  fontSize: '0.9rem',
+  lineHeight: 1.55,
+  borderRadius: isSelf ? '20px 20px 6px 20px' : '20px 20px 20px 6px',
+  background: isSelf ? 'var(--color-accent)' : 'var(--color-surface)',
+  color: isSelf ? 'var(--color-bg)' : 'var(--color-text)',
+  boxShadow: isSelf ? 'none' : 'var(--shadow-sm)',
+  border: 'none',
 });
 
 const msgTimeStyle = (isSelf: boolean): React.CSSProperties => ({
@@ -816,23 +853,27 @@ const msgTimeStyle = (isSelf: boolean): React.CSSProperties => ({
   fontSize: '0.65rem',
   textAlign: 'right',
   marginTop: '0.25rem',
-  color: isSelf ? 'rgba(255, 255, 255, 0.75)' : 'var(--muted)',
+  color: isSelf ? 'rgba(245, 234, 216, 0.75)' : 'var(--muted)',
 });
 
 const chatInputAreaStyle: React.CSSProperties = {
-  padding: '0.875rem 1.25rem',
-  borderTop: '1px solid var(--border)',
+  padding: '1.125rem 1.5rem',
+  borderTop: '1px solid var(--color-divider)',
+  backgroundColor: 'var(--color-surface)',
   display: 'flex',
-  gap: '0.5rem',
+  gap: '0.625rem',
   alignItems: 'center',
 };
 
 const chatInputFieldStyle: React.CSSProperties = {
   flex: 1,
-  padding: '0.625rem 0.875rem',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
+  padding: '0.6875rem 1.125rem',
+  border: '1px solid var(--color-divider)',
+  background: 'var(--color-bg)',
+  borderRadius: 'var(--radius-pill)',
+  fontFamily: 'var(--font-body)',
   fontSize: '0.875rem',
+  color: 'var(--color-text)',
   outline: 'none',
 };
 

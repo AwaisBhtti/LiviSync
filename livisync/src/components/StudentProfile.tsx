@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Student, Hostel, User } from '../types';
-import { User as UserIcon, Settings, ShieldAlert, LogOut, Users, Key, Heart, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Settings, ShieldAlert, LogOut, Users, Key, Heart } from 'lucide-react';
 import { ProfileTab } from './profile/ProfileTab';
 import { FriendsTab } from './profile/FriendsTab';
 import { LifestyleTab } from './profile/LifestyleTab';
@@ -9,9 +9,12 @@ import { BlocklistTab } from './profile/BlocklistTab';
 import { useAppDispatch, useAppSelector } from '../store/store';
 import { useMatchRequests } from '../hooks/useMatchRequests';
 import { useUserActions } from '../hooks/useUserActions';
+import { useCountUp } from '../hooks/useReveal';
 import { logout } from '../store/slices/authSlice';
 import { showToast } from '../store/slices/toastSlice';
 import { FriendProfileModal } from './profile/FriendProfileModal';
+import { DEFAULT_AVATAR } from '../styles/commonStyles';
+import logo from '../assets/logo.png';
 
 interface StudentProfileProps {
   currentUser: Student;
@@ -23,6 +26,14 @@ interface StudentProfileProps {
 
 type TabType = 'profile' | 'friends' | 'lifestyle' | 'account' | 'blocklist';
 
+const SECTIONS: { key: TabType; icon: React.ReactNode; label: string }[] = [
+  { key: 'profile', icon: <Settings size={13} strokeWidth={2.75} />, label: 'Profile' },
+  { key: 'friends', icon: <Users size={13} strokeWidth={2.75} />, label: 'Connections' },
+  { key: 'lifestyle', icon: <Heart size={13} strokeWidth={2.75} />, label: 'Lifestyle' },
+  { key: 'account', icon: <Key size={13} strokeWidth={2.75} />, label: 'Account' },
+  { key: 'blocklist', icon: <ShieldAlert size={13} strokeWidth={2.75} />, label: 'Blocklist' },
+];
+
 export const StudentProfile = ({
   currentUser,
   onSave,
@@ -31,7 +42,7 @@ export const StudentProfile = ({
   onUnblockUser,
 }: StudentProfileProps) => {
   const dispatch = useAppDispatch();
-  
+
   // Retrieve matches & actions directly from hooks/store to keep App.tsx props unchanged
   const { matchRequests } = useAppSelector((state) => state.matches);
   const { handleUnfriend } = useMatchRequests();
@@ -44,17 +55,23 @@ export const StudentProfile = ({
     return (sessionStorage.getItem('livisync_profile_section') as TabType) || 'profile';
   });
   const [selectedFriend, setSelectedFriend] = useState<User | null>(null);
-  // mobileDrilled: true when user has tapped into a section on narrow screens
-  const [mobileDrilled, setMobileDrilled] = useState(false);
+
+  const connectionsCount = matchRequests.filter(
+    (r) => r.status === 'accepted' && (r.senderId === currentUser.id || r.receiverId === currentUser.id)
+  ).length;
+
+  const requestsCount = matchRequests.filter(
+    (r) => r.status === 'pending' && r.receiverId === currentUser.id
+  ).length;
+
+  const connections = useCountUp(connectionsCount, true);
+  const requests = useCountUp(requestsCount, true);
+
+  const isComplete = currentUser.isProfileComplete || currentUser.is_profile_complete;
 
   const handleSectionChange = (section: TabType) => {
     setActiveSection(section);
-    setMobileDrilled(true);
     sessionStorage.setItem('livisync_profile_section', section);
-  };
-
-  const handleMobileBack = () => {
-    setMobileDrilled(false);
   };
 
   const handleSaveFields = (updatedFields: Partial<User>) => {
@@ -64,169 +81,95 @@ export const StudentProfile = ({
     } as User);
   };
 
-
   return (
-    <div className="split-layout profile-split-layout" style={splitLayoutContainerStyle}>
-      {/* Sidebar Navigation */}
-      <div style={sidebarStyle} className="mobile-hide">
-        <div style={sidebarHeaderStyle}>
-          <UserIcon size={18} />
-          <h4>Your Account</h4>
-        </div>
-        <div
-          style={sidebarItemStyle(activeSection === 'profile')}
-          onClick={() => handleSectionChange('profile')}
-          className="sidebar-tab"
-        >
-          <Settings size={14} />
-          Profile Settings
-        </div>
-        <div
-          style={sidebarItemStyle(activeSection === 'friends')}
-          onClick={() => handleSectionChange('friends')}
-          className="sidebar-tab"
-        >
-          <Users size={14} />
-          My Friends
-        </div>
-        <div
-          style={sidebarItemStyle(activeSection === 'lifestyle')}
-          onClick={() => handleSectionChange('lifestyle')}
-          className="sidebar-tab"
-        >
-          <Heart size={14} />
-          Lifestyle &amp; Habits
-        </div>
-        <div
-          style={sidebarItemStyle(activeSection === 'account')}
-          onClick={() => handleSectionChange('account')}
-          className="sidebar-tab"
-        >
-          <Key size={14} />
-          Account Security
-        </div>
-        <div
-          style={sidebarItemStyle(activeSection === 'blocklist')}
-          onClick={() => handleSectionChange('blocklist')}
-          className="sidebar-tab"
-        >
-          <ShieldAlert size={14} />
-          Blocked Users
-        </div>
+    <div style={{ paddingTop: '1.5rem' }}>
+      <style>{`
+        .sp-signout:hover { background: var(--color-accent-100) !important; }
+        @media (max-width: 640px) {
+          .sp-hero { padding: 32px 24px !important; }
+          .sp-stats { margin-left: 0 !important; width: 100%; }
+        }
+      `}</style>
 
-        {/* Logout Button on Bottom */}
-        <button
-          onClick={handleLogout}
-          className="btn btn-primary"
-          style={{
-            marginTop: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 1rem',
-            fontSize: '0.85rem',
-            width: '100%',
-            boxShadow: 'var(--shadow-sm)',
-          }}
-        >
-          <LogOut size={14} />
-          Sign Out
+      {/* ── Hero banner ── */}
+      <div className="sp-hero" style={heroStyle}>
+        <img src={logo} alt="" style={heroMarkStyle} />
+        <div style={heroInnerStyle}>
+          <img
+            src={currentUser.photo || DEFAULT_AVATAR}
+            alt={currentUser.name}
+            style={heroAvatarStyle}
+          />
+          <div style={{ minWidth: 0 }}>
+            <div style={heroEyebrowStyle}>Student profile</div>
+            <div className="display" style={heroNameStyle}>{currentUser.name}</div>
+            <div style={heroMetaStyle}>
+              {[
+                currentUser.institution || currentUser.company,
+                currentUser.location,
+                isComplete ? 'Profile complete' : 'Profile incomplete',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </div>
+          </div>
+
+          <div className="sp-stats" style={heroStatsStyle}>
+            <div>
+              <div style={heroStatValueStyle}>{connections}</div>
+              <div style={heroStatLabelStyle}>Connections</div>
+            </div>
+            <div>
+              <div style={heroStatValueStyle}>{requests}</div>
+              <div style={heroStatLabelStyle}>Requests</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section pills ── */}
+      <div style={tabRowStyle}>
+        {SECTIONS.map(({ key, icon, label }) => (
+          <button
+            key={key}
+            onClick={() => handleSectionChange(key)}
+            className={activeSection === key ? 'pill pill-active' : 'pill'}
+          >
+            {icon}
+            {label}
+          </button>
+        ))}
+        <button onClick={handleLogout} className="pill sp-signout" style={{ marginLeft: 'auto' }}>
+          <LogOut size={13} strokeWidth={2.75} />
+          Sign out
         </button>
       </div>
 
-      {/* Main Settings Card */}
-      <div className="card" style={rightCardStyle}>
-
-        {/* ── Mobile: Section List (shown when NOT drilled into a section) ── */}
-        {!mobileDrilled && (
-          <div className="mobile-section-list">
-            <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Account</p>
-            {([
-              { key: 'profile',   icon: <Settings size={16} />,     label: 'Profile Settings' },
-              { key: 'friends',   icon: <Users size={16} />,        label: 'My Friends' },
-              { key: 'lifestyle', icon: <Heart size={16} />,        label: 'Lifestyle & Habits' },
-              { key: 'account',   icon: <Key size={16} />,          label: 'Account Security' },
-              { key: 'blocklist', icon: <ShieldAlert size={16} />,  label: 'Blocked Users' },
-            ] as { key: TabType; icon: React.ReactNode; label: string }[]).map(({ key, icon, label }) => (
-              <button
-                key={key}
-                onClick={() => handleSectionChange(key)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.75rem',
-                  width: '100%', padding: '0.85rem 1rem',
-                  background: 'transparent',
-                  border: 'none', borderBottom: '1px solid var(--border-solid)',
-                  borderRadius: 0, cursor: 'pointer',
-                  color: '#332721', fontSize: '0.9rem', fontWeight: 500,
-                  textAlign: 'left',
-                }}
-              >
-                <span style={{ color: 'var(--primary)', opacity: 0.75 }}>{icon}</span>
-                <span style={{ flex: 1 }}>{label}</span>
-                <ChevronRight size={15} style={{ color: 'var(--muted)', opacity: 0.6 }} />
-              </button>
-            ))}
-            <button
-              onClick={handleLogout}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.75rem',
-                width: '100%', padding: '0.85rem 1rem', marginTop: '0.5rem',
-                background: 'transparent',
-                border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 600,
-                textAlign: 'left',
-              }}
-            >
-              <LogOut size={16} />
-              Sign Out
-            </button>
-          </div>
+      {/* ── Section content ── */}
+      <div style={contentCardStyle}>
+        {activeSection === 'profile' && (
+          <ProfileTab currentUser={currentUser} hostels={hostels} onSave={handleSaveFields} />
         )}
 
-        {/* ── Mobile: Back button (shown when drilled into a section) ── */}
-        {mobileDrilled && (
-          <button
-            className="mobile-back-btn"
-            onClick={handleMobileBack}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 600,
-              padding: '0 0 1rem 0', marginBottom: '0.25rem',
-            }}
-          >
-            <ArrowLeft size={15} />
-            Back
-          </button>
+        {activeSection === 'friends' && (
+          <FriendsTab
+            currentUser={currentUser}
+            users={users}
+            matchRequests={matchRequests}
+            onUnfriend={handleUnfriend}
+            onSelectFriend={setSelectedFriend}
+          />
         )}
 
-        {/* ── Section Content (always shown on desktop; on mobile only when drilled) ── */}
-        <div className={mobileDrilled ? 'mobile-section-content drilled' : 'mobile-section-content'}>
-          {activeSection === 'profile' && (
-            <ProfileTab currentUser={currentUser} hostels={hostels} onSave={handleSaveFields} />
-          )}
+        {activeSection === 'lifestyle' && (
+          <LifestyleTab currentUser={currentUser} onSave={handleSaveFields} />
+        )}
 
-          {activeSection === 'friends' && (
-            <FriendsTab
-              currentUser={currentUser}
-              users={users}
-              matchRequests={matchRequests}
-              onUnfriend={handleUnfriend}
-              onSelectFriend={setSelectedFriend}
-            />
-          )}
+        {activeSection === 'account' && <AccountTab onLogout={handleLogout} />}
 
-          {activeSection === 'lifestyle' && (
-            <LifestyleTab currentUser={currentUser} onSave={handleSaveFields} />
-          )}
-
-          {activeSection === 'account' && <AccountTab onLogout={handleLogout} />}
-
-          {activeSection === 'blocklist' && (
-            <BlocklistTab currentUser={currentUser} users={users} onUnblockUser={onUnblockUser} />
-          )}
-        </div>
+        {activeSection === 'blocklist' && (
+          <BlocklistTab currentUser={currentUser} users={users} onUnblockUser={onUnblockUser} />
+        )}
       </div>
 
       {selectedFriend && (
@@ -273,46 +216,96 @@ export const StudentProfile = ({
   );
 };
 
-// Sidebar & Layout Styles
-const splitLayoutContainerStyle: React.CSSProperties = {
-  display: 'grid',
-  // gridTemplateColumns is controlled by the .split-layout CSS class to allow responsive overrides
-  gap: '2rem',
-  height: 'calc(100vh - 180px)',
-  minHeight: '520px',
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const heroStyle: React.CSSProperties = {
+  position: 'relative',
+  borderRadius: 'calc(var(--radius-lg) * 1.3)',
+  overflow: 'hidden',
+  background: 'var(--color-text)',
+  color: 'var(--color-bg)',
+  padding: '48px',
+  animation: 'ls-fade 0.8s ease both',
 };
 
-const sidebarStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-  height: '100%',
+const heroMarkStyle: React.CSSProperties = {
+  position: 'absolute',
+  right: '-40px',
+  top: '-60px',
+  width: '320px',
+  opacity: 0.1,
+  animation: 'ls-float 8s ease-in-out infinite',
 };
 
-const rightCardStyle: React.CSSProperties = {
-  padding: '2rem',
-  height: '100%',
-  overflowY: 'auto',
-};
-
-const sidebarHeaderStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.5rem',
-  padding: '0.5rem',
-  borderBottom: '1px solid var(--border)',
-  marginBottom: '0.5rem',
-};
-
-const sidebarItemStyle = (isActive: boolean): React.CSSProperties => ({
+const heroInnerStyle: React.CSSProperties = {
+  position: 'relative',
   display: 'flex',
   alignItems: 'center',
-  gap: '0.5rem',
-  padding: '0.625rem 0.875rem',
+  gap: '26px',
+  flexWrap: 'wrap',
+};
+
+const heroAvatarStyle: React.CSSProperties = {
+  width: '104px',
+  height: '104px',
+  borderRadius: 'var(--radius-pill)',
+  objectFit: 'cover',
+  border: '4px solid var(--color-accent)',
+  flexShrink: 0,
+};
+
+const heroEyebrowStyle: React.CSSProperties = {
+  fontSize: '0.6875rem',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: 'var(--color-accent-300)',
+  marginBottom: '8px',
+};
+
+const heroNameStyle: React.CSSProperties = {
+  fontSize: 'clamp(32px, 4.2vw, 64px)',
+  letterSpacing: '0.05em',
+  lineHeight: 0.94,
+  color: 'var(--color-bg)',
+};
+
+const heroMetaStyle: React.CSSProperties = {
   fontSize: '0.875rem',
-  fontWeight: 500,
-  borderRadius: 'var(--radius)',
-  backgroundColor: isActive ? 'var(--secondary)' : 'transparent',
-  color: isActive ? 'var(--foreground)' : 'var(--muted)',
-  cursor: 'pointer',
-});
+  color: 'rgba(245, 234, 216, 0.7)',
+  marginTop: '6px',
+};
+
+const heroStatsStyle: React.CSSProperties = {
+  marginLeft: 'auto',
+  display: 'flex',
+  gap: '34px',
+};
+
+const heroStatValueStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-heading)',
+  fontSize: '2rem',
+  lineHeight: 1.1,
+};
+
+const heroStatLabelStyle: React.CSSProperties = {
+  fontSize: '0.66rem',
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  color: 'rgba(245, 234, 216, 0.65)',
+};
+
+const tabRowStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '6px',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  margin: '34px 0 30px',
+};
+
+const contentCardStyle: React.CSSProperties = {
+  background: 'var(--color-surface)',
+  borderRadius: 'calc(var(--radius-lg) * 1.15)',
+  padding: '2rem',
+  boxShadow: 'var(--shadow-sm)',
+  animation: 'ls-fade 0.5s ease both',
+};
