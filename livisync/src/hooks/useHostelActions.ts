@@ -25,11 +25,13 @@ export function useHostelActions() {
   const handleEditHostel = async (updatedHostel: Hostel) => {
     if (!token) return;
     try {
-      await dispatch(editHostel({ updatedHostel, token })).unwrap();
+      const result = await dispatch(editHostel({ updatedHostel, token })).unwrap();
       dispatch(showToast({ message: 'Hostel listing updated successfully!', type: 'success' }));
+      return result;
     } catch (err: any) {
       const errMsg = typeof err === 'string' ? err : err.message || 'Error updating hostel listing.';
       dispatch(showToast({ message: errMsg, type: 'error' }));
+      throw err;
     }
   };
 
