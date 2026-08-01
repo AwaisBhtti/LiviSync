@@ -28,7 +28,7 @@ export const Navbar = ({
             <div style={logoBoxStyle}>
               <img src={logo} alt="LiviSync Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
-            <span style={logoTextStyle}>LiviSync</span>
+            <span style={logoTextStyle}>LIVISYNC</span>
           </Link>
 
           <nav className="desktop-nav-tabs" style={desktopNavStyle}>
@@ -167,26 +167,25 @@ export const Navbar = ({
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ─── Styles — Organic: cream bar, dark pill nav track ─────────────────────────
 
 const headerStyle: React.CSSProperties = {
-  backdropFilter: 'blur(24px)',
-  WebkitBackdropFilter: 'blur(24px)',
-  backgroundColor: '#f0ece6', // Linen backdrop
-  borderBottom: '1px solid #e0d6cb',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  backgroundColor: 'rgba(245, 234, 216, 0.90)',
   position: 'sticky',
   top: 0,
   zIndex: 90,
-  boxShadow: '0 2px 12px rgba(51, 39, 33, 0.03)',
 };
 
 const navContainerStyle: React.CSSProperties = {
-  maxWidth: '1200px',
+  maxWidth: '1240px',
   margin: '0 auto',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  height: '64px',
+  gap: '1.5rem',
+  height: '76px',
   padding: '0 1.5rem',
 };
 
@@ -194,25 +193,25 @@ const logoBoxStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '30px',
-  height: '30px',
+  width: '26px',
+  height: '26px',
   flexShrink: 0,
 };
 
 const logoSectionStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.5rem',
+  gap: '0.625rem',
   cursor: 'pointer',
   textDecoration: 'none',
 };
 
 const logoTextStyle: React.CSSProperties = {
-  fontWeight: 800,
-  fontSize: '1.2rem',
-  letterSpacing: '-0.04em',
-  color: '#332721',
-  fontFamily: 'var(--font-sans)',
+  fontFamily: 'var(--font-display)',
+  fontWeight: 400,
+  fontSize: '1.1875rem',
+  letterSpacing: '0.2em',
+  color: 'var(--color-text)',
 };
 
 const desktopNavStyle: React.CSSProperties = {
@@ -220,25 +219,32 @@ const desktopNavStyle: React.CSSProperties = {
   alignItems: 'center',
 };
 
+/* The floating "island": a dark pill holding the section tabs */
 const navTrackStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1.5rem',
-  background: 'transparent',
-  padding: '0.3rem 0.5rem',
+  gap: '4px',
+  background: 'var(--color-text)',
+  padding: '8px',
+  borderRadius: 'var(--radius-pill)',
+  boxShadow: '0 10px 34px rgba(32, 30, 29, 0.22)',
 };
 
 const tabButtonStyle = (isActive: boolean): React.CSSProperties => ({
   display: 'flex',
   alignItems: 'center',
   gap: '0.4rem',
-  padding: '0.5rem 0.25rem',
-  fontSize: '0.9rem',
-  fontWeight: isActive ? 600 : 500,
-  color: isActive ? '#b55c3c' : '#8c7b70',
-  background: 'transparent',
+  padding: '0.5625rem 1rem',
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.6875rem',
+  fontWeight: 700,
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  color: 'var(--color-bg)',
+  opacity: isActive ? 1 : 0.72,
+  background: isActive ? 'var(--color-accent)' : 'transparent',
   border: 'none',
-  borderBottom: isActive ? '2.5px solid #b55c3c' : '2.5px solid transparent',
+  borderRadius: 'var(--radius-pill)',
   cursor: 'pointer',
   transition: 'var(--transition)',
   position: 'relative',
@@ -247,62 +253,63 @@ const tabButtonStyle = (isActive: boolean): React.CSSProperties => ({
 });
 
 const unreadBadgeStyle: React.CSSProperties = {
-  backgroundColor: 'var(--primary)',
-  color: 'var(--primary-foreground)',
-  fontSize: '0.65rem',
-  fontWeight: 700,
-  borderRadius: '9999px',
-  minWidth: '16px',
-  height: '16px',
+  backgroundColor: 'var(--color-accent-300)',
+  color: 'var(--color-accent-900)',
+  fontSize: '0.625rem',
+  fontWeight: 800,
+  borderRadius: 'var(--radius-pill)',
+  minWidth: '17px',
+  height: '17px',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '0 4px',
+  padding: '0 5px',
   marginLeft: '2px',
-  boxShadow: '0 2px 5px var(--primary-glow)',
+  letterSpacing: 0,
 };
 
 const mobileUnreadBadgeStyle: React.CSSProperties = {
   position: 'absolute',
   top: '-4px',
   right: '-6px',
-  backgroundColor: 'var(--danger)',
-  color: 'white',
-  fontSize: '0.65rem',
-  fontWeight: 700,
-  borderRadius: '9999px',
-  width: '15px',
-  height: '15px',
+  backgroundColor: 'var(--color-accent)',
+  color: 'var(--color-bg)',
+  fontSize: '0.625rem',
+  fontWeight: 800,
+  borderRadius: 'var(--radius-pill)',
+  width: '16px',
+  height: '16px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  boxShadow: '0 2px 5px var(--danger-glow)',
 };
 
 const userControlStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1rem',
+  gap: '0.75rem',
 };
 
 const roleDisplayStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.375rem',
-  fontSize: '0.8rem',
-  background: 'var(--secondary)',
-  padding: '0.375rem 0.75rem',
-  borderRadius: '9999px',
+  fontSize: '0.6875rem',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  background: 'var(--color-neutral-200)',
+  padding: '0.4375rem 0.875rem',
+  borderRadius: 'var(--radius-pill)',
 };
 
 const roleLabelStyle: React.CSSProperties = {
   color: 'var(--muted)',
-  fontWeight: 500,
+  fontWeight: 600,
 };
 
 const roleBadgeStyle = (role: string): React.CSSProperties => ({
-  fontWeight: 700,
-  color: role === 'admin' ? 'var(--danger)' : 'var(--success)',
+  fontWeight: 800,
+  color: role === 'admin' ? 'var(--color-accent-700)' : 'var(--color-accent-2-700)',
 });
 
 const mobileTabButtonStyle = (isActive: boolean): React.CSSProperties => ({
@@ -312,7 +319,7 @@ const mobileTabButtonStyle = (isActive: boolean): React.CSSProperties => ({
   gap: '4px',
   background: 'none',
   border: 'none',
-  color: isActive ? 'var(--primary)' : 'var(--muted)',
+  color: isActive ? 'var(--color-accent-300)' : 'rgba(245, 234, 216, 0.65)',
   cursor: 'pointer',
   fontSize: '0.75rem',
   width: '20%',
@@ -321,6 +328,8 @@ const mobileTabButtonStyle = (isActive: boolean): React.CSSProperties => ({
 });
 
 const mobileTabTextStyle: React.CSSProperties = {
-  fontSize: '0.65rem',
-  fontWeight: 600,
+  fontSize: '0.5625rem',
+  fontWeight: 700,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
 };
