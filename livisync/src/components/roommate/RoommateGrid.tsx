@@ -1,5 +1,5 @@
-/** RoommateGrid — candidate cards, warm sand and cashmere style. */
-import type { User, MatchRequest } from '../../types';
+/** RoommateGrid — candidate cards in the Organic style: soft sand surfaces, ring scores, pill tags. */
+import type { User, MatchRequest, Preferences } from '../../types';
 import { Check, MapPin } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
 
@@ -13,15 +13,34 @@ interface RoommateGridProps {
   hideScores?: boolean;
 }
 
-const CARD_BG = '#f0ece6'; // Linen beige
-const CARD_BORDER = '#e0d6cb';
-const TEXT = '#332721'; // Espresso brown
-const MUTED = '#8c7b70'; // Warm beige
+const RING_CIRCUMFERENCE = 263.9;
 
-const getScoreColors = (score: number) => {
-  if (score >= 80) return { color: '#b55c3c', bg: 'rgba(181, 92, 60, 0.12)', border: '#b55c3c' };
-  if (score >= 50) return { color: '#d97706', bg: '#fffbeb', border: 'rgba(217, 119, 6, 0.15)' };
-  return { color: MUTED, bg: 'rgba(51, 39, 33, 0.04)', border: '#e0d6cb' };
+const SLEEP_LABELS: Record<Preferences['sleepSchedule'], string> = {
+  'early-bird': 'Early Bird',
+  'night-owl': 'Night Owl',
+  flexible: 'Flexible',
+};
+
+const CLEAN_LABELS: Record<Preferences['cleanliness'], string> = {
+  meticulous: 'Very Tidy',
+  moderate: 'Moderately Tidy',
+  relaxed: 'Relaxed',
+};
+
+const SMOKING_LABELS: Record<Preferences['smoking'], string> = {
+  no: 'No Smoking',
+  yes: 'Smoker',
+  'outside-only': 'Outdoors Only',
+};
+
+/** The three lifestyle traits the card leads with — the ones that decide a room. */
+const lifestyleTags = (prefs?: Preferences) => {
+  if (!prefs) return [];
+  return [
+    SLEEP_LABELS[prefs.sleepSchedule],
+    CLEAN_LABELS[prefs.cleanliness],
+    SMOKING_LABELS[prefs.smoking],
+  ].filter(Boolean);
 };
 
 export const RoommateGrid = ({
@@ -42,91 +61,43 @@ export const RoommateGrid = ({
 
   if (candidates.length === 0) {
     return (
-      <div
-        style={{
-          padding: '4rem 2rem',
-          textAlign: 'center',
-          color: MUTED,
-          background: CARD_BG,
-          border: `1px solid ${CARD_BORDER}`,
-          borderRadius: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '0.75rem',
-        }}
-      >
-        <p style={{ fontWeight: 700, color: TEXT, fontSize: '1rem' }}>No matches found</p>
-        <p style={{ fontSize: '0.85rem' }}>Try adjusting your filters to see more candidates.</p>
+      <div style={emptyStateStyle}>
+        <p style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text)', fontSize: '1.25rem' }}>
+          No matches found
+        </p>
+        <p style={{ fontSize: '0.875rem' }}>Try adjusting your filters to see more candidates.</p>
       </div>
     );
   }
 
   return (
-    <div className="grid-2">
+    <div className="grid-2 rm-grid-mobile-single">
       {candidates.map((candidate) => {
         const reqStatus = getRequestStatus(candidate.id);
         const occupationDisplay = candidate.occupation === 'job' ? 'Job Holder' : 'Student';
-        const { color } = getScoreColors(candidate.score);
+        const tags = lifestyleTags(candidate.preferences);
 
         return (
           <div
             key={candidate.id}
             onClick={() => onSelectCandidate(candidate)}
-            style={{
-              background: CARD_BG,
-              border: `1px solid ${CARD_BORDER}`,
-              borderRadius: '16px',
-              padding: '1.25rem',
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.875rem',
-              transition: 'var(--transition)',
-              boxShadow: '0 2px 12px rgba(51, 39, 33, 0.02)',
-            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') onSelectCandidate(candidate); }}
             className="rm-card-hover"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.borderColor = '#b55c3c';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(181, 92, 60, 0.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.borderColor = CARD_BORDER;
-              e.currentTarget.style.boxShadow = '0 2px 12px rgba(51, 39, 33, 0.02)';
-            }}
+            style={cardStyle}
           >
-            {/* Top row */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+            {/* Top row — avatar, identity, ring score */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <img
                 src={candidate.photo || DEFAULT_AVATAR}
                 alt={candidate.name}
-                style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '1.5px solid #e0d6cb',
-                  flexShrink: 0,
-                }}
+                style={avatarStyle}
               />
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h3
-                  style={{
-                    fontSize: '1.05rem',
-                    fontWeight: 700,
-                    color: TEXT,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  {candidate.name}
-                </h3>
-                <p style={{ fontSize: '0.8rem', color: MUTED, marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                <h3 style={nameStyle}>{candidate.name}</h3>
+                <p style={metaStyle}>
                   <span>{candidate.age ?? '?'} y/o</span>
                   <span style={{ opacity: 0.5 }}>·</span>
                   <span style={{ textTransform: 'capitalize' }}>{candidate.gender ?? 'N/A'}</span>
@@ -135,82 +106,177 @@ export const RoommateGrid = ({
                 </p>
               </div>
 
-              {/* Score badge */}
               {!hideScores && (
-                <div
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color,
-                  }}
-                >
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, lineHeight: 1 }}>{candidate.score}%</span>
-                  <span style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, marginTop: '1px' }}>match</span>
+                <div style={{ position: 'relative', width: '56px', height: '56px', flexShrink: 0 }}>
+                  <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                    <circle cx="50" cy="50" r="42" stroke="var(--color-accent-200)" strokeWidth="8" fill="transparent" />
+                    <circle
+                      cx="50" cy="50" r="42"
+                      stroke="var(--color-accent)" strokeWidth="8" fill="transparent"
+                      strokeDasharray={RING_CIRCUMFERENCE}
+                      strokeDashoffset={RING_CIRCUMFERENCE * (1 - candidate.score / 100)}
+                      strokeLinecap="round"
+                      style={{ transition: 'stroke-dashoffset 1.3s var(--ease-organic)' }}
+                    />
+                  </svg>
+                  <div style={ringValueStyle}>{candidate.score}</div>
                 </div>
               )}
             </div>
 
+            {/* Lifestyle tags */}
+            {tags.length > 0 && (
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {tags.map((t) => (
+                  <span key={t} className="badge badge-neutral">{t}</span>
+                ))}
+              </div>
+            )}
+
             {/* Bio */}
-            <p
-              style={{
-                fontSize: '0.85rem',
-                color: '#332721',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                lineHeight: '1.5',
-              }}
-            >
-              {candidate.bio || 'No biography provided.'}
-            </p>
+            <p style={bioStyle}>{candidate.bio || 'No biography provided.'}</p>
 
             {/* Footer */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderTop: '1px solid #e0d6cb',
-                paddingTop: '0.75rem',
-                marginTop: 'auto',
-              }}
-            >
-              <span style={{ fontSize: '0.8rem', color: MUTED, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <MapPin size={12} />
-                {candidate.location || 'Islamabad'}
+            <div style={footerStyle}>
+              <span style={locationStyle}>
+                <MapPin size={12} strokeWidth={2.75} />
+                {candidate.location || 'Lahore'}
               </span>
 
               {reqStatus === 'accepted' && (
-                <span style={{ color: '#b55c3c', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '3px' }}>
-                  <Check size={12} /> Matched
+                <span style={matchedStyle}>
+                  <Check size={12} strokeWidth={2.75} /> Matched
                 </span>
               )}
-              {reqStatus === 'pending' && (
-                <span style={{
-                  color: '#b55c3c',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  background: 'transparent',
-                  border: '1px solid rgba(181, 92, 60, 0.25)',
-                  borderRadius: '20px',
-                  padding: '0.15rem 0.5rem',
-                }}>
-                  Pending
-                </span>
-              )}
-              {!reqStatus && (
-                <span style={{ color: '#b55c3c', fontSize: '0.8rem', fontWeight: 600 }}>
-                  View Profile
-                </span>
-              )}
+              {reqStatus === 'pending' && <span style={pendingStyle}>Pending</span>}
+              {!reqStatus && <span style={viewProfileStyle}>View profile →</span>}
             </div>
           </div>
         );
       })}
     </div>
   );
+};
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const cardStyle: React.CSSProperties = {
+  background: 'var(--color-surface)',
+  borderRadius: 'calc(var(--radius-lg) * 1.15)',
+  padding: '26px',
+  cursor: 'pointer',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '18px',
+  boxShadow: 'var(--shadow-sm)',
+  transition: 'transform 0.5s var(--ease-organic), box-shadow 0.5s ease',
+};
+
+const avatarStyle: React.CSSProperties = {
+  width: '62px',
+  height: '62px',
+  borderRadius: 'var(--radius-pill)',
+  objectFit: 'cover',
+  flexShrink: 0,
+};
+
+const nameStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-heading)',
+  fontWeight: 400,
+  fontSize: '1.1875rem',
+  color: 'var(--color-text)',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+};
+
+const metaStyle: React.CSSProperties = {
+  fontSize: '0.8125rem',
+  color: 'var(--color-neutral-600)',
+  marginTop: '0.2rem',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.35rem',
+  flexWrap: 'wrap',
+};
+
+const ringValueStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '0.8125rem',
+  fontWeight: 700,
+  color: 'var(--color-text)',
+};
+
+const bioStyle: React.CSSProperties = {
+  fontSize: '0.875rem',
+  color: 'var(--color-neutral-700)',
+  overflow: 'hidden',
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  lineHeight: 1.6,
+  margin: 0,
+};
+
+const footerStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  borderTop: '1px solid var(--color-divider)',
+  paddingTop: '16px',
+  marginTop: 'auto',
+};
+
+const locationStyle: React.CSSProperties = {
+  fontSize: '0.8125rem',
+  color: 'var(--color-neutral-600)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '5px',
+};
+
+const matchedStyle: React.CSSProperties = {
+  color: 'var(--color-accent-2-700)',
+  fontSize: '0.6875rem',
+  fontWeight: 700,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+};
+
+const pendingStyle: React.CSSProperties = {
+  color: 'var(--color-accent-800)',
+  background: 'var(--color-accent-100)',
+  fontSize: '0.625rem',
+  fontWeight: 700,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  borderRadius: 'var(--radius-pill)',
+  padding: '5px 12px',
+};
+
+const viewProfileStyle: React.CSSProperties = {
+  color: 'var(--color-accent-700)',
+  fontSize: '0.6875rem',
+  fontWeight: 700,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+};
+
+const emptyStateStyle: React.CSSProperties = {
+  padding: '4rem 2rem',
+  textAlign: 'center',
+  color: 'var(--color-neutral-600)',
+  background: 'var(--color-surface)',
+  borderRadius: 'calc(var(--radius-lg) * 1.15)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '0.75rem',
 };

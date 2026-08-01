@@ -130,36 +130,58 @@ export const RoommateFinder = ({
   return (
     <div style={pageWrapStyle}>
       <style>{`
-        .rm-input::placeholder { color: #8c7b70; }
-        .rm-select option { background: #f0ece6; color: #332721; }
+        .rm-input::placeholder { color: var(--color-neutral-500); }
+        .rm-select option { background: var(--color-surface); color: var(--color-text); }
         .rm-card-hover:hover {
-          border-color: #b55c3c !important;
-          box-shadow: 0 8px 32px rgba(181, 92, 60, 0.1) !important;
-          transform: translateY(-2px);
+          box-shadow: var(--shadow-lg) !important;
+          transform: translateY(-6px);
         }
-        .rm-filter-toggle:hover { background: #e8e3da !important; }
-        .rm-tab-btn:hover { color: #b55c3c !important; }
+        .rm-filter-toggle:hover { background: var(--color-accent-100) !important; }
+        @media (max-width: 900px) {
+          .rm-headline-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+        }
       `}</style>
 
       {/* ── Header ── */}
       <div style={headerStyle}>
         <div className="rm-header-wrap" style={headerInnerWrapStyle}>
+          <div style={eyebrowStyle}>Roommate finder</div>
+
+          <div className="rm-headline-grid" style={headlineGridStyle}>
+            <h1 className="display" style={pageTitleStyle}>
+              We match your habits before your housing.
+            </h1>
+            <p style={pageLeadStyle}>
+              Compatibility is scored on sleep schedule, cleanliness, smoking policy, pets and guest
+              tolerance — the five things that actually decide whether a room works.
+            </p>
+          </div>
+
           <div className="rm-header-inner" style={headerInnerStyle}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem' }}>
-                <div style={iconBoxStyle}>
-                  <Users size={16} color="white" strokeWidth={2.5} />
-                </div>
-                <h1 style={pageTitleStyle}>Find Roommates</h1>
-              </div>
-              <p style={pageSubtitleStyle}>
-                {candidates.length} compatible students · sorted by lifestyle match
-              </p>
+            {/* Tab bar */}
+            <div className="rm-tab-bar" style={tabBarStyle}>
+              <button
+                onClick={() => handleTabChange('find')}
+                className={activeTab === 'find' ? 'pill pill-active rm-tab-btn' : 'pill rm-tab-btn'}
+              >
+                <Users size={13} strokeWidth={2.75} />
+                Browse · {candidates.length}
+              </button>
+              <button
+                onClick={() => handleTabChange('requests')}
+                className={activeTab === 'requests' ? 'pill pill-active rm-tab-btn' : 'pill rm-tab-btn'}
+              >
+                <Inbox size={13} strokeWidth={2.75} />
+                Requests
+                {pendingReceivedCount > 0 && (
+                  <span style={tabPillStyle}>{pendingReceivedCount}</span>
+                )}
+              </button>
             </div>
 
             {/* Search */}
             <div className="rm-search-wrap" style={searchWrapStyle}>
-              <Search size={15} color="rgba(148,163,184,0.7)" style={{ flexShrink: 0 }} />
+              <Search size={15} strokeWidth={2.75} style={{ flexShrink: 0, color: 'var(--muted)' }} />
               <input
                 className="rm-input"
                 type="text"
@@ -169,29 +191,6 @@ export const RoommateFinder = ({
                 style={searchInputStyle}
               />
             </div>
-          </div>
-
-          {/* Tab bar */}
-          <div className="rm-tab-bar" style={tabBarStyle}>
-            <button
-              onClick={() => handleTabChange('find')}
-              className="rm-tab-btn"
-              style={tabBtnStyle(activeTab === 'find')}
-            >
-              <Users size={14} />
-              Browse
-            </button>
-            <button
-              onClick={() => handleTabChange('requests')}
-              className="rm-tab-btn"
-              style={tabBtnStyle(activeTab === 'requests')}
-            >
-              <Inbox size={14} />
-              Requests
-              {pendingReceivedCount > 0 && (
-                <span style={tabPillStyle}>{pendingReceivedCount}</span>
-              )}
-            </button>
           </div>
         </div>
       </div>
@@ -264,10 +263,10 @@ export const RoommateFinder = ({
                   width: '100%',
                   padding: '0.625rem 1rem',
                   marginBottom: '0.875rem',
-                  background: '#f0ece6',
-                  border: '1px solid #e0d6cb',
+                  background: '#ebddc5',
+                  border: '1px solid #dcd3c4',
                   borderRadius: '10px',
-                  color: '#332721',
+                  color: '#201e1d',
                   fontSize: '0.85rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -289,7 +288,7 @@ export const RoommateFinder = ({
                   onClick={(e) => { if (e.target === e.currentTarget) setShowMobileFilters(false); }}
                 >
                   <div style={{
-                    background: '#f0ece6',
+                    background: '#ebddc5',
                     borderRadius: '20px 20px 0 0',
                     padding: '1.25rem 1.25rem 2rem',
                     width: '100%',
@@ -297,10 +296,10 @@ export const RoommateFinder = ({
                     overflowY: 'auto',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#332721' }}>Filters</span>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#201e1d' }}>Filters</span>
                       <button
                         onClick={() => setShowMobileFilters(false)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#8c7b70' }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#82796a' }}
                       >
                         <X size={18} />
                       </button>
@@ -371,11 +370,11 @@ export const RoommateFinder = ({
   );
 };
 
-// ─── Warm Sand & Cashmere Theme ──────────────────────────────────────────────
+// ─── Organic theme ───────────────────────────────────────────────────────────
 
 const pageWrapStyle: React.CSSProperties = {
-  minHeight: 'calc(100vh - 64px)',
-  background: '#faf8f5', // Warm sand background
+  minHeight: 'calc(100vh - 76px)',
+  background: 'var(--color-bg)',
   backgroundAttachment: 'fixed',
   /* Full-bleed escape from centered max-width container */
   width: '100vw',
@@ -388,17 +387,47 @@ const pageWrapStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  background: '#f0ece6', // Linen beige header
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-  borderBottom: '1px solid #e0d6cb',
+  background: 'var(--color-bg)',
   padding: '0',
 };
 
 const headerInnerWrapStyle: React.CSSProperties = {
-  maxWidth: '1200px',
+  maxWidth: '1240px',
   margin: '0 auto',
-  padding: '1.5rem 2rem 0',
+  padding: '2.5rem 2rem 0',
+};
+
+const eyebrowStyle: React.CSSProperties = {
+  fontSize: '0.75rem',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: 'var(--color-accent-700)',
+  marginBottom: '22px',
+  animation: 'ls-fade 0.7s ease both',
+};
+
+const headlineGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1.2fr 0.8fr',
+  gap: '56px',
+  alignItems: 'end',
+  marginBottom: '36px',
+};
+
+const pageTitleStyle: React.CSSProperties = {
+  fontSize: 'clamp(38px, 5.6vw, 88px)',
+  lineHeight: 0.9,
+  margin: 0,
+  maxWidth: '19ch',
+  color: 'var(--color-text)',
+  animation: 'ls-rise 0.9s var(--ease-organic) both',
+};
+
+const pageLeadStyle: React.CSSProperties = {
+  fontSize: '1rem',
+  color: 'var(--color-neutral-700)',
+  margin: 0,
+  animation: 'ls-fade 0.9s ease 0.15s both',
 };
 
 const headerInnerStyle: React.CSSProperties = {
@@ -407,41 +436,18 @@ const headerInnerStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   flexWrap: 'wrap',
   gap: '1rem',
-  marginBottom: '1.25rem',
-};
-
-const iconBoxStyle: React.CSSProperties = {
-  width: '28px',
-  height: '28px',
-  borderRadius: '8px',
-  background: '#b55c3c', // Muted terracotta rose
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: '0 4px 12px rgba(181, 92, 60, 0.2)',
-};
-
-const pageTitleStyle: React.CSSProperties = {
-  fontSize: '1.35rem',
-  fontWeight: 800,
-  color: '#332721', // Espresso brown text
-  letterSpacing: '-0.03em',
-};
-
-const pageSubtitleStyle: React.CSSProperties = {
-  fontSize: '0.8rem',
-  color: '#8c7b70', // Warm beige
-  marginLeft: '36px',
+  marginBottom: '0.5rem',
+  animation: 'ls-fade 0.9s ease 0.25s both',
 };
 
 const searchWrapStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
-  background: '#faf8f5',
-  border: '1px solid #e0d6cb',
-  borderRadius: '10px',
-  padding: '0.5rem 0.875rem',
+  background: 'var(--color-surface)',
+  border: '1px solid var(--color-divider)',
+  borderRadius: 'var(--radius-pill)',
+  padding: '0.5rem 1.125rem',
   // flex and minWidth intentionally omitted — controlled via .rm-search-wrap CSS class
 };
 
@@ -449,61 +455,46 @@ const searchInputStyle: React.CSSProperties = {
   background: 'none',
   border: 'none',
   outline: 'none',
-  color: '#332721',
-  fontSize: '0.85rem',
+  color: 'var(--color-text)',
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.875rem',
   flex: 1,
+  minWidth: 0,
 };
 
 const tabBarStyle: React.CSSProperties = {
   display: 'flex',
-  gap: '0',
-  borderTop: '1px solid #e0d6cb',
-  marginTop: '0.5rem',
+  gap: '6px',
+  flexWrap: 'wrap',
 };
 
-const tabBtnStyle = (isActive: boolean): React.CSSProperties => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.4rem',
-  padding: '0.75rem 1.25rem',
-  fontSize: '0.85rem',
-  fontWeight: isActive ? 700 : 500,
-  color: isActive ? '#b55c3c' : '#8c7b70',
-  background: 'none',
-  border: 'none',
-  borderBottom: isActive ? '2.5px solid #b55c3c' : '2.5px solid transparent',
-  cursor: 'pointer',
-  transition: 'var(--transition)',
-  whiteSpace: 'nowrap' as const,
-});
-
 const tabPillStyle: React.CSSProperties = {
-  backgroundColor: '#b55c3c',
-  color: 'white',
-  fontSize: '0.65rem',
-  fontWeight: 700,
-  borderRadius: '9999px',
+  backgroundColor: 'var(--color-accent-300)',
+  color: 'var(--color-accent-900)',
+  fontSize: '0.625rem',
+  fontWeight: 800,
+  letterSpacing: 0,
+  borderRadius: 'var(--radius-pill)',
   minWidth: '18px',
   height: '18px',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '0 4px',
+  padding: '0 5px',
 };
 
 const bodyStyle: React.CSSProperties = {
   flex: 1,
-  maxWidth: '1200px',
+  maxWidth: '1240px',
   width: '100%',
   margin: '0 auto',
-  padding: '1.5rem 2rem',
+  padding: '1.75rem 2rem 3rem',
 };
 
 const warningBannerStyle: React.CSSProperties = {
   backgroundColor: 'var(--danger-bg)',
-  border: '1px solid var(--danger-glow)',
-  borderRadius: '12px',
-  padding: '1rem 1.25rem',
+  borderRadius: 'var(--radius-lg)',
+  padding: '1.125rem 1.5rem',
   color: 'var(--danger)',
   fontSize: '0.875rem',
   fontWeight: 600,
