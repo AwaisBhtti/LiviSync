@@ -19,10 +19,88 @@ export const Navbar = ({
   const location = useLocation();
   const currentPath = location.pathname;
 
+  const isActive = (to: string) =>
+    to === '/hostels' ? currentPath === '/hostels' || currentPath === '/' : currentPath === to;
+
+  const navItems = [
+    { to: '/hostels', label: 'Hostels', icon: <Building size={14} strokeWidth={2.75} />, badge: 0 },
+    ...(currentUser.role === 'student'
+      ? [
+          { to: '/roommates', label: 'Roommates', icon: <Users size={14} strokeWidth={2.75} />, badge: pendingRequestsCount },
+          { to: '/chats', label: 'Inbox', icon: <MessageSquare size={14} strokeWidth={2.75} />, badge: unreadMessagesCount },
+        ]
+      : []),
+    { to: '/profile', label: 'Profile', icon: <User size={14} strokeWidth={2.75} />, badge: 0 },
+    ...(currentUser.role === 'owner'
+      ? [{ to: '/owner', label: 'Owner Portal', icon: <Building size={14} strokeWidth={2.75} />, badge: 0 }]
+      : []),
+    ...(currentUser.role === 'admin'
+      ? [{ to: '/admin', label: 'Admin', icon: <Shield size={14} strokeWidth={2.75} />, badge: 0 }]
+      : []),
+  ];
+
+  // Surfaced on the collapsed capsule so a closed menu never hides a notification
+  const notificationCount = unreadMessagesCount + pendingRequestsCount;
+
   return (
     <>
       {/* Desktop Top Navbar */}
       <header style={headerStyle}>
+        <style>{`
+          /* Collapsed by default; hover or keyboard focus opens it. Tabbing into
+             a link trips :focus-within, so the menu is reachable without a mouse. */
+          .ls-island {
+            border-radius: 14px;
+            transform: scale(0.97);
+            transition: border-radius 0.5s var(--ease-organic),
+                        padding 0.5s var(--ease-organic),
+                        transform 0.5s var(--ease-organic);
+          }
+          .ls-island:hover,
+          .ls-island:focus-within {
+            border-radius: 999px;
+            transform: scale(1);
+            padding-right: 14px;
+          }
+
+          .ls-island-mark {
+            border-radius: 9px;
+            transition: border-radius 0.5s var(--ease-organic), transform 0.5s var(--ease-organic);
+          }
+          .ls-island:hover .ls-island-mark,
+          .ls-island:focus-within .ls-island-mark {
+            border-radius: 999px;
+            transform: rotate(360deg);
+          }
+
+          .ls-island-label {
+            max-width: 140px;
+            opacity: 1;
+            transition: max-width 0.5s var(--ease-organic), opacity 0.3s ease;
+          }
+          .ls-island:hover .ls-island-label,
+          .ls-island:focus-within .ls-island-label {
+            max-width: 0;
+            opacity: 0;
+          }
+
+          .ls-island-items {
+            max-width: 0;
+            opacity: 0;
+            transition: max-width 0.55s var(--ease-organic), opacity 0.35s ease 0.1s;
+          }
+          .ls-island:hover .ls-island-items,
+          .ls-island:focus-within .ls-island-items {
+            max-width: 680px;
+            opacity: 1;
+          }
+
+          .ls-island-items a:hover { opacity: 1; background: rgba(245, 234, 216, 0.12); }
+
+          @media (prefers-reduced-motion: reduce) {
+            .ls-island, .ls-island-mark, .ls-island-label, .ls-island-items { transition: none; }
+          }
+        `}</style>
         <div style={navContainerStyle}>
           <Link style={logoSectionStyle} to="/hostels">
             <div style={logoBoxStyle}>
@@ -31,60 +109,32 @@ export const Navbar = ({
             <span style={logoTextStyle}>LIVISYNC</span>
           </Link>
 
-          <nav className="desktop-nav-tabs" style={desktopNavStyle}>
-            <div style={navTrackStyle}>
-              <Link
-                to="/hostels"
-                style={tabButtonStyle(currentPath === '/hostels' || currentPath === '/')}
-              >
-                <Building size={15} />
-                Hostels
-              </Link>
-              {currentUser.role === 'student' && (
-                <>
-                  <Link
-                    to="/roommates"
-                    style={tabButtonStyle(currentPath === '/roommates')}
-                  >
-                    <Users size={15} />
-                    Roommates
-                    {pendingRequestsCount > 0 && <span style={unreadBadgeStyle}>{pendingRequestsCount}</span>}
+          {/* The island: collapsed to a "Menu" capsule, expanding on hover or
+              keyboard focus to reveal the sections. */}
+          <nav className="desktop-nav-tabs" style={desktopNavStyle} aria-label="Sections">
+            <div className="ls-island" style={islandStyle}>
+              <span className="ls-island-mark" style={islandMarkStyle}>
+                <img src={logo} alt="" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+              </span>
+
+              <span className="ls-island-label" style={islandLabelStyle} aria-hidden="true">
+                <span>Menu</span>
+                {notificationCount > 0 ? (
+                  <span style={unreadBadgeStyle}>{notificationCount}</span>
+                ) : (
+                  <span style={blinkDotStyle} />
+                )}
+              </span>
+
+              <span className="ls-island-items" style={islandItemsStyle}>
+                {navItems.map(({ to, label, icon, badge }) => (
+                  <Link key={to} to={to} style={tabButtonStyle(isActive(to))}>
+                    {icon}
+                    {label}
+                    {badge > 0 && <span style={unreadBadgeStyle}>{badge}</span>}
                   </Link>
-                  <Link
-                    to="/chats"
-                    style={tabButtonStyle(currentPath === '/chats')}
-                  >
-                    <MessageSquare size={15} />
-                    Inbox
-                    {unreadMessagesCount > 0 && <span style={unreadBadgeStyle}>{unreadMessagesCount}</span>}
-                  </Link>
-                </>
-              )}
-              <Link
-                to="/profile"
-                style={tabButtonStyle(currentPath === '/profile')}
-              >
-                <User size={15} />
-                Profile
-              </Link>
-              {currentUser.role === 'owner' && (
-                <Link
-                  to="/owner"
-                  style={tabButtonStyle(currentPath === '/owner')}
-                >
-                  <Building size={15} />
-                  Owner Portal
-                </Link>
-              )}
-              {currentUser.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  style={tabButtonStyle(currentPath === '/admin')}
-                >
-                  <Shield size={15} />
-                  Admin
-                </Link>
-              )}
+                ))}
+              </span>
             </div>
           </nav>
 
@@ -219,15 +269,54 @@ const desktopNavStyle: React.CSSProperties = {
   alignItems: 'center',
 };
 
-/* The floating "island": a dark pill holding the section tabs */
-const navTrackStyle: React.CSSProperties = {
+/* The floating "island" — a dark capsule that opens to reveal the sections */
+const islandStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  background: 'var(--color-text)',
+  padding: '8px 16px 8px 8px',
+  boxShadow: '0 10px 34px rgba(32, 30, 29, 0.32)',
+};
+
+const islandMarkStyle: React.CSSProperties = {
+  width: '34px',
+  height: '34px',
+  background: 'var(--color-bg)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+};
+
+const islandLabelStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '9px',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  fontSize: '0.6875rem',
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+  fontWeight: 700,
+  color: 'var(--color-bg)',
+};
+
+const blinkDotStyle: React.CSSProperties = {
+  width: '5px',
+  height: '5px',
+  borderRadius: 'var(--radius-pill)',
+  background: 'var(--color-accent)',
+  animation: 'ls-blink 1.8s ease-in-out infinite',
+  flexShrink: 0,
+};
+
+const islandItemsStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '4px',
-  background: 'var(--color-text)',
-  padding: '8px',
-  borderRadius: 'var(--radius-pill)',
-  boxShadow: '0 10px 34px rgba(32, 30, 29, 0.22)',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
 };
 
 const tabButtonStyle = (isActive: boolean): React.CSSProperties => ({
