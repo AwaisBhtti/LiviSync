@@ -13,12 +13,12 @@ interface RoommateRequestsPanelProps {
 }
 
 // ── Warm sand palette (matches RoommateGrid / page header) ──────────────────
-const BG       = '#faf8f5';
-const CARD_BG  = '#f0ece6';
-const BORDER   = '#e0d6cb';
-const TEXT     = '#332721';
-const MUTED    = '#8c7b70';
-const ACCENT   = '#b55c3c';
+const BG       = '#f5ead8';
+const CARD_BG  = '#ebddc5';
+const BORDER   = '#dcd3c4';
+const TEXT     = '#201e1d';
+const MUTED    = '#82796a';
+const ACCENT   = '#c67139';
 
 export const RoommateRequestsPanel = ({
   users,
@@ -77,9 +77,9 @@ export const RoommateRequestsPanel = ({
           <span style={{
             display: 'flex', alignItems: 'center', gap: '0.3rem',
             fontSize: '0.68rem', fontWeight: 700,
-            color: '#d97706',
-            background: '#fffbeb',
-            border: '1px solid rgba(217,119,6,0.2)',
+            color: '#8c491a',
+            background: '#fff2eb',
+            border: '1px solid rgba(140, 73, 26,0.2)',
             borderRadius: '20px',
             padding: '0.2rem 0.55rem',
             whiteSpace: 'nowrap',
@@ -94,8 +94,8 @@ export const RoommateRequestsPanel = ({
             display: 'flex', alignItems: 'center', gap: '0.3rem',
             fontSize: '0.68rem', fontWeight: 700,
             color: ACCENT,
-            background: 'rgba(181,92,60,0.1)',
-            border: `1px solid rgba(181,92,60,0.2)`,
+            background: 'rgba(198, 113, 57,0.1)',
+            border: `1px solid rgba(198, 113, 57,0.2)`,
             borderRadius: '20px',
             padding: '0.2rem 0.55rem',
             whiteSpace: 'nowrap',
@@ -246,8 +246,8 @@ const countPillStyle: React.CSSProperties = {
 
 const actionBtnStyle = (type: 'accept' | 'decline' | 'cancel'): React.CSSProperties => {
   const map = {
-    accept:  { color: '#059669', bg: 'rgba(5,150,105,0.08)',  border: 'rgba(5,150,105,0.25)'  },
-    decline: { color: '#dc2626', bg: 'rgba(220,38,38,0.07)',  border: 'rgba(220,38,38,0.2)'   },
+    accept:  { color: '#56633f', bg: 'rgba(86, 99, 63,0.08)',  border: 'rgba(86, 99, 63,0.25)'  },
+    decline: { color: '#8f3324', bg: 'rgba(143, 51, 36,0.07)',  border: 'rgba(143, 51, 36,0.2)'   },
     cancel:  { color: MUTED,     bg: 'rgba(140,123,112,0.08)',border: 'rgba(140,123,112,0.2)'  },
   };
   const { color, bg, border } = map[type];

@@ -375,7 +375,7 @@ export const OwnerPortal = ({
                           position: 'absolute',
                           top: '2px',
                           right: '2px',
-                          backgroundColor: 'rgba(220, 38, 38, 0.85)',
+                          backgroundColor: 'rgba(143, 51, 36, 0.85)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -552,7 +552,7 @@ export const OwnerPortal = ({
                         borderRadius: '4px',
                         fontWeight: 600,
                         backgroundColor: hostel.isVerified ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                        color: hostel.isVerified ? 'var(--success)' : '#d97706',
+                        color: hostel.isVerified ? 'var(--success)' : '#8c491a',
                         border: '1px solid ' + (hostel.isVerified ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)'),
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -663,7 +663,7 @@ const emptyCardStyle: React.CSSProperties = {
 
 const gridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))',
   gap: '1.5rem',
 };
 
@@ -722,8 +722,8 @@ const warningBannerStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.35rem',
-  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-  border: '1px solid rgba(239, 68, 68, 0.2)',
+  backgroundColor: 'rgba(163, 59, 42, 0.1)',
+  border: '1px solid rgba(163, 59, 42, 0.2)',
   padding: '0.5rem',
   borderRadius: 'var(--radius)',
   color: 'var(--destructive)',

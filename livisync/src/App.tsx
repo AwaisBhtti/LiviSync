@@ -397,7 +397,7 @@ const toastContainerStyle = (type: 'success' | 'error' | 'info'): React.CSSPrope
     position: 'fixed',
     bottom: '2rem',
     right: '2rem',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'var(--card)',
     backdropFilter: 'blur(16px)',
     borderLeft: `4px solid ${borderCol}`,
     padding: '1rem 1.5rem',

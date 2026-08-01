@@ -8,7 +8,7 @@ export const modalOverlayStyle: React.CSSProperties = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  backgroundColor: 'rgba(32, 30, 29, 0.6)',
   backdropFilter: 'blur(8px)',
   display: 'flex',
   alignItems: 'center',

@@ -82,7 +82,7 @@ export const OwnerProfile = ({ currentUser }: OwnerProfileProps) => {
         <form onSubmit={handlePasswordChange}>
           <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.25rem' }}>Change Password</h3>
           {errorMsg && (
-            <div style={{ color: 'var(--destructive)', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: 'var(--radius)', marginBottom: '1rem', fontSize: '0.875rem' }}>
+            <div style={{ color: 'var(--destructive)', backgroundColor: 'rgba(163, 59, 42, 0.1)', padding: '0.75rem', borderRadius: 'var(--radius)', marginBottom: '1rem', fontSize: '0.875rem' }}>
               {errorMsg}
             </div>
           )}

@@ -42,7 +42,7 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
       <form onSubmit={handleSubmit}>
         <div style={formGridStyle}>
           <div className="form-group">
-            <label className="form-label">Sleep Schedule <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Sleep Schedule <span style={{ color: '#a33b2a' }}>*</span></label>
             <CustomSelect
               value={preferences.sleepSchedule || ''}
               onChange={(val) => handlePrefChange('sleepSchedule', val)}
@@ -56,7 +56,7 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Cleanliness Level <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Cleanliness Level <span style={{ color: '#a33b2a' }}>*</span></label>
             <CustomSelect
               value={preferences.cleanliness || ''}
               onChange={(val) => handlePrefChange('cleanliness', val)}
@@ -70,7 +70,7 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Smoking Allowed <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Smoking Allowed <span style={{ color: '#a33b2a' }}>*</span></label>
             <CustomSelect
               value={preferences.smoking || ''}
               onChange={(val) => handlePrefChange('smoking', val)}
@@ -84,7 +84,7 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Pet Tolerance <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Pet Tolerance <span style={{ color: '#a33b2a' }}>*</span></label>
             <CustomSelect
               value={preferences.pets || ''}
               onChange={(val) => handlePrefChange('pets', val)}
@@ -98,7 +98,7 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Guest Tolerance <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Guest Tolerance <span style={{ color: '#a33b2a' }}>*</span></label>
             <CustomSelect
               value={preferences.guestTolerance || ''}
               onChange={(val) => handlePrefChange('guestTolerance', val)}
@@ -112,7 +112,7 @@ export const LifestyleTab = ({ currentUser, onSave }: LifestyleTabProps) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Noise Tolerance <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Noise Tolerance <span style={{ color: '#a33b2a' }}>*</span></label>
             <CustomSelect
               value={preferences.noiseTolerance || ''}
               onChange={(val) => handlePrefChange('noiseTolerance', val)}

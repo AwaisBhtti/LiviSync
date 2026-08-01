@@ -109,7 +109,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
         <h3 style={sectionTitleStyle}>Update Password</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '400px' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Current Password <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Current Password <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="password"
               className="form-input"
@@ -119,7 +119,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">New Password <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">New Password <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="password"
               className="form-input"
@@ -129,7 +129,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Confirm New Password <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Confirm New Password <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="password"
               className="form-input"
@@ -152,10 +152,10 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
       <h3 style={{ ...sectionTitleStyle, marginTop: '2.5rem', color: 'var(--danger)' }}>Danger Zone</h3>
       <div
         style={{
-          border: '1px solid rgba(244, 63, 94, 0.2)',
+          border: '1px solid rgba(163, 59, 42, 0.2)',
           padding: '1.25rem',
           borderRadius: 'var(--radius)',
-          backgroundColor: 'rgba(244, 63, 94, 0.02)',
+          backgroundColor: 'rgba(163, 59, 42, 0.02)',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.75rem',
@@ -169,7 +169,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
             type="button"
             onClick={handleDeactivate}
             className="btn btn-secondary"
-            style={{ color: 'var(--danger)', borderColor: 'rgba(244, 63, 94, 0.3)', flex: 1 }}
+            style={{ color: 'var(--danger)', borderColor: 'rgba(163, 59, 42, 0.3)', flex: 1 }}
           >
             Deactivate Account
           </button>

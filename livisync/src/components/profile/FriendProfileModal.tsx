@@ -87,7 +87,7 @@ export const FriendProfileModal = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.4)',
+        backgroundColor: 'rgba(32, 30, 29, 0.4)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -341,7 +341,7 @@ export const FriendProfileModal = ({
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  style={{ flex: '1', border: '1px solid #eab308', color: '#eab308' }}
+                  style={{ flex: '1', border: '1px solid #d67f48', color: '#d67f48' }}
                   onClick={() => setShowReportForm(true)}
                 >
                   Report

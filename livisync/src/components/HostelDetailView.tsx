@@ -354,7 +354,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                         display: 'inline-block',
                         fontSize: '0.85rem', fontWeight: 600,
                         padding: '0.25rem 0.6rem', borderRadius: '6px',
-                        backgroundColor: room.seatsAvailable > 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        backgroundColor: room.seatsAvailable > 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(163, 59, 42, 0.1)',
                         color: room.seatsAvailable > 0 ? 'var(--success)' : 'var(--danger)'
                       }}>
                         {room.seatsAvailable > 0 ? `${room.seatsAvailable} bed(s) left` : 'Fully Occupied'}
@@ -514,7 +514,7 @@ const sliderArrowLeftStyle: React.CSSProperties = {
   left: '1rem',
   top: '50%',
   transform: 'translateY(-50%)',
-  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  backgroundColor: 'var(--glass-bg)',
   color: 'black',
   border: 'none',
   borderRadius: '50%',
@@ -556,7 +556,7 @@ const showAllPhotosBtnStyle: React.CSSProperties = {
   position: 'absolute',
   bottom: '1.5rem',
   right: '1.5rem',
-  backgroundColor: 'white',
+  backgroundColor: 'var(--card)',
   color: 'black',
   border: '1px solid rgba(0,0,0,0.1)',
   borderRadius: '8px',

@@ -78,7 +78,7 @@ const overlayStyle: React.CSSProperties = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(15, 23, 42, 0.4)',
+  backgroundColor: 'rgba(32, 30, 29, 0.4)',
   backdropFilter: 'blur(8px)',
   display: 'flex',
   alignItems: 'center',
@@ -107,7 +107,7 @@ const iconContainerStyle = (isDanger: boolean): React.CSSProperties => ({
   width: '40px',
   height: '40px',
   borderRadius: '50%',
-  backgroundColor: isDanger ? 'rgba(244, 63, 94, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+  backgroundColor: isDanger ? 'rgba(163, 59, 42, 0.1)' : 'rgba(99, 102, 241, 0.1)',
   flexShrink: 0,
 });
 

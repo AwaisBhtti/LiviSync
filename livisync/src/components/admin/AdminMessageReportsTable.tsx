@@ -68,8 +68,8 @@ export const AdminMessageReportsTable = ({
                     <span style={{
                       padding: '0.2rem 0.5rem',
                       borderRadius: '4px',
-                      backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                      color: '#ef4444',
+                      backgroundColor: 'rgba(163, 59, 42, 0.08)',
+                      color: '#a33b2a',
                       fontSize: '0.75rem',
                       fontWeight: 600,
                     }}>

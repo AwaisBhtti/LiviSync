@@ -112,7 +112,7 @@ export const AdminUsersTable = ({
                         style={{
                           fontWeight: 600,
                           fontSize: '0.75rem',
-                          color: user.is_email_verified ? 'var(--success)' : '#d97706',
+                          color: user.is_email_verified ? 'var(--success)' : '#8c491a',
                           backgroundColor: user.is_email_verified
                             ? 'rgba(34, 197, 94, 0.1)'
                             : 'rgba(245, 158, 11, 0.1)',

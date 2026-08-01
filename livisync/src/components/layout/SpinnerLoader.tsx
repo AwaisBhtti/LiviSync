@@ -7,7 +7,7 @@ export const SpinnerLoader = () => (
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(15, 23, 42, 0.4)',
+      backgroundColor: 'rgba(32, 30, 29, 0.4)',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',

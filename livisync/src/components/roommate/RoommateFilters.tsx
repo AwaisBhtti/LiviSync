@@ -18,8 +18,8 @@ interface RoommateFiltersProps {
   onClearFilters: () => void;
 }
 
-const TEXT        = '#332721'; // Espresso brown text
-const MUTED       = '#8c7b70'; // Warm beige
+const TEXT        = '#201e1d'; // Espresso brown text
+const MUTED       = '#82796a'; // Warm beige
 
 const labelStyle: React.CSSProperties = {
   fontSize: '0.7rem',
@@ -32,9 +32,9 @@ const labelStyle: React.CSSProperties = {
 };
 
 const customSelectStyle: React.CSSProperties = {
-  background: '#faf8f5', // Warm sand
-  border: '1px solid #e0d6cb',
-  color: '#332721',
+  background: '#f5ead8', // Warm sand
+  border: '1px solid #dcd3c4',
+  color: '#201e1d',
   boxShadow: 'none',
 };
 
@@ -112,7 +112,7 @@ export const RoommateFilters = ({
               borderRadius: '4px',
               transition: 'var(--transition)',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(51, 39, 33, 0.05)')}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(32, 30, 29, 0.05)')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
           >
             Hide
@@ -133,7 +133,7 @@ export const RoommateFilters = ({
           step="5000"
           value={maxBudget}
           onChange={(e) => onMaxBudgetChange(Number(e.target.value))}
-          style={{ width: '100%', accentColor: '#b55c3c', cursor: 'pointer' }}
+          style={{ width: '100%', accentColor: '#c67139', cursor: 'pointer' }}
         />
       </div>
 
@@ -189,16 +189,16 @@ export const RoommateFilters = ({
           padding: '0.625rem 1rem',
           fontSize: '0.8rem',
           fontWeight: 700,
-          color: '#b55c3c',
+          color: '#c67139',
           background: 'transparent',
-          border: '1px solid #b55c3c',
+          border: '1px solid #c67139',
           borderRadius: '8px',
           cursor: 'pointer',
           marginTop: '0.5rem',
           transition: 'all 0.15s ease',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(181, 92, 60, 0.08)';
+          e.currentTarget.style.background = 'rgba(198, 113, 57, 0.08)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.background = 'transparent';
