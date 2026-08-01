@@ -1,7 +1,7 @@
 import uuid
 import boto3
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from ..database import get_db
 from ..models import Owner, Hostel, HostelAmenity, HostelRoom
 from ..auth import get_current_user
@@ -102,8 +102,12 @@ def update_hostel(hostel_id: uuid.UUID, hostel_in: HostelCreate, db: Session = D
         db.add(db_amenity)
 
     db.commit()
-    db.refresh(hostel)
-    return hostel
+    # Query the hostel again with joinedload to ensure relationships (amenities and rooms) are freshly loaded
+    updated_hostel = db.query(Hostel).options(
+        joinedload(Hostel.amenities),
+        joinedload(Hostel.rooms)
+    ).filter(Hostel.id == hostel_id).first()
+    return updated_hostel
 
 @router.delete("/hostels/{hostel_id}")
 def delete_hostel(hostel_id: uuid.UUID, db: Session = Depends(get_db), current_user: Owner = Depends(require_owner)):

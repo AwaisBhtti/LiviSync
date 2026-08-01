@@ -42,6 +42,7 @@ export const OwnerPortal = ({
   const [hasCurfew, setHasCurfew] = useState(false);
   const [curfewTime, setCurfewTime] = useState('22:00');
   const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const [confirmModal, setConfirmModal] = useState<{
@@ -169,10 +170,12 @@ export const OwnerPortal = ({
 
     const token = localStorage.getItem('livisync_token') || '';
 
+    setSubmitting(true);
     try {
       if (editingHostel) {
-        if (onEditHostel) onEditHostel(hostelData);
-        alert('Hostel details updated successfully!');
+        if (onEditHostel) {
+          await onEditHostel(hostelData);
+        }
         resetForm();
         setShowAddForm(false);
       } else {
@@ -231,6 +234,8 @@ export const OwnerPortal = ({
       }
     } catch (err: any) {
       alert(err.message || 'Error occurred listing hostel');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -480,6 +485,7 @@ export const OwnerPortal = ({
               <button
                 type="button"
                 className="btn btn-secondary"
+                disabled={submitting}
                 onClick={() => {
                   setShowAddForm(false);
                   resetForm();
@@ -487,8 +493,8 @@ export const OwnerPortal = ({
               >
                 Cancel
               </button>
-              <button type="submit" className="btn btn-primary">
-                {editingHostel ? 'Save Changes' : 'Next: Add Rooms'}
+              <button type="submit" className="btn btn-primary" disabled={submitting}>
+                {submitting ? 'Saving...' : (editingHostel ? 'Save Changes' : 'Next: Add Rooms')}
               </button>
             </div>
           </form>
