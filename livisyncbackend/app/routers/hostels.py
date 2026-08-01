@@ -33,6 +33,8 @@ def get_hostels(db: Session = Depends(get_db), current_user: Union[Student, Owne
             "hostel_type": h.hostel_type,
             "owner_id": str(h.owner_id) if h.owner_id else None,
             "is_verified": h.is_verified,
+            "has_curfew": h.has_curfew,
+            "curfew_time": h.curfew_time,
             "owner_name": h.owner.name if h.owner else "Unknown Owner",
             "rooms": [{
                 "id": str(r.id),

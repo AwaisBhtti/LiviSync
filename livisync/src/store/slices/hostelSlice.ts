@@ -155,8 +155,8 @@ export const editHostel = createAsyncThunk(
           photos: updatedHostel.photos,
           electricity_bill_included: updatedHostel.electricityBillIncluded,
           hostel_type: updatedHostel.hostelType || 'boys',
-          has_curfew: updatedHostel.hasCurfew || false,
-          curfew_time: updatedHostel.curfewTime || null,
+          has_curfew: updatedHostel.hasCurfew,
+          curfew_time: updatedHostel.hasCurfew ? updatedHostel.curfewTime : null,
           amenities: updatedHostel.amenities
         })
       });
@@ -179,7 +179,7 @@ export const editHostel = createAsyncThunk(
         ownerId: data.owner_id,
         isVerified: data.is_verified,
         currentOccupants: data.current_occupants || updatedHostel.currentOccupants || [],
-        rooms: data.rooms ? data.rooms.map((r: any) => ({
+        rooms: (data.rooms && data.rooms.length > 0) ? data.rooms.map((r: any) => ({
           id: r.id,
           hostelId: r.hostel_id,
           sharingType: r.sharing_type,
@@ -190,7 +190,7 @@ export const editHostel = createAsyncThunk(
           furniture: r.furniture,
           images: r.images || [],
           description: r.description || ''
-        })) : []
+        })) : (updatedHostel.rooms || [])
       } as Hostel;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error updating hostel listing');
