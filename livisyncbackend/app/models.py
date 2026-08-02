@@ -32,7 +32,7 @@ class Student(Base):
     __table_args__ = (
         CheckConstraint("age >= 16 AND age <= 100", name="student_age_check"),
         CheckConstraint("gender IN ('male', 'female', 'other')", name="student_gender_check"),
-        CheckConstraint("status IN ('active', 'suspended')", name="student_status_check"),
+        CheckConstraint("status IN ('active', 'suspended', 'inactive')", name="student_status_check"),
         CheckConstraint("occupation IN ('student', 'job')", name="student_occupation_check"),
     )
 
