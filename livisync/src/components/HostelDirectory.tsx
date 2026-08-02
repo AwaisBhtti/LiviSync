@@ -58,7 +58,10 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
   const filteredHostels = hostels.filter((host) => {
     const matchesSearch =
       host.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      host.location.toLowerCase().includes(searchQuery.toLowerCase());
+      host.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (host.nearbyLocations && host.nearbyLocations.some((loc) =>
+        loc.toLowerCase().includes(searchQuery.toLowerCase())
+      ));
 
     const matchesPrice = host.rooms && host.rooms.length > 0
       ? host.rooms.some((r) => r.price <= maxPrice)
