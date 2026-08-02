@@ -60,7 +60,8 @@ export default function App() {
     }
   }, [toastShow, dispatch]);
 
-  const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading || (token !== null && currentUser === null);
+  // Only show full page spinner for initial auth loading, not background data fetches
+  const isInitialLoad = authLoading || (token !== null && currentUser === null);
 
   // Sync active user session
   useEffect(() => {
@@ -189,7 +190,7 @@ export default function App() {
   const { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel } = useHostelActions();
   const { handleToggleUserStatus, handleWarnUser, handleResolveReport, handleDeleteUser, handleResolveMessageReport } = useAdminActions();
 
-  if (loadingData) {
+  if (isInitialLoad) {
     return <SpinnerLoader />;
   }
 

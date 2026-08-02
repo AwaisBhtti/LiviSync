@@ -45,14 +45,7 @@ const seatsLabel = (hostel: Hostel) => {
   return seats === 1 ? '1 seat left' : `${seats} seats left`;
 };
 
-/** The sharing types that still have a free seat, e.g. "Double · Triple". */
-const sharingLabel = (hostel: Hostel) => {
-  const types = Array.from(
-    new Set((hostel.rooms ?? []).filter((r) => r.seatsAvailable > 0).map((r) => r.sharingType))
-  );
-  if (types.length === 0) return 'Full';
-  return types.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(' · ');
-};
+
 
 export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) => {
   const navigate = useNavigate();
@@ -61,7 +54,6 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
   const [selectedSharing, setSelectedSharing] = useState<string>('all');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState<boolean>(false);
 
   const filteredHostels = hostels.filter((host) => {
     const matchesSearch =
@@ -105,7 +97,7 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
   };
 
   return (
-    <div style={{ paddingTop: '1.5rem' }}>
+    <div>
       <style>{`
         .hd-card { cursor: pointer; }
         .hd-card img { transition: transform 1.1s var(--ease-organic); }
@@ -133,77 +125,68 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          {SHARING_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={selectedSharing === opt.value ? 'pill pill-active' : 'pill'}
-              onClick={() => setSelectedSharing(opt.value)}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          className={showFilters || activeAdvanced ? 'pill pill-active' : 'pill'}
-          onClick={() => setShowFilters((v) => !v)}
-        >
-          <SlidersHorizontal size={13} strokeWidth={2.75} />
-          Filters
-        </button>
-
         <div className="hd-count" style={countStyle}>
           {filteredHostels.length} {filteredHostels.length === 1 ? 'listing' : 'listings'}
         </div>
       </div>
 
-      {/* ── Advanced filters ── */}
-      {showFilters && (
-        <div style={advancedPanelStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <div style={advancedTitleStyle}>Refine</div>
-            <button type="button" onClick={() => setShowFilters(false)} style={closeBtnStyle} aria-label="Hide filters">
-              <X size={16} strokeWidth={2.75} />
-            </button>
-          </div>
+      {/* ── Main Layout (Sidebar + Grid) ── */}
+      <div style={{ display: 'flex', gap: '2rem', marginTop: '24px', alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap' }}>
 
-          <div style={advancedGridStyle}>
-            <div>
-              <label className="form-label">Max price · PKR {maxPrice.toLocaleString()}</label>
-              <input
-                type="range"
-                min="5000"
-                max="35000"
-                step="1000"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                style={{ width: '100%' }}
-              />
-            </div>
-
-            <div>
-              <label className="form-label">Hostel category</label>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {TYPE_OPTIONS.map((tab) => (
-                  <button
-                    key={tab.value}
-                    type="button"
-                    className={selectedType === tab.value ? 'pill pill-active' : 'pill'}
-                    onClick={() => setSelectedType(tab.value)}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
+        {/* ── Sidebar Filters ── */}
+        <div style={sidebarPanelStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-divider)', paddingBottom: '12px' }}>
+            <div style={sidebarTitleStyle}>
+              <SlidersHorizontal size={18} strokeWidth={2.5} style={{ marginRight: '8px' }} />
+              Filters
             </div>
           </div>
 
-          <div style={{ marginTop: '1.5rem' }}>
-            <label className="form-label">Must have amenities</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={sidebarSectionStyle}>
+            <label style={sidebarLabelStyle}>MAX PRICE (PKR): {maxPrice.toLocaleString()}</label>
+            <input
+              type="range"
+              min="5000"
+              max="35000"
+              step="1000"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(Number(e.target.value))}
+              style={{ width: '100%', accentColor: '#ab6f4b' }}
+            />
+          </div>
+
+          <div style={sidebarSectionStyle}>
+            <label style={sidebarLabelStyle}>HOSTEL CATEGORY</label>
+            <div style={segmentedControlWrapStyle}>
+              {TYPE_OPTIONS.map((tab) => (
+                <button
+                  key={tab.value}
+                  type="button"
+                  style={segmentedControlBtnStyle(selectedType === tab.value)}
+                  onClick={() => setSelectedType(tab.value)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={sidebarSectionStyle}>
+            <label style={sidebarLabelStyle}>ROOM SHARING</label>
+            <select
+              value={selectedSharing}
+              onChange={(e) => setSelectedSharing(e.target.value)}
+              style={sidebarSelectStyle}
+            >
+              {SHARING_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={sidebarSectionStyle}>
+            <label style={sidebarLabelStyle}>MUST HAVE AMENITIES</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {BUILTIN_AMENITIES.map((amenity) => {
                 const isSelected = selectedAmenities.includes(amenity);
                 return (
@@ -215,7 +198,7 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
                         isSelected ? prev.filter((a) => a !== amenity) : [...prev, amenity]
                       )
                     }
-                    style={amenityChipStyle(isSelected)}
+                    style={sidebarAmenityChipStyle(isSelected)}
                   >
                     {amenity}
                   </button>
@@ -224,66 +207,65 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
             </div>
           </div>
 
-          <button type="button" onClick={clearFilters} className="btn btn-secondary" style={{ marginTop: '1.5rem' }}>
-            Clear filters
+          <button type="button" onClick={clearFilters} style={sidebarClearBtnStyle}>
+            Clear Filters
           </button>
         </div>
-      )}
 
-      {/* ── Listings ── */}
-      {filteredHostels.length === 0 ? (
-        <div style={emptyStateStyle}>
-          No hostels matched your search parameters. Try adjusting your filters.
-        </div>
-      ) : (
-        <div ref={gridRef} style={gridStyle}>
-          {filteredHostels.map((hostel, i) => (
-            <div
-              key={hostel.id}
-              className="reveal hd-card"
-              data-reveal
-              data-delay={((i % 3) * 0.06).toFixed(2)}
-              onClick={() => navigate(`/hostels/${hostel.id}`)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/hostels/${hostel.id}`); }}
-            >
-              <div style={cardImageWrapStyle}>
-                <img
-                  src={(hostel.photos && hostel.photos.length > 0) ? hostel.photos[0] : hostel.photo}
-                  alt={hostel.name}
-                  className="washed"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div style={{ position: 'absolute', top: '14px', left: '14px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {hostel.isVerified && <span style={verifiedTagStyle}>Verified</span>}
-                  <span style={typeTagStyle}>
-                    {(hostel.hostelType || 'boys').replace('-', ' ')}
-                  </span>
-                </div>
-                <div style={cardOverlayStyle}>
-                  <span style={{ fontSize: '0.6875rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                    {sharingLabel(hostel)}
-                  </span>
-                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: '0.9375rem', color: 'var(--color-accent-300)', whiteSpace: 'nowrap' }}>
-                    {priceLabel(hostel)}
-                  </span>
-                </div>
-              </div>
+        {/* ── Listings ── */}
+        <div style={{ flex: 1, minWidth: '300px' }}>
+          {filteredHostels.length === 0 ? (
+            <div style={emptyStateStyle}>
+              No hostels matched your search parameters. Try adjusting your filters.
+            </div>
+          ) : (
+            <div ref={gridRef} style={sidebarGridStyle}>
+              {filteredHostels.map((hostel, i) => (
+                <div
+                  key={hostel.id}
+                  className="reveal hd-card"
+                  data-reveal
+                  data-delay={((i % 3) * 0.06).toFixed(2)}
+                  onClick={() => navigate(`/hostels/${hostel.id}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/hostels/${hostel.id}`); }}
+                >
+                  <div style={cardImageWrapStyle}>
+                    <img
+                      src={(hostel.photos && hostel.photos.length > 0) ? hostel.photos[0] : hostel.photo}
+                      alt={hostel.name}
+                      className="washed"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{ position: 'absolute', top: '14px', left: '14px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {hostel.isVerified && <span style={verifiedTagStyle}>Verified</span>}
+                      <span style={typeTagStyle}>
+                        {(hostel.hostelType || 'boys').replace('-', ' ')}
+                      </span>
+                    </div>
+                    <div style={cardOverlayStyle}>
+                      <span style={{ fontFamily: 'var(--font-heading)', fontSize: '0.9375rem', color: 'var(--color-accent-300)', whiteSpace: 'nowrap' }}>
+                        {priceLabel(hostel)}
+                      </span>
+                    </div>
+                  </div>
 
-              <div style={cardFooterStyle}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1875rem' }}>{hostel.name}</div>
-                  <div style={{ fontSize: '0.84rem', color: 'var(--color-neutral-600)', marginTop: '3px' }}>
-                    {hostel.location}
+                  <div style={cardFooterStyle}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1875rem' }}>{hostel.name}</div>
+                      <div style={{ fontSize: '0.84rem', color: 'var(--color-neutral-600)', marginTop: '3px' }}>
+                        {hostel.location}
+                      </div>
+                    </div>
+                    <div style={seatsStyle}>{seatsLabel(hostel)}</div>
                   </div>
                 </div>
-                <div style={seatsStyle}>{seatsLabel(hostel)}</div>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -359,66 +341,123 @@ const countStyle: React.CSSProperties = {
   marginLeft: 'auto',
 };
 
-const advancedPanelStyle: React.CSSProperties = {
-  marginTop: '16px',
-  padding: '26px',
+const sidebarPanelStyle: React.CSSProperties = {
+  width: '320px',
+  flexShrink: 0,
+  padding: '24px',
   background: 'var(--color-surface)',
   borderRadius: 'calc(var(--radius-lg) * 1.1)',
-  boxShadow: 'var(--shadow-sm)',
+  border: '1px solid var(--color-divider)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '24px',
   animation: 'ls-fade 0.4s ease both',
 };
 
-const advancedTitleStyle: React.CSSProperties = {
+const sidebarTitleStyle: React.CSSProperties = {
   fontFamily: 'var(--font-heading)',
-  fontSize: '1.125rem',
+  fontSize: '1.15rem',
+  fontWeight: 700,
+  display: 'flex',
+  alignItems: 'center',
+  color: 'var(--color-text)',
 };
 
-const closeBtnStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '32px',
-  height: '32px',
-  borderRadius: 'var(--radius-pill)',
-  border: 'none',
+const sidebarHideBtnStyle: React.CSSProperties = {
   background: 'transparent',
-  color: 'var(--muted)',
+  border: 'none',
+  fontSize: '0.9rem',
+  color: 'var(--color-neutral-600)',
+  cursor: 'pointer',
+  fontWeight: 600,
+};
+
+const sidebarSectionStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px',
+};
+
+const sidebarLabelStyle: React.CSSProperties = {
+  fontSize: '0.8rem',
+  fontWeight: 700,
+  color: 'var(--color-neutral-600)',
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+};
+
+const segmentedControlWrapStyle: React.CSSProperties = {
+  display: 'flex',
+  border: '1px solid var(--color-divider)',
+  borderRadius: 'var(--radius-md)',
+  background: 'transparent',
+  overflow: 'hidden',
+};
+
+const segmentedControlBtnStyle = (active: boolean): React.CSSProperties => ({
+  flex: 1,
+  padding: '8px 4px',
+  textAlign: 'center',
+  fontSize: '0.75rem',
+  fontWeight: active ? 700 : 400,
+  background: active ? '#b96c44' : 'transparent',
+  color: active ? '#fff' : 'var(--color-neutral-600)',
+  border: 'none',
+  cursor: 'pointer',
+  transition: 'background 0.2s, color 0.2s',
+  whiteSpace: 'nowrap',
+});
+
+const sidebarSelectStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  borderRadius: 'var(--radius-md)',
+  border: '1px solid var(--color-divider)',
+  background: 'var(--color-bg)',
+  fontSize: '0.9rem',
+  fontFamily: 'var(--font-body)',
+  color: 'var(--color-text)',
   cursor: 'pointer',
 };
 
-const advancedGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-  gap: '1.5rem',
-};
-
-const amenityChipStyle = (selected: boolean): React.CSSProperties => ({
+const sidebarAmenityChipStyle = (selected: boolean): React.CSSProperties => ({
   fontFamily: 'var(--font-body)',
   fontSize: '0.75rem',
-  fontWeight: 700,
-  letterSpacing: '0.04em',
-  padding: '8px 14px',
+  padding: '6px 12px',
   borderRadius: 'var(--radius-pill)',
-  border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-divider)'}`,
-  background: selected ? 'var(--color-accent-100)' : 'transparent',
-  color: selected ? 'var(--color-accent-800)' : 'var(--color-neutral-600)',
+  border: `1px solid ${selected ? '#b96c44' : 'var(--color-divider)'}`,
+  background: selected ? '#b96c44' : 'transparent',
+  color: selected ? '#fff' : 'var(--color-neutral-600)',
   cursor: 'pointer',
   transition: 'var(--transition)',
 });
 
-const gridStyle: React.CSSProperties = {
+const sidebarClearBtnStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '12px',
+  marginTop: '8px',
+  borderRadius: 'var(--radius-md)',
+  border: '1px solid var(--color-divider)',
+  background: 'transparent',
+  fontFamily: 'var(--font-heading)',
+  fontWeight: 600,
+  fontSize: '0.95rem',
+  cursor: 'pointer',
+  color: 'var(--color-text)',
+  textAlign: 'center',
+};
+
+const sidebarGridStyle: React.CSSProperties = {
   display: 'grid',
-  // min() keeps a single card from overflowing viewports narrower than the track
   gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))',
   gap: '28px',
-  marginTop: '44px',
 };
 
 const cardImageWrapStyle: React.CSSProperties = {
   position: 'relative',
   borderRadius: 'var(--radius-lg)',
   overflow: 'hidden',
-  aspectRatio: '4/5',
+  aspectRatio: '16/10',
   background: 'var(--color-neutral-200)',
 };
 
@@ -451,16 +490,14 @@ const typeTagStyle: React.CSSProperties = {
 const cardOverlayStyle: React.CSSProperties = {
   position: 'absolute',
   bottom: '14px',
-  left: '14px',
   right: '14px',
   background: 'rgba(32, 30, 29, 0.82)',
   color: 'var(--color-bg)',
   borderRadius: 'var(--radius-md)',
-  padding: '12px 14px',
+  padding: '6px 12px',
   display: 'flex',
-  justifyContent: 'space-between',
   alignItems: 'center',
-  gap: '10px',
+  justifyContent: 'center',
 };
 
 const cardFooterStyle: React.CSSProperties = {
