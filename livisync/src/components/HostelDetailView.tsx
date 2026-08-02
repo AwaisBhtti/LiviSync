@@ -18,6 +18,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
 
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxInitialIndex, setLightboxInitialIndex] = useState<number>(0);
   const [ownerPhone, setOwnerPhone] = useState<string | null>(null);
   const [loadingPhone, setLoadingPhone] = useState<boolean>(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -82,6 +83,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
   const handleContainerClick = () => {
     if (allPhotos.length > 0) {
       setLightboxImages(allPhotos);
+      setLightboxInitialIndex(currentPhotoIndex);
       setLightboxOpen(true);
     }
   };
@@ -103,7 +105,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
 
       {/* Hero Header Section */}
       <div style={{ marginBottom: '2rem' }}>
-        <h1 className="details-title" style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.5rem', lineHeight: 1.2 }}>
+        <h1 className="details-title" style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem', lineHeight: 1.2 }}>
           {selectedHostel.name}
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem 1rem', color: 'var(--muted)', fontSize: '0.9rem', fontWeight: 500 }}>
@@ -220,6 +222,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                 onClick={(e) => {
                   e.stopPropagation();
                   setLightboxImages(allPhotos);
+                  setLightboxInitialIndex(currentPhotoIndex);
                   setLightboxOpen(true);
                 }}
                 style={showAllPhotosBtnStyle}
@@ -232,10 +235,10 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
           {/* About Section */}
           <section>
             <h2 style={sectionHeadingStyle}>About this hostel</h2>
-            <p style={{ color: 'var(--foreground)', fontSize: '1.05rem', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
+            <p style={{ color: 'var(--foreground)', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-line' }}>
               {selectedHostel.description || 'No description provided.'}
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--card-hover)', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1rem', padding: '0.75rem 1rem', backgroundColor: 'var(--card-hover)', borderRadius: '12px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 600 }}>
                 {selectedHostel.ownerName ? selectedHostel.ownerName.charAt(0).toUpperCase() : 'U'}
               </div>
@@ -268,7 +271,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
           {/* Rules Section */}
           <section>
             <h2 style={sectionHeadingStyle}>Policies & Rules</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0rem' }}>
               <div style={ruleItemStyle}>
                 <div style={ruleIconWrapperStyle}>
                   <Info size={20} style={{ color: 'var(--primary)' }} />
@@ -289,7 +292,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
 
           {/* Rooms Section */}
           <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
               <h2 style={{ ...sectionHeadingStyle, marginBottom: 0 }}>Available Rooms</h2>
               <span style={{
                 fontSize: '0.85rem', padding: '0.35rem 0.75rem', borderRadius: '20px',
@@ -335,7 +338,9 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                               src={img}
                               alt={`Room view ${i + 1}`}
                               onClick={() => {
-                                setLightboxImages([img]);
+                                const roomPhotos = room.images.filter(img => img.trim().length > 0);
+                                setLightboxImages(roomPhotos);
+                                setLightboxInitialIndex(i);
                                 setLightboxOpen(true);
                               }}
                               style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '8px', cursor: 'zoom-in', border: '1px solid var(--border)', transition: 'transform 0.2s' }}
@@ -377,7 +382,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
         <div>
           <div className="details-sticky-sidebar" style={stickySidebarStyle}>
             <div style={{ marginBottom: '1.5rem' }}>
-              <span style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--foreground)' }}>
+              <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--foreground)' }}>
                 {priceStr}
               </span>
               <span style={{ fontSize: '0.9rem', color: 'var(--muted)', marginLeft: '0.25rem' }}>/ month</span>
@@ -431,9 +436,11 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
       {lightboxOpen && (
         <ImageLightbox
           images={lightboxImages}
+          initialIndex={lightboxInitialIndex}
           onClose={() => {
             setLightboxOpen(false);
             setLightboxImages([]);
+            setLightboxInitialIndex(0);
           }}
         />
       )}
@@ -479,12 +486,12 @@ const detailsPageStyle: React.CSSProperties = {
   animation: 'fadeIn 0.3s ease-out',
   maxWidth: '1200px',
   margin: '0 auto',
-  padding: '0 1rem 4rem 1rem',
+  padding: '0 1rem 2rem 1rem',
 };
 
 const mainPhotoContainerStyle: React.CSSProperties = {
   width: '100%',
-  height: '450px',
+  height: '350px',
   position: 'relative',
   borderRadius: '16px',
   overflow: 'hidden',
@@ -575,37 +582,36 @@ const showAllPhotosBtnStyle: React.CSSProperties = {
 const contentGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '1fr 380px',
-  gap: '4rem',
+  gap: '2rem',
 };
 
 const sectionHeadingStyle: React.CSSProperties = {
-  fontSize: '1.5rem',
+  fontSize: '1.1rem',
   fontWeight: 700,
-  marginBottom: '1.25rem',
+  margin: '0 0 0.5rem 0',
   color: 'var(--foreground)',
 };
 
 const dividerStyle: React.CSSProperties = {
   border: 0,
   borderTop: '1px solid var(--border)',
-  margin: '2.5rem 0',
+  margin: '1rem 0',
 };
 
 const amenitiesGridStyle: React.CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '1rem',
+  gap: '0.5rem',
 };
 
 const amenityBadgeStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
-  fontSize: '0.95rem',
-  padding: '0.75rem 1.25rem',
-  backgroundColor: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: '30px',
+  padding: '0.5rem 0.75rem',
+  backgroundColor: 'var(--card-hover)',
+  borderRadius: '8px',
+  fontSize: '0.85rem',
   fontWeight: 500,
   boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
 };
