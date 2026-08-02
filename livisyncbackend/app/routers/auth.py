@@ -55,6 +55,10 @@ def login(login_in: LoginRequest, db: Session = Depends(get_db)):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Your account has been suspended by an administrator."
             )
+        if student.status == "inactive":
+            student.status = "active"
+            db.commit()
+            db.refresh(student)
         access_token = create_access_token(data={"sub": str(student.id), "role": "student"})
         return {"access_token": access_token, "token_type": "bearer"}
 
