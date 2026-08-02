@@ -45,6 +45,7 @@ export const fetchHostels = createAsyncThunk(
         ownerName: h.owner_name || 'Unknown Owner',
         isVerified: h.is_verified,
         currentOccupants: h.current_occupants || [],
+        nearbyLocations: h.nearby_locations || [],
         rooms: h.rooms ? h.rooms.map((r: any) => ({
           id: r.id,
           hostelId: r.hostel_id,
@@ -80,6 +81,29 @@ export const verifyHostel = createAsyncThunk(
       return hostelId;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Error verifying hostel');
+    }
+  }
+);
+
+export const updateNearbyLocations = createAsyncThunk(
+  'hostels/updateNearbyLocations',
+  async ({ hostelId, nearbyLocations, token }: { hostelId: string; nearbyLocations: string[]; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/hostels/${hostelId}/nearby-locations`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ nearby_locations: nearbyLocations })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to update nearby locations');
+      }
+      return { hostelId, nearbyLocations: data.nearby_locations as string[] };
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error updating nearby locations');
     }
   }
 );
@@ -129,6 +153,7 @@ export const addHostel = createAsyncThunk(
         ownerId: data.owner_id,
         isVerified: data.is_verified,
         currentOccupants: [],
+        nearbyLocations: data.nearby_locations || [],
         rooms: []
       } as Hostel;
     } catch (err: any) {
@@ -179,6 +204,7 @@ export const editHostel = createAsyncThunk(
         ownerId: data.owner_id,
         isVerified: data.is_verified,
         currentOccupants: data.current_occupants || updatedHostel.currentOccupants || [],
+        nearbyLocations: data.nearby_locations || updatedHostel.nearbyLocations || [],
         rooms: (data.rooms && data.rooms.length > 0) ? data.rooms.map((r: any) => ({
           id: r.id,
           hostelId: r.hostel_id,
@@ -243,6 +269,11 @@ const hostelSlice = createSlice({
       })
       .addCase(verifyHostel.fulfilled, (state, action: PayloadAction<string>) => {
         state.hostels = state.hostels.map((h) => h.id === action.payload ? { ...h, isVerified: true } : h);
+      })
+      .addCase(updateNearbyLocations.fulfilled, (state, action) => {
+        state.hostels = state.hostels.map((h) =>
+          h.id === action.payload.hostelId ? { ...h, nearbyLocations: action.payload.nearbyLocations } : h
+        );
       })
       .addCase(addHostel.fulfilled, (state, action: PayloadAction<Hostel>) => {
         state.hostels.push(action.payload);

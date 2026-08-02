@@ -4,7 +4,7 @@
  */
 import type { Hostel } from '../types';
 import { useAppDispatch, useAppSelector } from '../store/store';
-import { addHostel, editHostel, deleteHostel, verifyHostel } from '../store/slices/hostelSlice';
+import { addHostel, editHostel, deleteHostel, verifyHostel, updateNearbyLocations } from '../store/slices/hostelSlice';
 import { showToast } from '../store/slices/toastSlice';
 
 export function useHostelActions() {
@@ -57,5 +57,15 @@ export function useHostelActions() {
     }
   };
 
-  return { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel };
+  const handleUpdateNearbyLocations = async (hostelId: string, nearbyLocations: string[]) => {
+    if (!token) return;
+    try {
+      await dispatch(updateNearbyLocations({ hostelId, nearbyLocations, token })).unwrap();
+      dispatch(showToast({ message: 'Nearby locations updated successfully!', type: 'success' }));
+    } catch (err: any) {
+      dispatch(showToast({ message: err || 'Error updating nearby locations.', type: 'error' }));
+    }
+  };
+
+  return { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel, handleUpdateNearbyLocations };
 }

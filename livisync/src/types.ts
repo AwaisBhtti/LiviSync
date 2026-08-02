@@ -111,6 +111,7 @@ export interface Hostel {
   isVerified: boolean;
   rooms: Room[];
   currentOccupants?: string[];
+  nearbyLocations?: string[];
 }
 
 export interface MatchRequest {
