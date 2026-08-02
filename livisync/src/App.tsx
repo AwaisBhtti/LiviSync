@@ -187,7 +187,7 @@ export default function App() {
   } = useMatchRequests();
 
   const { handleBlockUser, handleUnblockUser, handleReportUser } = useUserActions();
-  const { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel } = useHostelActions();
+  const { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel, handleUpdateNearbyLocations } = useHostelActions();
   const { handleToggleUserStatus, handleWarnUser, handleResolveReport, handleDeleteUser, handleResolveMessageReport } = useAdminActions();
 
   if (isInitialLoad) {
@@ -342,6 +342,7 @@ export default function App() {
                       onVerifyHostel={handleVerifyHostel}
                       onWarnUser={handleWarnUser}
                       onResolveMessageReport={handleResolveMessageReport}
+                      onUpdateNearbyLocations={handleUpdateNearbyLocations}
                     />
                   ) : (
                     <Navigate to="/hostels" replace />
