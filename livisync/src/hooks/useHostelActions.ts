@@ -14,11 +14,13 @@ export function useHostelActions() {
   const handleAddHostel = async (newHostel: Omit<Hostel, 'id' | 'isVerified'>) => {
     if (!token) return;
     try {
-      await dispatch(addHostel({ newHostel, token })).unwrap();
+      const result = await dispatch(addHostel({ newHostel, token })).unwrap();
       dispatch(showToast({ message: 'Hostel listing added successfully!', type: 'success' }));
+      return result;
     } catch (err: any) {
       const errMsg = typeof err === 'string' ? err : err.message || 'Error adding hostel listing.';
       dispatch(showToast({ message: errMsg, type: 'error' }));
+      throw err;
     }
   };
 

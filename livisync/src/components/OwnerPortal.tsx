@@ -11,7 +11,7 @@ import { CustomSelect } from './ui/CustomSelect';
 interface OwnerPortalProps {
   currentUser: User;
   hostels: Hostel[];
-  onAddHostel?: (hostel: Hostel) => void;
+  onAddHostel?: (hostel: Hostel) => Promise<any> | void;
   onEditHostel?: (hostel: Hostel) => void;
   onDeleteHostel?: (hostelId: string) => void;
 }
@@ -180,57 +180,15 @@ export const OwnerPortal = ({
         setShowAddForm(false);
       } else {
         // Create new hostel listing
-        const response = await fetch(`${API_BASE_URL}/owners/hostels`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            name: hostelData.name,
-            location: hostelData.location,
-            description: hostelData.description,
-            photo: hostelData.photo,
-            photos: hostelData.photos,
-            electricity_bill_included: hostelData.electricityBillIncluded,
-            hostel_type: hostelData.hostelType,
-            has_curfew: hostelData.hasCurfew,
-            curfew_time: hostelData.curfewTime,
-            amenities: hostelData.amenities
-          })
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-          const errMsg = Array.isArray(data.detail)
-            ? data.detail.map((err: any) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
-            : data.detail || 'Failed to create hostel';
-          throw new Error(errMsg);
+        if (onAddHostel) {
+          const createdHostel = await onAddHostel(hostelData);
+          if (createdHostel) {
+            // Redirect to Room management view for this newly listed hostel
+            setSelectedHostelForRooms(createdHostel);
+          }
         }
-
-        const createdHostel: Hostel = {
-          id: data.id,
-          name: data.name,
-          location: data.location,
-          description: data.description,
-          photo: data.photo,
-          photos: data.photos,
-          electricityBillIncluded: data.electricity_bill_included,
-          hostelType: data.hostel_type,
-          hasCurfew: data.has_curfew,
-          curfewTime: data.curfew_time,
-          amenities: data.amenities ? data.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
-          rooms: [],
-          isVerified: data.is_verified,
-          ownerId: data.owner_id
-        };
-
-        if (onAddHostel) onAddHostel(createdHostel);
         resetForm();
         setShowAddForm(false);
-
-        // Redirect to Room management view for this newly listed hostel
-        setSelectedHostelForRooms(createdHostel);
       }
     } catch (err: any) {
       alert(err.message || 'Error occurred listing hostel');
@@ -272,8 +230,6 @@ export const OwnerPortal = ({
         token={token}
         onBack={() => {
           setSelectedHostelForRooms(null);
-          // Simple window reload or dispatcher reload to get latest hostels with rooms
-          window.location.reload();
         }}
       />
     );
@@ -473,7 +429,9 @@ export const OwnerPortal = ({
                   type="button"
                   className="btn btn-secondary"
                   style={{ marginRight: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     setSelectedHostelForRooms(editingHostel);
                     setShowAddForm(false);
                     resetForm();
@@ -578,7 +536,12 @@ export const OwnerPortal = ({
                       </div>
 
                       <button
-                        onClick={() => setSelectedHostelForRooms(hostel)}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedHostelForRooms(hostel);
+                        }}
                         className="btn btn-secondary"
                         style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
                       >
@@ -593,7 +556,9 @@ export const OwnerPortal = ({
         </div>
       )}
 
-      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {lightboxUrl && (
+        <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
       {confirmModal.isOpen && (
         <ConfirmationModal
           title={confirmModal.title}
