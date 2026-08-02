@@ -4,8 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .routers import auth, admin, students, owners, hostels, chat
 
+from sqlalchemy import text
+
 # Create tables in database
 Base.metadata.create_all(bind=engine)
+
+# Auto-migrate: add nearby_locations column if not exists
+with engine.begin() as conn:
+    conn.execute(text("ALTER TABLE hostels ADD COLUMN IF NOT EXISTS nearby_locations TEXT[] DEFAULT '{}';"))
 
 app = FastAPI(
     title="LiviSync Backend",

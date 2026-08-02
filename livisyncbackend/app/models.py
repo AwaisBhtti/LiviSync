@@ -106,6 +106,7 @@ class Hostel(Base):
     hostel_type = Column(String(50), nullable=False, default='boys')
     has_curfew = Column(Boolean, nullable=False, default=False)
     curfew_time = Column(String(20), nullable=True)
+    nearby_locations = Column(ARRAY(String(255)), nullable=True, default=[])
 
     owner = relationship("Owner", back_populates="owned_hostels")
     amenities = relationship("HostelAmenity", back_populates="hostel", cascade="all, delete-orphan")
