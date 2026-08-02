@@ -205,7 +205,9 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
         />
       )}
 
-      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {lightboxUrl && (
+        <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
 
       {confirmModal.isOpen && (
         <ConfirmationModal

@@ -414,7 +414,9 @@ export const AdminHostelVerification = ({
         </div>
       )}
 
-      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {lightboxUrl && (
+        <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </>
   );
 };
