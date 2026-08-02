@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config';
 import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo-n.png';
 
@@ -8,7 +9,9 @@ interface AuthScreenProps {
 }
 
 export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isLogin = location.pathname !== '/register';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -350,13 +353,13 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
                 />
                 <label htmlFor="terms" style={{ color: '#c8b8ad', fontSize: '0.85rem', lineHeight: '1.4', cursor: 'pointer' }}>
                   I agree to the{' '}
-                  <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#f5ead8', textDecoration: 'underline' }}>
+                  <Link to="/privacy" style={{ color: '#f5ead8', textDecoration: 'underline' }}>
                     Privacy Policy
-                  </a>{' '}
+                  </Link>{' '}
                   and{' '}
-                  <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#f5ead8', textDecoration: 'underline' }}>
+                  <Link to="/terms" style={{ color: '#f5ead8', textDecoration: 'underline' }}>
                     Terms of Service
-                  </a>.
+                  </Link>.
                 </label>
               </div>
             )}
@@ -369,8 +372,9 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           <div style={{ display: 'flex', gap: '0.375rem', marginTop: '2rem', fontSize: '0.875rem', color: '#c8b8ad' }}>
             <span>{isLogin ? "Don't have an account?" : 'Already have an account?'}</span>
             <button
+              type="button"
               onClick={() => {
-                setIsLogin(!isLogin);
+                navigate(isLogin ? '/register' : '/login');
                 setError('');
               }}
               style={{

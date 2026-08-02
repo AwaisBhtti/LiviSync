@@ -205,7 +205,10 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
         <img src={logo} alt="" style={heroMarkStyle} />
         <div style={{ position: 'relative', textAlign: 'center', padding: '0 24px', maxWidth: '1000px' }}>
           <div style={heroEyebrowStyle}>Lifestyle-first student housing · Lahore</div>
-          <h1 style={heroTitleStyle}>
+          <div style={{ display: 'inline-block', padding: '8px 24px', borderRadius: '999px', background: 'var(--color-surface)', border: '1.5px solid var(--color-accent)', color: 'var(--color-accent)', fontFamily: 'var(--font-heading)', fontSize: '1.35rem', letterSpacing: '0.1em', animation: 'ls-rise 1s var(--ease-organic) 0.1s both', marginBottom: '16px', fontWeight: 700, textTransform: 'uppercase' }}>
+            LiviSync
+          </div>
+          <h1 style={{ ...heroTitleStyle, fontSize: '3rem' }}>
             <span style={{ display: 'inline-block', animation: 'ls-rise 1s var(--ease-organic) 0.2s both' }}>Find</span>
             <span style={{ display: 'inline-block', animation: 'ls-rise 1s var(--ease-organic) 0.3s both' }}>your</span>
             <span style={{ display: 'inline-block', color: 'var(--color-accent-300)', animation: 'ls-rise 1s var(--ease-organic) 0.4s both' }}>perfect</span>
@@ -352,51 +355,7 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
         </div>
       </section>
 
-      {/* ══════════════ TEAM ══════════════ */}
-      <section className="ls-two-col ls-section" style={teamSectionStyle}>
-        <div className="reveal" data-reveal>
-          <div style={eyebrowStyle}>The team</div>
-          <h2 className="display-alt" style={teamTitleStyle}>Built by fellow hostellites who&rsquo;ve been through it</h2>
-          <p style={teamBodyStyle}>
-            LiviSync is on a mission to make university housing safe, easy, transparent, and roommate matchmaking stress-free.
-          </p>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.375rem', color: 'var(--color-accent-700)' }}>
-            Built by Gen-Z, for the Gen-Z
-          </div>
-        </div>
-        <div className="reveal" data-reveal data-delay="0.1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginTop: '38px' }}>
-            <img src={hostelHeritage} alt="Heritage loft dorm" className="washed" style={teamImageStyle} />
-          </div>
-          <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-            <img src={hostelOrchard} alt="Orchard commons room" className="washed" style={teamImageStyle} />
-          </div>
-        </div>
-      </section>
 
-      {/* ══════════════ NEWSLETTER ══════════════ */}
-      <section style={newsletterSectionStyle}>
-        <div className="reveal ls-two-col ls-section" data-reveal style={newsletterInnerStyle}>
-          <h2 className="display-alt" style={newsletterTitleStyle}>
-            Stay up-to-date with new verified hostels near you
-          </h2>
-          <div>
-            <div style={newsletterFieldStyle}>
-              <span style={newsletterLabelStyle}>Email</span>
-              <input
-                type="email"
-                placeholder="you@university.edu.pk"
-                aria-label="Email address"
-                style={newsletterInputStyle}
-              />
-              <button className="ls-dark-btn" style={newsletterBtnStyle}>Subscribe</button>
-            </div>
-            <div style={newsletterNoteStyle}>
-              By subscribing you agree to receive occasional emails from LiviSync. We never share your data.
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ══════════════ FOOTER ══════════════ */}
       <footer style={footerStyle}>
@@ -416,6 +375,7 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
               <div style={footerColLabelStyle}>Contact us</div>
               <div style={footerColBodyStyle}>
                 <a href="mailto:support@livisync.me" className="ls-foot-link" style={{ color: 'var(--color-accent-700)' }}>support@livisync.me</a>
+                <br />+92 333 0565255
                 <br />+92 314 4536266
               </div>
             </div>
@@ -597,7 +557,7 @@ const heroTitleStyle: React.CSSProperties = {
   fontFamily: 'var(--font-display)',
   fontWeight: 400,
   textTransform: 'uppercase',
-  fontSize: 'clamp(44px, 11vw, 150px)',
+  fontSize: 'clamp(24px, 6vw, 64px)',
   lineHeight: 0.9,
   color: 'var(--color-bg)',
   margin: '0 0 30px',

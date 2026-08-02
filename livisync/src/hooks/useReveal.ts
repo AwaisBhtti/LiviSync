@@ -20,12 +20,19 @@ export function useRevealContainer<T extends HTMLElement = HTMLDivElement>(deps:
       el.classList.add('is-visible');
     };
 
+    const hide = (el: HTMLElement) => {
+      el.classList.remove('is-visible');
+      el.style.transitionDelay = '0s'; // reset delay so hide is instant
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          show(entry.target as HTMLElement);
-          observer.unobserve(entry.target);
+          if (entry.isIntersecting) {
+            show(entry.target as HTMLElement);
+          } else {
+            hide(entry.target as HTMLElement);
+          }
         });
       },
       { threshold: 0.08, rootMargin: '0px 0px -6% 0px' }
@@ -33,9 +40,8 @@ export function useRevealContainer<T extends HTMLElement = HTMLDivElement>(deps:
 
     const vh = window.innerHeight || 800;
     root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
-      if (el.classList.contains('is-visible')) return;
       if (el.getBoundingClientRect().top < vh * 0.94) show(el);
-      else observer.observe(el);
+      observer.observe(el);
     });
 
     return () => observer.disconnect();
@@ -50,7 +56,10 @@ export function useCountUp(target: number, active: boolean, duration = 1300) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      setValue(0);
+      return;
+    }
     let frame = 0;
     const start = performance.now();
     const step = (now: number) => {
@@ -77,7 +86,8 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(threshold = 0.
       ([entry]) => {
         if (entry.isIntersecting) {
           setInView(true);
-          observer.disconnect();
+        } else {
+          setInView(false);
         }
       },
       { threshold }
