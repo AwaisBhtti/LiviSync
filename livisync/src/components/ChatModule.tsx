@@ -467,8 +467,8 @@ export const ChatModule = ({
               style={avatarStyle}
             />
             <div>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 600 }}>{getRespondent()?.name}</h4>
-              <p style={{ fontSize: '0.75rem', color: 'var(--success)' }}>Click to view profile.</p>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>{getRespondent()?.name}</h4>
+              <p style={{ fontSize: '0.75rem', color: 'var(--success)', margin: 0 }}>Click to view profile.</p>
             </div>
             </div>
           </div>
@@ -503,7 +503,7 @@ export const ChatModule = ({
                       className="chat-msg-row"
                     >
                       <div style={msgBubbleStyle(isSelf)}>
-                        <p style={{ fontSize: '0.875rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.text}</p>
+                        <p style={{ fontSize: '0.875rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: 0 }}>{msg.text}</p>
                         <span style={msgTimeStyle(isSelf)}>
                           {new Date(msg.timestamp).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -751,8 +751,8 @@ const listStyle: React.CSSProperties = {
 
 
 const avatarStyle: React.CSSProperties = {
-  width: '42px',
-  height: '42px',
+  width: '36px',
+  height: '36px',
   borderRadius: 'var(--radius-pill)',
   objectFit: 'cover',
   flexShrink: 0,
@@ -783,8 +783,8 @@ const chatPreviewTextStyle: React.CSSProperties = {
 const chatHeaderStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.875rem',
-  padding: '0.6rem 1.5rem',
+  gap: '0.6rem',
+  padding: '0.4rem 1.25rem',
   borderBottom: '1px solid var(--color-divider)',
   backgroundColor: 'var(--color-surface)',
 };
@@ -798,12 +798,12 @@ const backButtonStyle: React.CSSProperties = {
 
 const chatMessagesStyle: React.CSSProperties = {
   flex: 1,
-  padding: '1.5rem',
+  padding: '1rem 1.25rem',
   overflowY: 'auto',
   backgroundColor: 'var(--background)',
   display: 'flex',
   flexDirection: 'column',
-  gap: '1rem',
+  gap: '0.625rem',
 };
 
 const chatEmptyFeedStyle: React.CSSProperties = {
@@ -819,9 +819,9 @@ const chatEmptyFeedStyle: React.CSSProperties = {
 const msgBubbleStyle = (isSelf: boolean): React.CSSProperties => ({
   flex: 1,
   minWidth: 0,
-  padding: '0.8125rem 1.125rem',
+  padding: '0.55rem 0.875rem',
   fontSize: '0.9rem',
-  lineHeight: 1.55,
+  lineHeight: 1.4,
   borderRadius: isSelf ? '20px 20px 6px 20px' : '20px 20px 20px 6px',
   background: isSelf ? 'var(--color-accent)' : 'var(--color-surface)',
   color: isSelf ? 'var(--color-bg)' : 'var(--color-text)',
