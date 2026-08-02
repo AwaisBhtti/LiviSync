@@ -36,6 +36,7 @@ def get_hostels(db: Session = Depends(get_db), current_user: Union[Student, Owne
             "has_curfew": h.has_curfew,
             "curfew_time": h.curfew_time,
             "owner_name": h.owner.name if h.owner else "Unknown Owner",
+            "nearby_locations": h.nearby_locations or [],
             "rooms": [{
                 "id": str(r.id),
                 "hostel_id": str(r.hostel_id),
