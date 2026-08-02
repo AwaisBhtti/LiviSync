@@ -119,13 +119,6 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
 
       {/* ── Header ── */}
       <div style={eyebrowStyle}>Hostel directory</div>
-      <h1 className="display" style={pageTitleStyle}>
-        Verified living spaces, inspected in person.
-      </h1>
-      <p style={pageLeadStyle}>
-        Search, filter and open a listing to see room details, availability, sharing options and
-        whether the electricity bill is included.
-      </p>
 
       {/* ── Filter bar ── */}
       <div className="hd-filter-bar" style={filterBarStyle}>

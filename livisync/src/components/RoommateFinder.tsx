@@ -148,13 +148,6 @@ export const RoommateFinder = ({
           <div style={eyebrowStyle}>Roommate finder</div>
 
           <div className="rm-headline-grid" style={headlineGridStyle}>
-            <h1 className="display" style={pageTitleStyle}>
-              We match your habits before your housing.
-            </h1>
-            <p style={pageLeadStyle}>
-              Compatibility is scored on sleep schedule, cleanliness, smoking policy, pets and guest
-              tolerance — the five things that actually decide whether a room works.
-            </p>
           </div>
 
           <div className="rm-header-inner" style={headerInnerStyle}>
