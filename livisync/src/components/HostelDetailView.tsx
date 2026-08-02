@@ -126,16 +126,6 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
             </>
           )}
         </div>
-        {selectedHostel.nearbyLocations && selectedHostel.nearbyLocations.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.625rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 600 }}>Nearby Areas/Landmarks:</span>
-            {selectedHostel.nearbyLocations.map((loc, idx) => (
-              <span key={idx} style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', backgroundColor: 'var(--card-hover)', borderRadius: '6px', border: '1px solid var(--border)', color: 'var(--foreground)', fontWeight: 500 }}>
-                {loc}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Main Content Layout */}
