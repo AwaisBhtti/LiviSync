@@ -26,9 +26,9 @@ export const Navbar = ({
     { to: '/hostels', label: 'Hostels', icon: <Building size={14} strokeWidth={2.75} />, badge: 0 },
     ...(currentUser.role === 'student'
       ? [
-          { to: '/roommates', label: 'Roommates', icon: <Users size={14} strokeWidth={2.75} />, badge: pendingRequestsCount },
-          { to: '/chats', label: 'Inbox', icon: <MessageSquare size={14} strokeWidth={2.75} />, badge: unreadMessagesCount },
-        ]
+        { to: '/roommates', label: 'Roommates', icon: <Users size={14} strokeWidth={2.75} />, badge: pendingRequestsCount },
+        { to: '/chats', label: 'Inbox', icon: <MessageSquare size={14} strokeWidth={2.75} />, badge: unreadMessagesCount },
+      ]
       : []),
     { to: '/profile', label: 'Profile', icon: <User size={14} strokeWidth={2.75} />, badge: 0 },
     ...(currentUser.role === 'owner'
@@ -113,9 +113,6 @@ export const Navbar = ({
               keyboard focus to reveal the sections. */}
           <nav className="desktop-nav-tabs" style={desktopNavStyle} aria-label="Sections">
             <div className="ls-island" style={islandStyle}>
-              <span className="ls-island-mark" style={islandMarkStyle}>
-                <img src={logo} alt="" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
-              </span>
 
               <span className="ls-island-label" style={islandLabelStyle} aria-hidden="true">
                 <span>Menu</span>
@@ -277,16 +274,6 @@ const islandStyle: React.CSSProperties = {
   background: 'var(--color-text)',
   padding: '8px 16px 8px 8px',
   boxShadow: '0 10px 34px rgba(32, 30, 29, 0.32)',
-};
-
-const islandMarkStyle: React.CSSProperties = {
-  width: '34px',
-  height: '34px',
-  background: 'var(--color-bg)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
 };
 
 const islandLabelStyle: React.CSSProperties = {
