@@ -4,6 +4,7 @@ import type { Hostel, User } from '../types';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { BUILTIN_AMENITIES } from './Amenities';
 import { useRevealContainer } from '../hooks/useReveal';
+import { CustomSelect } from './ui/CustomSelect';
 
 interface HostelDirectoryProps {
   hostels: Hostel[];
@@ -173,15 +174,12 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
 
           <div style={sidebarSectionStyle}>
             <label style={sidebarLabelStyle}>ROOM SHARING</label>
-            <select
+            <CustomSelect
               value={selectedSharing}
-              onChange={(e) => setSelectedSharing(e.target.value)}
+              onChange={setSelectedSharing}
+              options={SHARING_OPTIONS}
               style={sidebarSelectStyle}
-            >
-              {SHARING_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            />
           </div>
 
           <div style={sidebarSectionStyle}>
