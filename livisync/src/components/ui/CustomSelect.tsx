@@ -60,7 +60,7 @@ export const CustomSelect = ({
     padding: '0.625rem 0.875rem',
     fontFamily: 'var(--font-sans)',
     fontSize: '0.85rem',
-    background: 'var(--card)',
+    background: 'var(--color-bg)',
     border: '1px solid var(--border-solid)',
     borderRadius: '10px',
     color: 'var(--foreground)',
@@ -143,7 +143,7 @@ export const CustomSelect = ({
                   padding: '0.5rem 0.625rem',
                   fontSize: '0.825rem',
                   color: isSelected ? 'var(--primary)' : 'var(--foreground)',
-                  background: isSelected ? 'rgba(181, 92, 60, 0.04)' : 'transparent',
+                  background: isSelected ? 'var(--color-bg)' : 'transparent',
                   border: 'none',
                   borderRadius: '8px',
                   cursor: 'pointer',
@@ -153,7 +153,7 @@ export const CustomSelect = ({
                   transition: 'background-color 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
-                  if (!isSelected) e.currentTarget.style.backgroundColor = '#f2f1ec';
+                  if (!isSelected) e.currentTarget.style.backgroundColor = 'var(--color-bg)';
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
