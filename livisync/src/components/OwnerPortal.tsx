@@ -168,8 +168,6 @@ export const OwnerPortal = ({
       isVerified: editingHostel ? editingHostel.isVerified : false,
     };
 
-    const token = localStorage.getItem('livisync_token') || '';
-
     setSubmitting(true);
     try {
       if (editingHostel) {
