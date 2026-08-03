@@ -315,7 +315,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                 color: selectedHostel.electricityBillIncluded ? 'var(--success)' : 'var(--muted)',
                 fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem'
               }}>
-                ⚡ Electricity: {selectedHostel.electricityBillIncluded ? 'Included' : 'Not Included'}
+                Electricity: {selectedHostel.electricityBillIncluded ? 'Included' : 'Not Included'}
               </span>
             </div>
 
@@ -329,13 +329,13 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                       </h3>
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
                         <span style={roomBadgeStyle}>
-                          🏢 {room.floor} Floor
+                          {room.floor}
                         </span>
                         <span style={roomBadgeStyle}>
-                          🛋️ {room.furniture === 'nothing' ? 'Unfurnished' : room.furniture === 'mattress' ? 'Mattress Provided' : 'Furnished'}
+                          {room.furniture === 'nothing' ? 'Unfurnished' : room.furniture === 'mattress' ? 'Mattress Provided' : 'Furnished'}
                         </span>
                         <span style={roomBadgeStyle}>
-                          🚿 {room.hasAttachedBathroom ? 'Attached Bath' : 'Shared Bath'}
+                          {room.hasAttachedBathroom ? 'Attached Bath' : 'Shared Bath'}
                         </span>
                       </div>
                       {room.description && (
