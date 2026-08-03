@@ -37,3 +37,4 @@ livisync/.env
 # Custom Agent files
 .agents/
 skills-lock.json
+.claude/
