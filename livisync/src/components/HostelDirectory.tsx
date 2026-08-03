@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Hostel, User } from '../types';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import { BUILTIN_AMENITIES } from './Amenities';
 import { useRevealContainer } from '../hooks/useReveal';
 
@@ -87,9 +87,6 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
   });
 
   const gridRef = useRevealContainer<HTMLDivElement>([filteredHostels.length, selectedSharing, selectedType]);
-
-  const activeAdvanced =
-    maxPrice !== 25000 || selectedAmenities.length > 0 || selectedType !== 'all';
 
   const clearFilters = () => {
     setMaxPrice(25000);
@@ -284,22 +281,6 @@ const eyebrowStyle: React.CSSProperties = {
   animation: 'ls-fade 0.7s ease both',
 };
 
-const pageTitleStyle: React.CSSProperties = {
-  fontSize: 'clamp(40px, 6vw, 92px)',
-  lineHeight: 0.9,
-  margin: '0 0 18px',
-  maxWidth: '20ch',
-  animation: 'ls-rise 0.9s var(--ease-organic) both',
-};
-
-const pageLeadStyle: React.CSSProperties = {
-  fontSize: '1.03rem',
-  color: 'var(--color-neutral-700)',
-  maxWidth: '56ch',
-  margin: '0 0 40px',
-  animation: 'ls-fade 0.9s ease 0.15s both',
-};
-
 const filterBarStyle: React.CSSProperties = {
   display: 'flex',
   gap: '12px',
@@ -364,15 +345,6 @@ const sidebarTitleStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   color: 'var(--color-text)',
-};
-
-const sidebarHideBtnStyle: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  fontSize: '0.9rem',
-  color: 'var(--color-neutral-600)',
-  cursor: 'pointer',
-  fontWeight: 600,
 };
 
 const sidebarSectionStyle: React.CSSProperties = {
