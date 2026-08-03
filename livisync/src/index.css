@@ -85,11 +85,11 @@
   /* ── Type ────────────────────────────────────────────── */
   --font-body:            'Figtree', system-ui, -apple-system, sans-serif;
   --font-sans:            var(--font-body);
-  --font-heading:         'Caprasimo', Georgia, serif;   /* card + section titles */
-  --font-display:         'Anton', 'Caprasimo', sans-serif;        /* big uppercase display */
-  --font-display-alt:     'Archivo Black', 'Anton', sans-serif;    /* tighter display voice */
-  --font-serif:           var(--font-heading);
-  --font-mono:            var(--font-heading);
+  --font-heading:         var(--font-body);   /* card + section titles */
+  --font-display:         var(--font-body);        /* big uppercase display */
+  --font-display-alt:     var(--font-body);    /* tighter display voice */
+  --font-serif:           var(--font-body);
+  --font-mono:            ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --transition:           all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
   --ease-organic:         cubic-bezier(0.19, 1, 0.22, 1);
