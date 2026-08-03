@@ -55,6 +55,7 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
   const [selectedSharing, setSelectedSharing] = useState<string>('all');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(true);
 
   const filteredHostels = hostels.filter((host) => {
     const matchesSearch =
@@ -135,83 +136,146 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
       <div style={{ display: 'flex', gap: '2rem', marginTop: '24px', alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap' }}>
 
         {/* ── Sidebar Filters ── */}
-        <div style={sidebarPanelStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-divider)', paddingBottom: '12px' }}>
-            <div style={sidebarTitleStyle}>
-              <SlidersHorizontal size={18} strokeWidth={2.5} style={{ marginRight: '8px' }} />
-              Filters
+        {showFilters && (
+          <div className="card" style={sidebarPanelStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '0.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <SlidersHorizontal size={14} style={{ color: 'var(--muted)' }} />
+                <h3 style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>Filters</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                  }
+                  setShowFilters(false);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#82796a',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '0.2rem 0.4rem',
+                  borderRadius: '4px',
+                  transition: 'var(--transition)',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(32, 30, 29, 0.05)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                Hide
+              </button>
             </div>
-          </div>
 
-          <div style={sidebarSectionStyle}>
-            <label style={sidebarLabelStyle}>MAX PRICE (PKR): {maxPrice.toLocaleString()}</label>
-            <input
-              type="range"
-              min="5000"
-              max="35000"
-              step="1000"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(Number(e.target.value))}
-              style={{ width: '100%', accentColor: '#ab6f4b' }}
-            />
-          </div>
-
-          <div style={sidebarSectionStyle}>
-            <label style={sidebarLabelStyle}>HOSTEL CATEGORY</label>
-            <div style={segmentedControlWrapStyle}>
-              {TYPE_OPTIONS.map((tab) => (
-                <button
-                  key={tab.value}
-                  type="button"
-                  style={segmentedControlBtnStyle(selectedType === tab.value)}
-                  onClick={() => setSelectedType(tab.value)}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            {/* Price */}
+            <div>
+              <label style={sidebarLabelStyle}>Max Price</label>
+              <p style={{ fontSize: '0.85rem', color: '#201e1d', fontWeight: 600, marginBottom: '0.4rem' }}>
+                PKR {maxPrice.toLocaleString()}
+              </p>
+              <input
+                type="range"
+                min="5000"
+                max="35000"
+                step="1000"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                style={{ width: '100%', accentColor: '#c67139', cursor: 'pointer' }}
+              />
             </div>
-          </div>
 
-          <div style={sidebarSectionStyle}>
-            <label style={sidebarLabelStyle}>ROOM SHARING</label>
-            <CustomSelect
-              value={selectedSharing}
-              onChange={setSelectedSharing}
-              options={SHARING_OPTIONS}
-              style={sidebarSelectStyle}
-            />
-          </div>
-
-          <div style={sidebarSectionStyle}>
-            <label style={sidebarLabelStyle}>MUST HAVE AMENITIES</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {BUILTIN_AMENITIES.map((amenity) => {
-                const isSelected = selectedAmenities.includes(amenity);
-                return (
+            {/* Category */}
+            <div>
+              <label style={sidebarLabelStyle}>Hostel Category</label>
+              <div style={segmentedControlWrapStyle}>
+                {TYPE_OPTIONS.map((tab) => (
                   <button
-                    key={amenity}
+                    key={tab.value}
                     type="button"
-                    onClick={() =>
-                      setSelectedAmenities((prev) =>
-                        isSelected ? prev.filter((a) => a !== amenity) : [...prev, amenity]
-                      )
-                    }
-                    style={sidebarAmenityChipStyle(isSelected)}
+                    style={segmentedControlBtnStyle(selectedType === tab.value)}
+                    onClick={() => setSelectedType(tab.value)}
                   >
-                    {amenity}
+                    {tab.label}
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
 
-          <button type="button" onClick={clearFilters} style={sidebarClearBtnStyle}>
-            Clear Filters
-          </button>
-        </div>
+            {/* Sharing */}
+            <div>
+              <label style={sidebarLabelStyle}>Room Sharing</label>
+              <CustomSelect
+                value={selectedSharing}
+                onChange={setSelectedSharing}
+                options={SHARING_OPTIONS}
+                style={sidebarSelectStyle}
+              />
+            </div>
+
+            {/* Amenities */}
+            <div>
+              <label style={sidebarLabelStyle}>Must Have Amenities</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {BUILTIN_AMENITIES.map((amenity) => {
+                  const isSelected = selectedAmenities.includes(amenity);
+                  return (
+                    <button
+                      key={amenity}
+                      type="button"
+                      onClick={() =>
+                        setSelectedAmenities((prev) =>
+                          isSelected ? prev.filter((a) => a !== amenity) : [...prev, amenity]
+                        )
+                      }
+                      style={sidebarAmenityChipStyle(isSelected)}
+                    >
+                      {amenity}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              style={sidebarClearBtnStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(198, 113, 57, 0.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
 
         {/* ── Listings ── */}
         <div style={{ flex: 1, minWidth: '300px' }}>
+          {!showFilters && (
+            <button
+              onClick={() => setShowFilters(true)}
+              className="btn btn-secondary hd-filter-toggle-desktop"
+              style={{
+                marginBottom: '1rem',
+                width: 'fit-content',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 0.875rem',
+                fontSize: '0.8rem',
+              }}
+            >
+              <SlidersHorizontal size={13} />
+              Show Filters
+            </button>
+          )}
           {filteredHostels.length === 0 ? (
             <div style={emptyStateStyle}>
               No hostels matched your search parameters. Try adjusting your filters.
@@ -324,44 +388,30 @@ const countStyle: React.CSSProperties = {
 };
 
 const sidebarPanelStyle: React.CSSProperties = {
-  width: '320px',
+  width: '300px',
   flexShrink: 0,
-  padding: '24px',
+  padding: '1.25rem',
   background: 'var(--color-surface)',
-  borderRadius: 'calc(var(--radius-lg) * 1.1)',
-  border: '1px solid var(--color-divider)',
   display: 'flex',
   flexDirection: 'column',
-  gap: '24px',
+  gap: '1rem',
   animation: 'ls-fade 0.4s ease both',
-};
-
-const sidebarTitleStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-heading)',
-  fontSize: '1.15rem',
-  fontWeight: 700,
-  display: 'flex',
-  alignItems: 'center',
-  color: 'var(--color-text)',
-};
-
-const sidebarSectionStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '12px',
+  overflow: 'visible',
 };
 
 const sidebarLabelStyle: React.CSSProperties = {
-  fontSize: '0.8rem',
+  fontSize: '0.7rem',
   fontWeight: 700,
-  color: 'var(--color-neutral-600)',
-  letterSpacing: '0.04em',
+  color: '#82796a',
   textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  marginBottom: '0.35rem',
+  display: 'block',
 };
 
 const segmentedControlWrapStyle: React.CSSProperties = {
   display: 'flex',
-  border: '1px solid var(--color-divider)',
+  border: '1px solid #dcd3c4',
   borderRadius: 'var(--radius-md)',
   background: 'transparent',
   overflow: 'hidden',
@@ -373,8 +423,8 @@ const segmentedControlBtnStyle = (active: boolean): React.CSSProperties => ({
   textAlign: 'center',
   fontSize: '0.75rem',
   fontWeight: active ? 700 : 400,
-  background: active ? '#b96c44' : 'transparent',
-  color: active ? '#fff' : 'var(--color-neutral-600)',
+  background: active ? '#c67139' : 'transparent',
+  color: active ? '#fff' : '#82796a',
   border: 'none',
   cursor: 'pointer',
   transition: 'background 0.2s, color 0.2s',
@@ -385,11 +435,12 @@ const sidebarSelectStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
   borderRadius: 'var(--radius-md)',
-  border: '1px solid var(--color-divider)',
-  background: 'var(--color-bg)',
+  background: '#f5ead8',
+  border: '1px solid #dcd3c4',
+  color: '#201e1d',
+  boxShadow: 'none',
   fontSize: '0.9rem',
   fontFamily: 'var(--font-body)',
-  color: 'var(--color-text)',
   cursor: 'pointer',
 };
 
@@ -398,25 +449,25 @@ const sidebarAmenityChipStyle = (selected: boolean): React.CSSProperties => ({
   fontSize: '0.75rem',
   padding: '6px 12px',
   borderRadius: 'var(--radius-pill)',
-  border: `1px solid ${selected ? '#b96c44' : 'var(--color-divider)'}`,
-  background: selected ? '#b96c44' : 'transparent',
-  color: selected ? '#fff' : 'var(--color-neutral-600)',
+  border: `1px solid ${selected ? '#c67139' : '#dcd3c4'}`,
+  background: selected ? '#c67139' : 'transparent',
+  color: selected ? '#fff' : '#82796a',
   cursor: 'pointer',
   transition: 'var(--transition)',
 });
 
 const sidebarClearBtnStyle: React.CSSProperties = {
   width: '100%',
-  padding: '12px',
-  marginTop: '8px',
-  borderRadius: 'var(--radius-md)',
-  border: '1px solid var(--color-divider)',
+  padding: '0.625rem 1rem',
+  fontSize: '0.8rem',
+  fontWeight: 700,
+  color: '#c67139',
   background: 'transparent',
-  fontFamily: 'var(--font-heading)',
-  fontWeight: 600,
-  fontSize: '0.95rem',
+  border: '1px solid #c67139',
+  borderRadius: '8px',
   cursor: 'pointer',
-  color: 'var(--color-text)',
+  marginTop: '0.5rem',
+  transition: 'all 0.15s ease',
   textAlign: 'center',
 };
 
