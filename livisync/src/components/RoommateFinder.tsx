@@ -407,22 +407,6 @@ const headlineGridStyle: React.CSSProperties = {
   marginBottom: '36px',
 };
 
-const pageTitleStyle: React.CSSProperties = {
-  fontSize: 'clamp(38px, 5.6vw, 88px)',
-  lineHeight: 0.9,
-  margin: 0,
-  maxWidth: '19ch',
-  color: 'var(--color-text)',
-  animation: 'ls-rise 0.9s var(--ease-organic) both',
-};
-
-const pageLeadStyle: React.CSSProperties = {
-  fontSize: '1rem',
-  color: 'var(--color-neutral-700)',
-  margin: 0,
-  animation: 'ls-fade 0.9s ease 0.15s both',
-};
-
 const headerInnerStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',

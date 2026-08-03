@@ -449,214 +449,214 @@ export const ChatModule = ({
           {activeChatUserId ? (
             <>
               {/* Chat Header */}
-        <div style={chatHeaderStyle}>
-          <button
-            className="chat-back-btn"
-            style={backButtonStyle}
-            onClick={() => setActiveChatUserId(null)}
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div
-            onClick={() => setShowRespondentProfile(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flex: 1, minWidth: 0 }}
-          >
-            <img
-              src={getRespondent()?.photo}
-              alt={getRespondent()?.name}
-              style={avatarStyle}
-            />
-            <div>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>{getRespondent()?.name}</h4>
-              <p style={{ fontSize: '0.75rem', color: 'var(--success)', margin: 0 }}>Click to view profile.</p>
-            </div>
-            </div>
-          </div>
-
-          {/* Chat Messages */}
-          <div style={chatMessagesStyle}>
-            {(messages[activeChatUserId] || []).length === 0 ? (
-              <div style={chatEmptyFeedStyle}>
-                <MessageSquare size={24} style={{ color: 'var(--border)' }} />
-                <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.5rem' }}>
-                  This is the beginning of your chat history. Say hello!
-                </p>
-              </div>
-            ) : (
-              (messages[activeChatUserId] || []).map((msg, index, arr) => {
-                const isSelf = msg.senderId === currentUser.id;
-                const isLastMsg = index === arr.length - 1;
-                const scrollTargetIndex = Math.max(0, arr.length - 10);
-                return (
-                  <div
-                    key={msg.id}
-                    id={index === scrollTargetIndex ? 'scroll-target-msg' : undefined}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: isSelf ? 'flex-end' : 'flex-start',
-                      width: '100%',
-                    }}
-                  >
-                    <div
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', maxWidth: '70%', flexDirection: isSelf ? 'row-reverse' : 'row' }}
-                      className="chat-msg-row"
-                    >
-                      <div style={msgBubbleStyle(isSelf)}>
-                        <p style={{ fontSize: '0.875rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: 0 }}>{msg.text}</p>
-                        <span style={msgTimeStyle(isSelf)}>
-                          {new Date(msg.timestamp).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                          {(msg as any).status === 'sending' && (
-                            <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
-                          )}
-                        </span>
-                      </div>
-                      {!isSelf && (
-                        <button
-                          className="chat-report-btn"
-                          title="Report message"
-                          onClick={() => setReportingMessage({
-                            messageId: msg.id,
-                            messageText: msg.text,
-                            reportedUserId: msg.senderId,
-                            reportedUserName: getRespondent()?.name || 'User',
-                          })}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: 'var(--muted)',
-                            padding: '0.25rem',
-                            borderRadius: '4px',
-                            opacity: 0,
-                            transition: 'opacity 0.15s ease, color 0.15s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Flag size={13} />
-                        </button>
-                      )}
-                    </div>
-                    {isLastMsg && isSelf && (msg as any).status !== 'sending' && (
-                      <span style={{
-                        fontSize: '0.65rem',
-                        color: 'var(--muted)',
-                        marginTop: '0.2rem',
-                        marginRight: '0.25rem',
-                        fontWeight: 600,
-                        letterSpacing: '0.02em',
-                      }}>
-                        {msg.read ? 'Read' : 'Delivered'}
-                      </span>
-                    )}
+              <div style={chatHeaderStyle}>
+                <button
+                  className="chat-back-btn"
+                  style={backButtonStyle}
+                  onClick={() => setActiveChatUserId(null)}
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <div
+                  onClick={() => setShowRespondentProfile(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flex: 1, minWidth: 0 }}
+                >
+                  <img
+                    src={getRespondent()?.photo}
+                    alt={getRespondent()?.name}
+                    style={avatarStyle}
+                  />
+                  <div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>{getRespondent()?.name}</h4>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--success)', margin: 0 }}>Click to view profile.</p>
                   </div>
-                );
-              })
-            )}
-            <div ref={chatEndRef} />
-          </div>
+                </div>
+              </div>
 
-          {/* Chat Input */}
-          <form onSubmit={handleSendMessage} style={chatInputAreaStyle}>
-            <input
-              type="text"
-              placeholder="Type a message..."
-              style={chatInputFieldStyle}
-              value={typedMessage}
-              onChange={(e) => setTypedMessage(e.target.value)}
-            />
-            <button type="submit" className="btn btn-primary" style={{ padding: '0.625rem' }}>
-              <Send size={16} />
-            </button>
-          </form>
-        </>
-        ) : (
-        <div style={noChatSelectedStyle}>
-          <MessageSquare size={36} style={{ color: 'var(--border)' }} />
-          <h3 style={{ fontSize: '1rem', marginTop: '0.75rem' }}>Your Messages</h3>
-          <p style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-            Select a matched roommate from the sidebar to view chat logs and coordinate.
-          </p>
-        </div>
+              {/* Chat Messages */}
+              <div style={chatMessagesStyle}>
+                {(messages[activeChatUserId] || []).length === 0 ? (
+                  <div style={chatEmptyFeedStyle}>
+                    <MessageSquare size={24} style={{ color: 'var(--border)' }} />
+                    <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.5rem' }}>
+                      This is the beginning of your chat history. Say hello!
+                    </p>
+                  </div>
+                ) : (
+                  (messages[activeChatUserId] || []).map((msg, index, arr) => {
+                    const isSelf = msg.senderId === currentUser.id;
+                    const isLastMsg = index === arr.length - 1;
+                    const scrollTargetIndex = Math.max(0, arr.length - 10);
+                    return (
+                      <div
+                        key={msg.id}
+                        id={index === scrollTargetIndex ? 'scroll-target-msg' : undefined}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: isSelf ? 'flex-end' : 'flex-start',
+                          width: '100%',
+                        }}
+                      >
+                        <div
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', maxWidth: '70%', flexDirection: isSelf ? 'row-reverse' : 'row' }}
+                          className="chat-msg-row"
+                        >
+                          <div style={msgBubbleStyle(isSelf)}>
+                            <p style={{ fontSize: '0.875rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: 0 }}>{msg.text}</p>
+                            <span style={msgTimeStyle(isSelf)}>
+                              {new Date(msg.timestamp).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                              {(msg as any).status === 'sending' && (
+                                <Clock size={10} style={{ marginLeft: '4px', display: 'inline-block', verticalAlign: 'middle', opacity: 0.8 }} />
+                              )}
+                            </span>
+                          </div>
+                          {!isSelf && (
+                            <button
+                              className="chat-report-btn"
+                              title="Report message"
+                              onClick={() => setReportingMessage({
+                                messageId: msg.id,
+                                messageText: msg.text,
+                                reportedUserId: msg.senderId,
+                                reportedUserName: getRespondent()?.name || 'User',
+                              })}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'var(--muted)',
+                                padding: '0.25rem',
+                                borderRadius: '4px',
+                                opacity: 0,
+                                transition: 'opacity 0.15s ease, color 0.15s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Flag size={13} />
+                            </button>
+                          )}
+                        </div>
+                        {isLastMsg && isSelf && (msg as any).status !== 'sending' && (
+                          <span style={{
+                            fontSize: '0.65rem',
+                            color: 'var(--muted)',
+                            marginTop: '0.2rem',
+                            marginRight: '0.25rem',
+                            fontWeight: 600,
+                            letterSpacing: '0.02em',
+                          }}>
+                            {msg.read ? 'Read' : 'Delivered'}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Chat Input */}
+              <form onSubmit={handleSendMessage} style={chatInputAreaStyle}>
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  style={chatInputFieldStyle}
+                  value={typedMessage}
+                  onChange={(e) => setTypedMessage(e.target.value)}
+                />
+                <button type="submit" className="btn btn-primary" style={{ padding: '0.625rem' }}>
+                  <Send size={16} />
+                </button>
+              </form>
+            </>
+          ) : (
+            <div style={noChatSelectedStyle}>
+              <MessageSquare size={36} style={{ color: 'var(--border)' }} />
+              <h3 style={{ fontSize: '1rem', marginTop: '0.75rem' }}>Your Messages</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                Select a matched roommate from the sidebar to view chat logs and coordinate.
+              </p>
+            </div>
           )}
+        </div>
       </div>
-    </div>
 
       {
-    showRespondentProfile && getRespondent() && (
-      <FriendProfileModal
-        selectedUser={getRespondent()!}
-        currentUser={currentUser}
-        matchRequests={matchRequests}
-        onClose={() => {
-          setShowRespondentProfile(false);
-        }}
-        onUnfriend={async (id) => {
-          try {
-            await onUnfriend(id);
-            setShowRespondentProfile(false);
-            setActiveChatUserId(null);
-          } catch (err: any) {
-            dispatch(showToast({ message: err.message || 'Error unfriending.', type: 'error' }));
-          }
-        }}
-        onBlockUser={async (id) => {
-          try {
-            await onBlockUser(id);
-            setShowRespondentProfile(false);
-            setActiveChatUserId(null);
-          } catch (err: any) {
-            dispatch(showToast({ message: err.message || 'Error blocking user.', type: 'error' }));
-          }
-        }}
-        onReportUser={async (reportedId, reason, desc) => {
-          try {
-            await onReportUser(reportedId, reason, desc);
-            const stillConnected = matchRequests.some(
-              (r) => r.status === 'accepted' &&
-                ((r.senderId === currentUser.id && r.receiverId === reportedId) ||
-                  (r.senderId === reportedId && r.receiverId === currentUser.id))
-            );
-            if (!stillConnected) {
+        showRespondentProfile && getRespondent() && (
+          <FriendProfileModal
+            selectedUser={getRespondent()!}
+            currentUser={currentUser}
+            matchRequests={matchRequests}
+            onClose={() => {
               setShowRespondentProfile(false);
-              setActiveChatUserId(null);
-            }
-          } catch (err: any) {
-            dispatch(showToast({ message: err.message || 'Error submitting report', type: 'error' }));
-          }
-        }}
-        showSafetyActions={true}
-      />
-    )
-  }
-  {
-    confirmModal.isOpen && (
-      <ConfirmationModal
-        title={confirmModal.title}
-        message={confirmModal.message}
-        confirmText={confirmModal.confirmText}
-        isDanger={confirmModal.isDanger}
-        onConfirm={confirmModal.onConfirm}
-        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
-      />
-    )
-  }
-  {
-    reportingMessage && (
-      <ReportMessageModal
-        messageId={reportingMessage.messageId}
-        messageText={reportingMessage.messageText}
-        reportedUserId={reportingMessage.reportedUserId}
-        reportedUserName={reportingMessage.reportedUserName}
-        token={token}
-        onClose={() => setReportingMessage(null)}
-      />
-    )
-  }
+            }}
+            onUnfriend={async (id) => {
+              try {
+                await onUnfriend(id);
+                setShowRespondentProfile(false);
+                setActiveChatUserId(null);
+              } catch (err: any) {
+                dispatch(showToast({ message: err.message || 'Error unfriending.', type: 'error' }));
+              }
+            }}
+            onBlockUser={async (id) => {
+              try {
+                await onBlockUser(id);
+                setShowRespondentProfile(false);
+                setActiveChatUserId(null);
+              } catch (err: any) {
+                dispatch(showToast({ message: err.message || 'Error blocking user.', type: 'error' }));
+              }
+            }}
+            onReportUser={async (reportedId, reason, desc) => {
+              try {
+                await onReportUser(reportedId, reason, desc);
+                const stillConnected = matchRequests.some(
+                  (r) => r.status === 'accepted' &&
+                    ((r.senderId === currentUser.id && r.receiverId === reportedId) ||
+                      (r.senderId === reportedId && r.receiverId === currentUser.id))
+                );
+                if (!stillConnected) {
+                  setShowRespondentProfile(false);
+                  setActiveChatUserId(null);
+                }
+              } catch (err: any) {
+                dispatch(showToast({ message: err.message || 'Error submitting report', type: 'error' }));
+              }
+            }}
+            showSafetyActions={true}
+          />
+        )
+      }
+      {
+        confirmModal.isOpen && (
+          <ConfirmationModal
+            title={confirmModal.title}
+            message={confirmModal.message}
+            confirmText={confirmModal.confirmText}
+            isDanger={confirmModal.isDanger}
+            onConfirm={confirmModal.onConfirm}
+            onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+          />
+        )
+      }
+      {
+        reportingMessage && (
+          <ReportMessageModal
+            messageId={reportingMessage.messageId}
+            messageText={reportingMessage.messageText}
+            reportedUserId={reportingMessage.reportedUserId}
+            reportedUserName={reportingMessage.reportedUserName}
+            token={token}
+            onClose={() => setReportingMessage(null)}
+          />
+        )
+      }
     </div >
   );
 };
@@ -683,14 +683,6 @@ const eyebrowStyle: React.CSSProperties = {
   color: 'var(--color-accent-700)',
   marginBottom: '18px',
   animation: 'ls-fade 0.7s ease both',
-};
-
-const inboxTitleStyle: React.CSSProperties = {
-  fontSize: 'clamp(30px, 4.4vw, 68px)',
-  lineHeight: 0.9,
-  margin: '0 0 28px',
-  maxWidth: '22ch',
-  animation: 'ls-rise 0.9s var(--ease-organic) both',
 };
 
 const chatGridStyle: React.CSSProperties = {
