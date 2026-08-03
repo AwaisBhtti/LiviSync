@@ -32,7 +32,7 @@ class Student(Base):
     __table_args__ = (
         CheckConstraint("age >= 16 AND age <= 100", name="student_age_check"),
         CheckConstraint("gender IN ('male', 'female', 'other')", name="student_gender_check"),
-        CheckConstraint("status IN ('active', 'suspended')", name="student_status_check"),
+        CheckConstraint("status IN ('active', 'suspended', 'inactive')", name="student_status_check"),
         CheckConstraint("occupation IN ('student', 'job')", name="student_occupation_check"),
     )
 
@@ -106,6 +106,7 @@ class Hostel(Base):
     hostel_type = Column(String(50), nullable=False, default='boys')
     has_curfew = Column(Boolean, nullable=False, default=False)
     curfew_time = Column(String(20), nullable=True)
+    nearby_locations = Column(ARRAY(String(255)), nullable=True, default=[])
 
     owner = relationship("Owner", back_populates="owned_hostels")
     amenities = relationship("HostelAmenity", back_populates="hostel", cascade="all, delete-orphan")

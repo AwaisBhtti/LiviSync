@@ -34,5 +34,7 @@ livisync/*.local
 livisyncbackend/.env
 livisync/.env
 
-# Local plans
-implementation_plan.md
+# Custom Agent files
+.agents/
+skills-lock.json
+.claude/

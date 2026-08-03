@@ -137,8 +137,8 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
       {rooms.length === 0 && (
         <div
           style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
+            backgroundColor: 'rgba(163, 59, 42, 0.1)',
+            border: '1px solid rgba(163, 59, 42, 0.2)',
             padding: '1rem',
             borderRadius: 'var(--radius)',
             color: 'var(--destructive)',
@@ -205,7 +205,9 @@ export const RoomListing = ({ hostel, onBack, token }: RoomListingProps) => {
         />
       )}
 
-      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {lightboxUrl && (
+        <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
 
       {confirmModal.isOpen && (
         <ConfirmationModal

@@ -10,6 +10,8 @@ import type { SharingType, FurnitureType } from '../../constants/roomOptions';
 import { ImageLightbox } from '../ImageLightbox';
 import { API_BASE_URL } from '../../config';
 import { CustomSelect } from '../ui/CustomSelect';
+import { useAppDispatch } from '../../store/store';
+import { showToast } from '../../store/slices/toastSlice';
 
 interface AddRoomFormProps {
   hostelId: string;
@@ -18,6 +20,7 @@ interface AddRoomFormProps {
 }
 
 export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) => {
+  const dispatch = useAppDispatch();
   const [sharingType, setSharingType] = useState<SharingType>('single');
   const [price, setPrice] = useState('');
   const [seatsAvailable, setSeatsAvailable] = useState('1');
@@ -28,7 +31,7 @@ export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) 
   const [uploading, setUploading] = useState(false);
   const [description, setDescription] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [photoErrorMsg, setPhotoErrorMsg] = useState('');
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const maxSeats = CAPACITY_MAP[sharingType];
@@ -36,6 +39,7 @@ export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) 
   const handleMultiplePhotosUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    setPhotoErrorMsg('');
     setUploading(true);
     const newUrls: string[] = [];
     for (let i = 0; i < files.length; i++) {
@@ -53,11 +57,11 @@ export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) 
   const handleAddRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    setSuccessMsg('');
+    setPhotoErrorMsg('');
 
     const filteredPhotos = photoUrls.filter((url) => url.trim().length > 0);
     if (filteredPhotos.length < 2) {
-      setErrorMsg('You must upload at least 2 pictures for the room (including room area and bathroom).');
+      setPhotoErrorMsg('You must upload at least 2 pictures for the room (including room area and bathroom).');
       return;
     }
 
@@ -92,7 +96,7 @@ export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) 
           : data.detail || 'Failed to list room';
         throw new Error(errMsg);
       }
-      setSuccessMsg('Room listed successfully!');
+      dispatch(showToast({ message: 'Room added successfully!', type: 'success' }));
       setPrice('');
       setSeatsAvailable('1');
       setFloor('Ground Floor');
@@ -112,7 +116,6 @@ export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) 
         <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>Add Room Details</h3>
         <form onSubmit={handleAddRoom} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {errorMsg && <div style={{ color: 'var(--destructive)', fontSize: '0.85rem' }}>{errorMsg}</div>}
-          {successMsg && <div style={{ color: 'var(--success)', fontSize: '0.85rem' }}>{successMsg}</div>}
 
           <div className="form-group">
             <label className="form-label">Sharing Status / Type</label>
@@ -131,7 +134,7 @@ export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) 
           </div>
 
           <div className="form-group">
-            <label className="form-label">Price (PKR / Month per Room)</label>
+            <label className="form-label">Price (PKR / Month per Person)</label>
             <input
               type="number"
               className="form-input"
@@ -221,6 +224,11 @@ export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) 
               disabled={uploading}
               style={{ width: '100%', marginBottom: '0.5rem' }}
             />
+            {photoErrorMsg && (
+              <span style={{ color: 'var(--destructive)', fontSize: '0.85rem', display: 'block', marginTop: '0.25rem', marginBottom: '0.25rem' }}>
+                {photoErrorMsg}
+              </span>
+            )}
             {uploading && (
               <span style={{ color: 'var(--primary)', fontSize: '0.85rem', display: 'block', marginTop: '0.25rem' }}>
                 Uploading photos to Cloudflare R2...
@@ -265,7 +273,9 @@ export const AddRoomForm = ({ hostelId, token, onRoomAdded }: AddRoomFormProps) 
         </form>
       </div>
 
-      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {lightboxUrl && (
+        <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </>
   );
 };

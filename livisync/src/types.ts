@@ -108,9 +108,11 @@ export interface Hostel {
   amenities: string[];
   ownerId?: string;
   ownerName?: string;
+  ownerPhone?: string;
   isVerified: boolean;
   rooms: Room[];
   currentOccupants?: string[];
+  nearbyLocations?: string[];
 }
 
 export interface MatchRequest {

@@ -324,3 +324,15 @@ def submit_message_report(req: MessageReportCreate, db: Session = Depends(get_db
     db.add(new_report)
     db.commit()
     return {"message": "Message report submitted successfully"}
+
+@router.post("/deactivate")
+def deactivate_student_account(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    current_user.status = "inactive"
+    db.commit()
+    return {"message": "Account deactivated successfully."}
+
+@router.delete("/account")
+def delete_student_account(db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
+    db.delete(current_user)
+    db.commit()
+    return {"message": "Account deleted permanently."}

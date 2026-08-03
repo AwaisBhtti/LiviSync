@@ -48,7 +48,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
         <h3 style={sectionTitleStyle}>Basic Information</h3>
         <div style={formGridStyle}>
           <div className="form-group">
-            <label className="form-label">Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Full Name <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="text"
               className="form-input"
@@ -59,7 +59,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Age <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Age <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="number"
               className="form-input"
@@ -72,7 +72,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Gender <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Gender <span style={{ color: '#a33b2a' }}>*</span></label>
             <CustomSelect
               value={gender}
               onChange={(val) => setGender(val as any)}
@@ -86,7 +86,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
           </div>
 
           <div className="form-group">
-            <label className="form-label">City Location <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">City Location <span style={{ color: '#a33b2a' }}>*</span></label>
             <CustomSelect
               value={location}
               onChange={setLocation}
@@ -151,7 +151,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
         <h3 style={sectionTitleStyle}>Living &amp; Rent Preferences</h3>
         <div style={formGridStyle}>
           <div className="form-group">
-            <label className="form-label">Max Budget Limit (PKR / mo) <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Max Budget Limit (PKR / mo) <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="number"
               className="form-input"

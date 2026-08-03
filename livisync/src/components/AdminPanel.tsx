@@ -23,6 +23,7 @@ interface AdminPanelProps {
   onDeleteUser: (userId: string) => void;
   onVerifyHostel: (hostelId: string) => void;
   onResolveMessageReport: (reportId: string) => void;
+  onUpdateNearbyLocations: (hostelId: string, locations: string[]) => void;
 }
 
 export const AdminPanel = ({
@@ -36,6 +37,7 @@ export const AdminPanel = ({
   onDeleteUser,
   onVerifyHostel,
   onResolveMessageReport,
+  onUpdateNearbyLocations,
 }: AdminPanelProps) => {
   const [selectedUserDetail, setSelectedUserDetail] = useState<User | null>(null);
 
@@ -80,7 +82,11 @@ export const AdminPanel = ({
       <AdminInviteSection />
 
       {/* Hostel Verification */}
-      <AdminHostelVerification hostels={hostels} onVerifyHostel={onVerifyHostel} />
+      <AdminHostelVerification
+        hostels={hostels}
+        onVerifyHostel={onVerifyHostel}
+        onUpdateNearbyLocations={onUpdateNearbyLocations}
+      />
 
       {/* Student Profile Details Modal */}
       {selectedUserDetail && (

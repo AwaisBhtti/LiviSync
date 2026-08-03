@@ -7,16 +7,48 @@ interface ImageLightboxProps {
   onClose: () => void;
 }
 
+let lightboxInstanceCount = 0;
+
 export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: ImageLightboxProps) => {
   const displayImages = images || (imageUrl ? [imageUrl] : []);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isHovered, setIsHovered] = useState(false);
 
   const minSwipeDistance = 50;
+  const touchStartX = useRef(0);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
   }, [initialIndex, displayImages.length]);
+
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    lightboxInstanceCount++;
+    // Push a state to history so back button can be caught
+    window.history.pushState({ lightbox: true }, '');
+
+    const handlePopState = () => {
+      onCloseRef.current();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      lightboxInstanceCount--;
+      window.removeEventListener('popstate', handlePopState);
+      setTimeout(() => {
+        if (lightboxInstanceCount === 0) {
+          if (window.history.state && window.history.state.lightbox) {
+            window.history.back();
+          }
+        }
+      }, 50);
+    };
+  }, []);
 
   if (displayImages.length === 0) return null;
 
@@ -31,12 +63,11 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
   };
 
   // Touch swipe
-  let touchStartX = 0;
   const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX = e.targetTouches[0].clientX;
+    touchStartX.current = e.targetTouches[0].clientX;
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    const distance = touchStartX - e.changedTouches[0].clientX;
+    const distance = touchStartX.current - e.changedTouches[0].clientX;
     if (distance > minSwipeDistance) handleNext();
     else if (distance < -minSwipeDistance) handlePrev();
   };
@@ -68,7 +99,7 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
       style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        backgroundColor: 'rgba(32, 30, 29, 0.95)',
         backdropFilter: 'blur(10px)',
         display: 'flex',
         flexDirection: 'column',

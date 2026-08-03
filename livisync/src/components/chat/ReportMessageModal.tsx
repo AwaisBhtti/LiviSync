@@ -74,7 +74,7 @@ export const ReportMessageModal = ({
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Flag size={18} style={{ color: '#ef4444' }} />
+            <Flag size={18} style={{ color: '#a33b2a' }} />
             <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Report Message</h3>
           </div>
           <button
@@ -97,7 +97,7 @@ export const ReportMessageModal = ({
 
         {/* Reason selection */}
         <p style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.625rem', color: 'var(--foreground)' }}>
-          Why are you reporting this message? <span style={{ color: '#ef4444' }}>*</span>
+          Why are you reporting this message? <span style={{ color: '#a33b2a' }}>*</span>
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
           {REPORT_REASONS.map((reason) => {

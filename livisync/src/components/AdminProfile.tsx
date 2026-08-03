@@ -73,7 +73,7 @@ export const AdminProfile = ({ currentUser: _currentUser }: AdminProfileProps) =
 
         <form onSubmit={handlePasswordChange}>
           {errorMsg && (
-            <div style={{ color: 'var(--destructive)', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: 'var(--radius)', marginBottom: '1rem', fontSize: '0.875rem' }}>
+            <div style={{ color: 'var(--destructive)', backgroundColor: 'rgba(163, 59, 42, 0.1)', padding: '0.75rem', borderRadius: 'var(--radius)', marginBottom: '1rem', fontSize: '0.875rem' }}>
               {errorMsg}
             </div>
           )}

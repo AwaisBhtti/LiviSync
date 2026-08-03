@@ -4,7 +4,7 @@
  */
 import type { Hostel } from '../types';
 import { useAppDispatch, useAppSelector } from '../store/store';
-import { addHostel, editHostel, deleteHostel, verifyHostel } from '../store/slices/hostelSlice';
+import { addHostel, editHostel, deleteHostel, verifyHostel, updateNearbyLocations } from '../store/slices/hostelSlice';
 import { showToast } from '../store/slices/toastSlice';
 
 export function useHostelActions() {
@@ -14,11 +14,13 @@ export function useHostelActions() {
   const handleAddHostel = async (newHostel: Omit<Hostel, 'id' | 'isVerified'>) => {
     if (!token) return;
     try {
-      await dispatch(addHostel({ newHostel, token })).unwrap();
+      const result = await dispatch(addHostel({ newHostel, token })).unwrap();
       dispatch(showToast({ message: 'Hostel listing added successfully!', type: 'success' }));
+      return result;
     } catch (err: any) {
       const errMsg = typeof err === 'string' ? err : err.message || 'Error adding hostel listing.';
       dispatch(showToast({ message: errMsg, type: 'error' }));
+      throw err;
     }
   };
 
@@ -55,5 +57,15 @@ export function useHostelActions() {
     }
   };
 
-  return { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel };
+  const handleUpdateNearbyLocations = async (hostelId: string, nearbyLocations: string[]) => {
+    if (!token) return;
+    try {
+      await dispatch(updateNearbyLocations({ hostelId, nearbyLocations, token })).unwrap();
+      dispatch(showToast({ message: 'Nearby locations updated successfully!', type: 'success' }));
+    } catch (err: any) {
+      dispatch(showToast({ message: err || 'Error updating nearby locations.', type: 'error' }));
+    }
+  };
+
+  return { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel, handleUpdateNearbyLocations };
 }

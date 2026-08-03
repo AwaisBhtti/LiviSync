@@ -4,8 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .routers import auth, admin, students, owners, hostels, chat
 
+from sqlalchemy import text
+
 # Create tables in database
 Base.metadata.create_all(bind=engine)
+
+# Auto-migrate: add nearby_locations column and update status constraint if needed
+with engine.begin() as conn:
+    conn.execute(text("ALTER TABLE hostels ADD COLUMN IF NOT EXISTS nearby_locations TEXT[] DEFAULT '{}';"))
+    conn.execute(text("ALTER TABLE students DROP CONSTRAINT IF EXISTS student_status_check;"))
+    conn.execute(text("ALTER TABLE students ADD CONSTRAINT student_status_check CHECK (status IN ('active', 'suspended', 'inactive'));"))
 
 app = FastAPI(
     title="LiviSync Backend",

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { API_BASE_URL } from '../../config';
 import { showToast } from '../../store/slices/toastSlice';
 import { useAppDispatch } from '../../store/store';
+import { ConfirmationModal } from '../ConfirmationModal';
 
 interface AccountTabProps {
   onLogout: () => void;
@@ -17,25 +18,45 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pwdLoading, setPwdLoading] = useState(false);
 
+  // Custom confirmation modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText: string;
+    isDanger: boolean;
+    onConfirm: () => void | Promise<void>;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    isDanger: false,
+    onConfirm: () => {},
+  });
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      dispatch(showToast({ message: 'New passwords do not match!', type: 'error' }));
+      dispatch(showToast({ message: 'Passwords do not match!', type: 'error' }));
       return;
     }
     setPwdLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/students/change-password`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+        body: JSON.stringify({
+          old_password: currentPassword,
+          new_password: newPassword,
+        }),
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.detail || 'Failed to change password');
+        throw new Error(data.detail || 'Failed to update password');
       }
       dispatch(showToast({ message: 'Password updated successfully!', type: 'success' }));
       setCurrentPassword('');
@@ -48,54 +69,60 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
     }
   };
 
-  const handleDeactivate = async () => {
-    if (
-      !window.confirm(
-        'Are you sure you want to deactivate your account? You will be signed out and your profile will be hidden.'
-      )
-    ) {
-      return;
-    }
-    try {
-      const response = await fetch(`${API_BASE_URL}/students/deactivate`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to deactivate account');
+  const handleDeactivate = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Deactivate Account',
+      message: 'Are you sure you want to deactivate your account? You will be signed out and your profile will be hidden temporarily from roommate search.',
+      confirmText: 'Deactivate',
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          const response = await fetch(`${API_BASE_URL}/students/deactivate`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (!response.ok) {
+            throw new Error('Failed to deactivate account');
+          }
+          dispatch(showToast({ message: 'Account deactivated successfully.', type: 'success' }));
+          onLogout();
+        } catch (err: any) {
+          dispatch(showToast({ message: err.message || 'Error deactivating account', type: 'error' }));
+        }
       }
-      dispatch(showToast({ message: 'Account deactivated successfully.', type: 'success' }));
-      onLogout();
-    } catch (err: any) {
-      dispatch(showToast({ message: err.message || 'Error deactivating account', type: 'error' }));
-    }
+    });
   };
 
-  const handleDeleteAccount = async () => {
-    if (
-      !window.confirm(
-        'WARNING: This action is permanent! Are you sure you want to delete your account? All your match requests and profile data will be permanently wiped.'
-      )
-    ) {
-      return;
-    }
-    try {
-      const response = await fetch(`${API_BASE_URL}/students/account`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete account');
+  const handleDeleteAccount = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Account Permanently',
+      message: 'WARNING: This action is permanent! Are you sure you want to delete your account? All your match requests and profile data will be permanently wiped.',
+      confirmText: 'Delete Permanently',
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          const response = await fetch(`${API_BASE_URL}/students/account`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (!response.ok) {
+            throw new Error('Failed to delete account');
+          }
+          dispatch(showToast({ message: 'Account deleted permanently.', type: 'success' }));
+          onLogout();
+        } catch (err: any) {
+          dispatch(showToast({ message: err.message || 'Error deleting account', type: 'error' }));
+        }
       }
-      dispatch(showToast({ message: 'Account deleted permanently.', type: 'success' }));
-      onLogout();
-    } catch (err: any) {
-      dispatch(showToast({ message: err.message || 'Error deleting account', type: 'error' }));
-    }
+    });
   };
 
   return (
@@ -109,7 +136,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
         <h3 style={sectionTitleStyle}>Update Password</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '400px' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Current Password <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Current Password <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="password"
               className="form-input"
@@ -119,7 +146,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">New Password <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">New Password <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="password"
               className="form-input"
@@ -129,7 +156,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Confirm New Password <span style={{ color: '#ef4444' }}>*</span></label>
+            <label className="form-label">Confirm New Password <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
               type="password"
               className="form-input"
@@ -152,10 +179,10 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
       <h3 style={{ ...sectionTitleStyle, marginTop: '2.5rem', color: 'var(--danger)' }}>Danger Zone</h3>
       <div
         style={{
-          border: '1px solid rgba(244, 63, 94, 0.2)',
+          border: '1px solid rgba(163, 59, 42, 0.2)',
           padding: '1.25rem',
           borderRadius: 'var(--radius)',
-          backgroundColor: 'rgba(244, 63, 94, 0.02)',
+          backgroundColor: 'rgba(163, 59, 42, 0.02)',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.75rem',
@@ -169,7 +196,7 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
             type="button"
             onClick={handleDeactivate}
             className="btn btn-secondary"
-            style={{ color: 'var(--danger)', borderColor: 'rgba(244, 63, 94, 0.3)', flex: 1 }}
+            style={{ color: 'var(--danger)', borderColor: 'rgba(163, 59, 42, 0.3)', flex: 1 }}
           >
             Deactivate Account
           </button>
@@ -183,6 +210,17 @@ export const AccountTab = ({ onLogout }: AccountTabProps) => {
           </button>
         </div>
       </div>
+
+      {confirmModal.isOpen && (
+        <ConfirmationModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          isDanger={confirmModal.isDanger}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 };

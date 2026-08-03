@@ -34,7 +34,7 @@ interface RoommateModalsProps {
 const modalOverlay: React.CSSProperties = {
   position: 'fixed',
   top: 0, left: 0, right: 0, bottom: 0,
-  backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  backgroundColor: 'rgba(32, 30, 29, 0.6)',
   backdropFilter: 'blur(8px)',
   display: 'flex',
   alignItems: 'center',
@@ -75,9 +75,9 @@ const scoreStyle = (score: number): React.CSSProperties => {
     textAlign: 'center',
     padding: '0.5rem 1rem',
     borderRadius: 'var(--radius)',
-    border: `1px solid ${isHigh ? 'var(--success)' : isMid ? '#fbbf24' : 'var(--border)'}`,
-    color: isHigh ? 'var(--success)' : isMid ? '#d97706' : 'var(--muted)',
-    backgroundColor: isHigh ? 'var(--success-bg)' : isMid ? '#fffbeb' : 'var(--muted-bg)',
+    border: `1px solid ${isHigh ? 'var(--success)' : isMid ? '#f6a06b' : 'var(--border)'}`,
+    color: isHigh ? 'var(--success)' : isMid ? '#8c491a' : 'var(--muted)',
+    backgroundColor: isHigh ? 'var(--success-bg)' : isMid ? '#fff2eb' : 'var(--muted-bg)',
   };
 };
 
@@ -233,7 +233,7 @@ export const RoommateModals = ({
                       borderRadius: 'var(--radius)',
                       fontSize: '0.85rem',
                       fontWeight: 500,
-                      border: '1px solid rgba(16, 185, 129, 0.2)',
+                      border: '1px solid rgba(114, 129, 87, 0.2)',
                     }}
                   >
                     You and {selectedUser.name} are matched roommates. Go to the Inbox tab to chat!
@@ -241,13 +241,13 @@ export const RoommateModals = ({
                 ) : reqStatus === 'pending' ? (
                   <div
                     style={{
-                      backgroundColor: '#fffbeb',
-                      color: '#d97706',
+                      backgroundColor: '#fff2eb',
+                      color: '#8c491a',
                       padding: '0.875rem 1rem',
                       borderRadius: 'var(--radius)',
                       fontSize: '0.85rem',
                       fontWeight: 500,
-                      border: '1px solid rgba(217, 119, 6, 0.2)',
+                      border: '1px solid rgba(140, 73, 26, 0.2)',
                     }}
                   >
                     Your match request is currently pending review by {selectedUser.name}.
@@ -347,7 +347,7 @@ export const RoommateModals = ({
                     { value: 'spam', label: 'Spam / Advertising' },
                     { value: 'other', label: 'Other' }
                   ]}
-                  style={{ background: '#faf8f5', border: '1px solid #e0d6cb', color: '#332721' }}
+                  style={{ background: '#f5ead8', border: '1px solid #dcd3c4', color: '#201e1d' }}
                 />
               </div>
               <div className="form-group">

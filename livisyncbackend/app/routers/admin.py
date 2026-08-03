@@ -282,3 +282,25 @@ def resolve_message_report(report_id: uuid.UUID, db: Session = Depends(get_db), 
     report.status = "resolved"
     db.commit()
     return {"message": "Message report resolved successfully."}
+
+class NearbyLocationsUpdate(BaseModel):
+    nearby_locations: List[str]
+
+@router.put("/hostels/{hostel_id}/nearby-locations")
+def update_hostel_nearby_locations(
+    hostel_id: uuid.UUID,
+    data: NearbyLocationsUpdate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_admin)
+):
+    hostel = db.query(Hostel).filter(Hostel.id == hostel_id).first()
+    if not hostel:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Hostel not found"
+        )
+    # clean inputs
+    cleaned = [loc.strip() for loc in data.nearby_locations if loc.strip()]
+    hostel.nearby_locations = cleaned
+    db.commit()
+    return {"message": "Nearby locations updated successfully.", "nearby_locations": hostel.nearby_locations}

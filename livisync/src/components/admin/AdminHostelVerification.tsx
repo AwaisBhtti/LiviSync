@@ -22,6 +22,7 @@ import {
 interface AdminHostelVerificationProps {
   hostels: Hostel[];
   onVerifyHostel: (hostelId: string) => void;
+  onUpdateNearbyLocations: (hostelId: string, locations: string[]) => void;
 }
 
 const getPriceRangeString = (hostel: Hostel) => {
@@ -36,21 +37,67 @@ const getPriceRangeString = (hostel: Hostel) => {
 export const AdminHostelVerification = ({
   hostels,
   onVerifyHostel,
+  onUpdateNearbyLocations,
 }: AdminHostelVerificationProps) => {
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [hostelSearch, setHostelSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'pending' | 'verified'>('pending');
+  const [newLocationInput, setNewLocationInput] = useState('');
 
-  const filteredHostels = hostels.filter(
+  const pendingHostels = hostels.filter(
     (h) => !h.isVerified && h.name.toLowerCase().includes(hostelSearch.toLowerCase().trim())
   );
+
+  const verifiedHostels = hostels.filter(
+    (h) => h.isVerified && h.name.toLowerCase().includes(hostelSearch.toLowerCase().trim())
+  );
+
+  const displayList = activeTab === 'pending' ? pendingHostels : verifiedHostels;
 
   return (
     <>
       <div className="card" style={{ padding: '1.5rem' }}>
         <h3 style={sectionTitleStyle}>
-          <Building size={18} /> Hostel Listings Verification
+          <Building size={18} /> Hostel Listings Management
         </h3>
+
+        {/* Tab switcher */}
+        <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', marginBottom: '1.25rem' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('pending')}
+            style={{
+              padding: '0.5rem 1rem',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'pending' ? '2px solid var(--primary)' : '2px solid transparent',
+              color: activeTab === 'pending' ? 'var(--primary)' : 'var(--muted)',
+              cursor: 'pointer',
+            }}
+          >
+            Pending Verification ({hostels.filter(h => !h.isVerified).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('verified')}
+            style={{
+              padding: '0.5rem 1rem',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'verified' ? '2px solid var(--primary)' : '2px solid transparent',
+              color: activeTab === 'verified' ? 'var(--primary)' : 'var(--muted)',
+              cursor: 'pointer',
+            }}
+          >
+            Verified Directory ({hostels.filter(h => h.isVerified).length})
+          </button>
+        </div>
+
         <div style={{ marginBottom: '1rem', width: '100%', maxWidth: '320px' }}>
           <input
             type="text"
@@ -61,9 +108,11 @@ export const AdminHostelVerification = ({
             onChange={(e) => setHostelSearch(e.target.value)}
           />
         </div>
-        {filteredHostels.length === 0 ? (
+        {displayList.length === 0 ? (
           <p style={{ color: 'var(--muted)', fontSize: '0.875rem', padding: '1rem 0' }}>
-            No pending hostels for verification matching search.
+            {activeTab === 'pending'
+              ? 'No pending hostels for verification matching search.'
+              : 'No verified hostels matching search.'}
           </p>
         ) : (
           <div style={tableContainerStyle}>
@@ -77,7 +126,7 @@ export const AdminHostelVerification = ({
                 </tr>
               </thead>
               <tbody>
-                {filteredHostels.map((hostel) => (
+                {displayList.map((hostel) => (
                   <tr key={hostel.id} style={tableRowStyle}>
                     <td style={tdStyle}>
                       <button
@@ -101,13 +150,17 @@ export const AdminHostelVerification = ({
                     <td style={tdStyle}>{hostel.location}</td>
                     <td style={tdStyle}>{getPriceRangeString(hostel)}</td>
                     <td style={tdStyle}>
-                      <button
-                        className="btn btn-primary"
-                        style={tableBtnStyle}
-                        onClick={() => onVerifyHostel(hostel.id)}
-                      >
-                        <CheckCircle size={12} /> Verify Listing
-                      </button>
+                      {!hostel.isVerified ? (
+                        <button
+                          className="btn btn-primary"
+                          style={tableBtnStyle}
+                          onClick={() => onVerifyHostel(hostel.id)}
+                        >
+                          <CheckCircle size={12} /> Verify Listing
+                        </button>
+                      ) : (
+                        <span style={{ color: 'var(--success)', fontSize: '0.85rem', fontWeight: 600 }}>✓ Verified</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -199,8 +252,8 @@ export const AdminHostelVerification = ({
                             position: 'absolute',
                             top: '0.5rem',
                             right: '0.5rem',
-                            backgroundColor: 'rgba(51, 39, 33, 0.75)',
-                            color: '#faf8f5',
+                            backgroundColor: 'rgba(32, 30, 29, 0.75)',
+                            color: '#f5ead8',
                             padding: '0.2rem 0.5rem',
                             borderRadius: '6px',
                             fontSize: '0.65rem',
@@ -377,6 +430,105 @@ export const AdminHostelVerification = ({
                   )}
                 </div>
               </div>
+              
+              {/* Nearby Locations management */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                <h5 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>
+                  Nearby Locations (Admin Only)
+                </h5>
+                <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: '0 0 0.5rem 0' }}>
+                  Add nearby universities, sub-areas, or landmarks to help students find this hostel in search queries.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  {(!selectedHostel.nearbyLocations || selectedHostel.nearbyLocations.length === 0) ? (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                      No nearby locations added yet.
+                    </span>
+                  ) : (
+                    selectedHostel.nearbyLocations.map((loc, i) => (
+                      <span
+                        key={i}
+                        className="badge badge-neutral"
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '0.25rem 0.5rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          backgroundColor: 'var(--card-hover)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        {loc}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = (selectedHostel.nearbyLocations || []).filter(l => l !== loc);
+                            onUpdateNearbyLocations(selectedHostel.id, updated);
+                            setSelectedHostel({ ...selectedHostel, nearbyLocations: updated });
+                          }}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            color: 'var(--danger)',
+                            cursor: 'pointer',
+                            padding: 0,
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="e.g. UMT, Johar Town"
+                    className="form-input"
+                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', flex: 1 }}
+                    value={newLocationInput}
+                    onChange={(e) => setNewLocationInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (newLocationInput.trim() && selectedHostel) {
+                          const currentLocs = selectedHostel.nearbyLocations || [];
+                          if (!currentLocs.includes(newLocationInput.trim())) {
+                            const updated = [...currentLocs, newLocationInput.trim()];
+                            onUpdateNearbyLocations(selectedHostel.id, updated);
+                            setSelectedHostel({ ...selectedHostel, nearbyLocations: updated });
+                          }
+                          setNewLocationInput('');
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }}
+                    onClick={() => {
+                      if (newLocationInput.trim() && selectedHostel) {
+                        const currentLocs = selectedHostel.nearbyLocations || [];
+                        if (!currentLocs.includes(newLocationInput.trim())) {
+                          const updated = [...currentLocs, newLocationInput.trim()];
+                          onUpdateNearbyLocations(selectedHostel.id, updated);
+                          setSelectedHostel({ ...selectedHostel, nearbyLocations: updated });
+                        }
+                        setNewLocationInput('');
+                      }
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
 
               <div
                 style={{
@@ -414,7 +566,9 @@ export const AdminHostelVerification = ({
         </div>
       )}
 
-      <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      {lightboxUrl && (
+        <ImageLightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </>
   );
 };

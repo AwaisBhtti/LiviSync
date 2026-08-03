@@ -1,14 +1,17 @@
 import { API_BASE_URL } from '../config';
 import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import logo from '../assets/logo-n.png';
+import logo from '../assets/logo.png';
 
 interface AuthScreenProps {
   onAuthSuccess: (token: string) => void;
 }
 
 export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isLogin = location.pathname !== '/register';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -72,7 +75,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           flex-direction: column;
           justify-content: space-between;
           background-image:
-            linear-gradient(to top, rgba(51,39,33,0.88) 0%, rgba(51,39,33,0.45) 60%, rgba(51,39,33,0.88) 100%),
+            linear-gradient(to top, rgba(32, 30, 29,0.88) 0%, rgba(32, 30, 29,0.45) 60%, rgba(32, 30, 29,0.88) 100%),
             url('https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1920&q=80');
           background-size: cover;
           background-position: center;
@@ -104,7 +107,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           font-weight: 800;
           font-size: 1.35rem;
           letter-spacing: -0.04em;
-          color: #faf8f5;
+          color: #f5ead8;
         }
 
         .auth-netflix-content {
@@ -121,18 +124,18 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           width: 100%;
           max-width: 500px;
           padding: 2.5rem 2.25rem;
-          border: 1px solid rgba(240, 236, 230, 0.18);
+          border: 1px solid rgba(235, 221, 197, 0.18);
           border-radius: var(--radius);
-          background-color: rgba(51, 39, 33, 0.72);
+          background-color: rgba(32, 30, 29, 0.72);
           backdrop-filter: blur(24px);
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
-          color: #faf8f5;
+          color: #f5ead8;
         }
 
         @media (max-width: 480px) {
           .auth-netflix-card {
             padding: 2.5rem 1.5rem;
-            background-color: rgba(51, 39, 33, 0.90);
+            background-color: rgba(32, 30, 29, 0.90);
           }
         }
 
@@ -161,7 +164,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
         .auth-netflix-icon {
           position: absolute;
           left: 1rem;
-          color: #b8a99e;
+          color: #a19786;
           pointer-events: none;
         }
 
@@ -169,9 +172,9 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           width: 100%;
           height: 50px;
           padding-left: 2.75rem !important;
-          background-color: rgba(250, 248, 245, 0.10) !important;
-          color: #faf8f5 !important;
-          border: 1px solid rgba(240, 236, 230, 0.20) !important;
+          background-color: rgba(245, 234, 216, 0.10) !important;
+          color: #f5ead8 !important;
+          border: 1px solid rgba(235, 221, 197, 0.20) !important;
           border-radius: var(--radius-sm) !important;
           font-size: 0.9rem;
           outline: none;
@@ -184,8 +187,8 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
 
         .auth-netflix-input:focus {
           border-color: var(--primary) !important;
-          box-shadow: 0 0 0 4px rgba(181, 92, 60, 0.22) !important;
-          background-color: rgba(250, 248, 245, 0.18) !important;
+          box-shadow: 0 0 0 4px rgba(198, 113, 57, 0.22) !important;
+          background-color: rgba(245, 234, 216, 0.18) !important;
         }
 
         .auth-netflix-password-toggle {
@@ -194,7 +197,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           background: none;
           border: none;
           cursor: pointer;
-          color: #b8a99e;
+          color: #a19786;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -203,7 +206,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           z-index: 12;
         }
 
-        .auth-netflix-password-toggle:hover { color: #faf8f5; }
+        .auth-netflix-password-toggle:hover { color: #f5ead8; }
 
         .auth-netflix-error {
           display: flex;
@@ -211,11 +214,11 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           gap: 0.5rem;
           padding: 0.75rem 1.25rem;
           border-radius: var(--radius-sm);
-          background-color: rgba(244, 63, 94, 0.15);
+          background-color: rgba(163, 59, 42, 0.15);
           color: #fca5a5;
           font-size: 0.875rem;
           margin-bottom: 1.5rem;
-          border: 1px solid rgba(244, 63, 94, 0.25);
+          border: 1px solid rgba(163, 59, 42, 0.25);
         }
 
         .auth-netflix-submit {
@@ -226,25 +229,25 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           cursor: pointer;
           margin-top: 0.75rem;
           background: var(--gradient-brand);
-          color: #faf8f5;
+          color: #f5ead8;
           border: none;
           border-radius: var(--radius-sm);
-          box-shadow: 0 4px 14px rgba(181, 92, 60, 0.35);
+          box-shadow: 0 4px 14px rgba(198, 113, 57, 0.35);
           transition: var(--transition);
         }
 
         .auth-netflix-submit:hover {
           filter: brightness(1.08);
-          box-shadow: 0 6px 20px rgba(181, 92, 60, 0.50);
+          box-shadow: 0 6px 20px rgba(198, 113, 57, 0.50);
         }
 
         .auth-netflix-submit:active { transform: scale(0.98); }
 
         .auth-netflix-footer {
           padding: 2rem 3.5rem;
-          background-color: rgba(51, 39, 33, 0.85);
-          border-top: 1px solid rgba(240, 236, 230, 0.08);
-          color: #8c7b70;
+          background-color: rgba(32, 30, 29, 0.85);
+          border-top: 1px solid rgba(235, 221, 197, 0.08);
+          color: #82796a;
           font-size: 0.825rem;
           text-align: center;
           position: relative;
@@ -267,7 +270,7 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
       {/* Centered Content Card */}
       <div className="auth-netflix-content">
         <div className="auth-netflix-card">
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem', color: '#faf8f5' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem', color: '#f5ead8' }}>
             {isLogin ? 'Sign In' : 'Sign Up'}
           </h2>
           <p style={{ color: '#c8b8ad', fontSize: '0.875rem', marginBottom: '2rem' }}>
@@ -350,13 +353,13 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
                 />
                 <label htmlFor="terms" style={{ color: '#c8b8ad', fontSize: '0.85rem', lineHeight: '1.4', cursor: 'pointer' }}>
                   I agree to the{' '}
-                  <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#faf8f5', textDecoration: 'underline' }}>
+                  <Link to="/privacy" style={{ color: '#f5ead8', textDecoration: 'underline' }}>
                     Privacy Policy
-                  </a>{' '}
+                  </Link>{' '}
                   and{' '}
-                  <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#faf8f5', textDecoration: 'underline' }}>
+                  <Link to="/terms" style={{ color: '#f5ead8', textDecoration: 'underline' }}>
                     Terms of Service
-                  </a>.
+                  </Link>.
                 </label>
               </div>
             )}
@@ -369,15 +372,16 @@ export const AuthScreen = ({ onAuthSuccess }: AuthScreenProps) => {
           <div style={{ display: 'flex', gap: '0.375rem', marginTop: '2rem', fontSize: '0.875rem', color: '#c8b8ad' }}>
             <span>{isLogin ? "Don't have an account?" : 'Already have an account?'}</span>
             <button
+              type="button"
               onClick={() => {
-                setIsLogin(!isLogin);
+                navigate(isLogin ? '/register' : '/login');
                 setError('');
               }}
               style={{
                 background: 'none',
                 border: 'none',
                 padding: 0,
-                color: '#faf8f5',
+                color: '#f5ead8',
                 fontWeight: 700,
                 cursor: 'pointer',
                 textDecoration: 'underline',

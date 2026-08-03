@@ -60,7 +60,10 @@ export default function App() {
     }
   }, [toastShow, dispatch]);
 
-  const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading || (token !== null && currentUser === null);
+  const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading;
+
+  // Only show full page spinner for initial auth loading, not background data fetches
+  const isInitialLoad = authLoading || (token !== null && currentUser === null);
 
   // Sync active user session
   useEffect(() => {
@@ -186,10 +189,10 @@ export default function App() {
   } = useMatchRequests();
 
   const { handleBlockUser, handleUnblockUser, handleReportUser } = useUserActions();
-  const { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel } = useHostelActions();
+  const { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel, handleUpdateNearbyLocations } = useHostelActions();
   const { handleToggleUserStatus, handleWarnUser, handleResolveReport, handleDeleteUser, handleResolveMessageReport } = useAdminActions();
 
-  if (loadingData) {
+  if (isInitialLoad || loadingData) {
     return <SpinnerLoader />;
   }
 
@@ -248,8 +251,8 @@ export default function App() {
                   pendingRequestsCount={
                     currentUser && currentUser.role === 'student'
                       ? matchRequests.filter(
-                          (r) => r.receiverId === currentUser.id && r.status === 'pending'
-                        ).length
+                        (r) => r.receiverId === currentUser.id && r.status === 'pending'
+                      ).length
                       : 0
                   }
                 />
@@ -341,6 +344,7 @@ export default function App() {
                       onVerifyHostel={handleVerifyHostel}
                       onWarnUser={handleWarnUser}
                       onResolveMessageReport={handleResolveMessageReport}
+                      onUpdateNearbyLocations={handleUpdateNearbyLocations}
                     />
                   ) : (
                     <Navigate to="/hostels" replace />
@@ -397,7 +401,7 @@ const toastContainerStyle = (type: 'success' | 'error' | 'info'): React.CSSPrope
     position: 'fixed',
     bottom: '2rem',
     right: '2rem',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'var(--card)',
     backdropFilter: 'blur(16px)',
     borderLeft: `4px solid ${borderCol}`,
     padding: '1rem 1.5rem',
