@@ -60,6 +60,8 @@ export default function App() {
     }
   }, [toastShow, dispatch]);
 
+  const loadingData = authLoading || hostelsLoading || usersLoading || matchesLoading || adminLoading;
+
   // Only show full page spinner for initial auth loading, not background data fetches
   const isInitialLoad = authLoading || (token !== null && currentUser === null);
 
@@ -190,7 +192,7 @@ export default function App() {
   const { handleAddHostel, handleEditHostel, handleDeleteHostel, handleVerifyHostel, handleUpdateNearbyLocations } = useHostelActions();
   const { handleToggleUserStatus, handleWarnUser, handleResolveReport, handleDeleteUser, handleResolveMessageReport } = useAdminActions();
 
-  if (isInitialLoad) {
+  if (isInitialLoad || loadingData) {
     return <SpinnerLoader />;
   }
 
@@ -249,8 +251,8 @@ export default function App() {
                   pendingRequestsCount={
                     currentUser && currentUser.role === 'student'
                       ? matchRequests.filter(
-                          (r) => r.receiverId === currentUser.id && r.status === 'pending'
-                        ).length
+                        (r) => r.receiverId === currentUser.id && r.status === 'pending'
+                      ).length
                       : 0
                   }
                 />
