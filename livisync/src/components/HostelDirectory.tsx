@@ -301,7 +301,6 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                     <div style={{ position: 'absolute', top: '14px', left: '14px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      {hostel.isVerified && <span style={verifiedTagStyle}>Verified</span>}
                       <span style={typeTagStyle}>
                         {(hostel.hostelType || 'boys').replace('-', ' ')}
                       </span>
@@ -483,19 +482,6 @@ const cardImageWrapStyle: React.CSSProperties = {
   overflow: 'hidden',
   aspectRatio: '16/10',
   background: 'var(--color-neutral-200)',
-};
-
-const verifiedTagStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  background: 'var(--color-bg)',
-  color: 'var(--color-text)',
-  fontWeight: 700,
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  fontSize: '0.625rem',
-  padding: '4px 10px',
-  borderRadius: 'var(--radius-pill)',
 };
 
 const typeTagStyle: React.CSSProperties = {
