@@ -2,7 +2,7 @@ import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import logo from '../assets/logo-n.png';
+import logo from '../assets/logo.png';
 
 interface AuthScreenProps {
   onAuthSuccess: (token: string) => void;
