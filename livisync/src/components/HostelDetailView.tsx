@@ -35,6 +35,21 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
 
   const handleShowPhone = async () => {
     if (!token || !selectedHostel) return;
+    if (selectedHostel.ownerPhone) {
+      setOwnerPhone(selectedHostel.ownerPhone);
+      try {
+        fetch(`${API_BASE_URL}/students/view-phone/${selectedHostel.id}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (err) {
+        // silent background error
+      }
+      return;
+    }
     setLoadingPhone(true);
     try {
       const response = await fetch(`${API_BASE_URL}/students/view-phone/${selectedHostel.id}`, {

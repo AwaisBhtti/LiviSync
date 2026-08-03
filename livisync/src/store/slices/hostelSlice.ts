@@ -43,6 +43,7 @@ export const fetchHostels = createAsyncThunk(
         amenities: h.amenities ? h.amenities.map((a: any) => typeof a === 'string' ? a : (a.amenity || '')) : [],
         ownerId: h.owner_id,
         ownerName: h.owner_name || 'Unknown Owner',
+        ownerPhone: h.owner_phone,
         isVerified: h.is_verified,
         currentOccupants: h.current_occupants || [],
         nearbyLocations: h.nearby_locations || [],
