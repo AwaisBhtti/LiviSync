@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { Student, Hostel, User } from '../types';
 import { Settings, ShieldAlert, LogOut, Users, Key, Heart } from 'lucide-react';
 import { ProfileTab } from './profile/ProfileTab';
@@ -28,8 +29,8 @@ type TabType = 'profile' | 'friends' | 'lifestyle' | 'account' | 'blocklist';
 
 const SECTIONS: { key: TabType; icon: React.ReactNode; label: string }[] = [
   { key: 'profile', icon: <Settings size={13} strokeWidth={2.75} />, label: 'Profile' },
-  { key: 'friends', icon: <Users size={13} strokeWidth={2.75} />, label: 'Connections' },
   { key: 'lifestyle', icon: <Heart size={13} strokeWidth={2.75} />, label: 'Lifestyle' },
+  { key: 'friends', icon: <Users size={13} strokeWidth={2.75} />, label: 'Connections' },
   { key: 'account', icon: <Key size={13} strokeWidth={2.75} />, label: 'Account' },
   { key: 'blocklist', icon: <ShieldAlert size={13} strokeWidth={2.75} />, label: 'Blocklist' },
 ];
@@ -51,9 +52,19 @@ export const StudentProfile = ({
     dispatch(logout());
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabType;
+
   const [activeSection, setActiveSection] = useState<TabType>(() => {
-    return (sessionStorage.getItem('livisync_profile_section') as TabType) || 'profile';
+    return tabParam || (sessionStorage.getItem('livisync_profile_section') as TabType) || 'profile';
   });
+
+  // Sync state if tabParam query parameter changes
+  useEffect(() => {
+    if (tabParam && tabParam !== activeSection) {
+      setActiveSection(tabParam);
+    }
+  }, [tabParam, activeSection]);
   const [selectedFriend, setSelectedFriend] = useState<User | null>(null);
 
   const connectionsCount = matchRequests.filter(
@@ -72,6 +83,7 @@ export const StudentProfile = ({
   const handleSectionChange = (section: TabType) => {
     setActiveSection(section);
     sessionStorage.setItem('livisync_profile_section', section);
+    setSearchParams({ tab: section });
   };
 
   const handleSaveFields = (updatedFields: Partial<User>) => {
