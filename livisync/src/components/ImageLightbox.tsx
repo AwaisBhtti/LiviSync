@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface ImageLightboxProps {
   images?: string[];
@@ -7,7 +8,7 @@ interface ImageLightboxProps {
   onClose: () => void;
 }
 
-let lightboxInstanceCount = 0;
+
 
 export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: ImageLightboxProps) => {
   const displayImages = images || (imageUrl ? [imageUrl] : []);
@@ -20,34 +21,42 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
     setCurrentIndex(initialIndex);
   }, [initialIndex, displayImages.length]);
 
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hadLightboxParamRef = useRef(false);
 
   useEffect(() => {
-    lightboxInstanceCount++;
-    // Push a state to history so back button can be caught
-    window.history.pushState({ lightbox: true }, '');
-
-    const handlePopState = () => {
-      onCloseRef.current();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      lightboxInstanceCount--;
-      window.removeEventListener('popstate', handlePopState);
-      setTimeout(() => {
-        if (lightboxInstanceCount === 0) {
-          if (window.history.state && window.history.state.lightbox) {
-            window.history.back();
-          }
-        }
-      }, 50);
-    };
+    const searchParams = new URLSearchParams(location.search);
+    if (!searchParams.has('lightbox')) {
+      searchParams.set('lightbox', 'true');
+      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    }
   }, []);
+
+  // Close the lightbox if the query parameter is removed (e.g. user clicks browser back button)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const hasParam = searchParams.has('lightbox');
+
+    if (!hasParam && hadLightboxParamRef.current) {
+      onClose();
+    }
+
+    hadLightboxParamRef.current = hasParam;
+  }, [location.search, onClose]);
+
+  const handleClose = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.has('lightbox')) {
+      searchParams.delete('lightbox');
+      const newSearch = searchParams.toString();
+      navigate(`${location.pathname}${newSearch ? '?' + newSearch : ''}`, { replace: true });
+    }
+    onClose();
+  };
 
   const handleNext = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -117,7 +126,7 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
 
   return (
     <div
-      onClick={onClose}
+      onClick={handleClose}
       style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
@@ -197,7 +206,7 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
 
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           onMouseDown={(e) => e.stopPropagation()}
           style={{
             position: 'absolute', top: '-2.5rem', right: '-2.5rem',
