@@ -14,11 +14,11 @@ interface HostelDirectoryProps {
 
 const SHARING_OPTIONS = [
   { value: 'all', label: 'All rooms' },
-  { value: 'single', label: 'Single' },
-  { value: 'double', label: 'Double' },
-  { value: 'triple', label: 'Triple' },
-  { value: 'quad', label: 'Quad' },
-  { value: 'penta', label: 'Penta' },
+  { value: 'single', label: '1 Sharing' },
+  { value: 'double', label: '2 Sharing' },
+  { value: 'triple', label: '3 Sharing' },
+  { value: 'quad', label: '4 Sharing' },
+  { value: 'penta', label: '5 Sharing' },
 ];
 
 const TYPE_OPTIONS = [

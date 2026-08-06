@@ -49,7 +49,7 @@ export const RoomCard = ({ room, onEdit, onDelete, onImageClick }: RoomCardProps
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <span style={{ fontWeight: 600, fontSize: '0.95rem', textTransform: 'capitalize' }}>
-            {room.sharingType} Sharing ({room.floor})
+            {(room.sharingType === 'single' ? '1 Sharing' : room.sharingType === 'double' ? '2 Sharing' : room.sharingType === 'triple' ? '3 Sharing' : room.sharingType === 'quad' ? '4 Sharing' : room.sharingType === 'penta' ? '5 Sharing' : room.sharingType)} ({room.floor})
           </span>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button

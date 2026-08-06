@@ -325,7 +325,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                     <div>
                       <h3 style={{ textTransform: 'capitalize', fontWeight: 700, fontSize: '1.15rem', marginBottom: '0.5rem' }}>
-                        {room.sharingType} Sharing
+                        {room.sharingType === 'single' ? '1 Sharing' : room.sharingType === 'double' ? '2 Sharing' : room.sharingType === 'triple' ? '3 Sharing' : room.sharingType === 'quad' ? '4 Sharing' : room.sharingType === 'penta' ? '5 Sharing' : room.sharingType}
                       </h3>
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
                         <span style={roomBadgeStyle}>
