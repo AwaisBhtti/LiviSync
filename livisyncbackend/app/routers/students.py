@@ -1,10 +1,12 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+import boto3
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Student, Owner, Hostel, PhoneViewLog, MatchRequest, Preferences, BlockedUser, Report, MessageReport
 from ..schemas import StudentOut, StudentUpdate
 from ..auth import get_current_user
+from ..config import settings
 from pydantic import BaseModel
 from typing import List
 
@@ -58,62 +60,137 @@ def get_roommates(db: Session = Depends(get_db), current_user: Student = Depends
 
 @router.put("/profile")
 def update_profile(profile_in: StudentUpdate, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
-    # Validate that none of the required fields are null or empty
-    if (
-        not profile_in.name or not profile_in.name.strip() or
-        profile_in.age is None or profile_in.age < 16 or profile_in.age > 100 or
-        not profile_in.gender or profile_in.gender not in ['male', 'female', 'other'] or
-        profile_in.budget is None or profile_in.budget <= 0 or
-        not profile_in.location or not profile_in.location.strip() or
-        not profile_in.sleep_schedule or
-        not profile_in.cleanliness or
-        not profile_in.smoking or
-        not profile_in.pets or
-        not profile_in.guest_tolerance or
-        not profile_in.noise_tolerance
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="All profile and preference fields must be completed with valid data."
-        )
+    # Validate provided fields
+    if profile_in.name is not None and not profile_in.name.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name cannot be empty.")
+    if profile_in.age is not None and (profile_in.age < 16 or profile_in.age > 100):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Age must be between 16 and 100.")
+    if profile_in.gender is not None and profile_in.gender not in ['male', 'female', 'other']:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid gender value.")
+    if profile_in.budget is not None and profile_in.budget < 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Budget cannot be negative.")
 
-    current_user.name = profile_in.name
-    current_user.age = profile_in.age
-    current_user.gender = profile_in.gender
-    current_user.bio = profile_in.bio
-    current_user.budget = profile_in.budget
-    current_user.location = profile_in.location
-    current_user.occupation = profile_in.occupation
-    current_user.institution = profile_in.institution
-    current_user.company = profile_in.company
-    current_user.hostel_id = profile_in.hostel_id
+    # Apply updates for provided basic info
+    if profile_in.name is not None:
+        current_user.name = profile_in.name
+    if profile_in.age is not None:
+        current_user.age = profile_in.age
+    if profile_in.gender is not None:
+        current_user.gender = profile_in.gender
+    if profile_in.bio is not None:
+        current_user.bio = profile_in.bio
+    if profile_in.budget is not None:
+        current_user.budget = profile_in.budget
+    if profile_in.location is not None:
+        current_user.location = profile_in.location
+    if profile_in.occupation is not None:
+        current_user.occupation = profile_in.occupation
+    if profile_in.institution is not None:
+        current_user.institution = profile_in.institution
+    if profile_in.company is not None:
+        current_user.company = profile_in.company
+    if profile_in.hostel_id is not None:
+        current_user.hostel_id = profile_in.hostel_id
+    if profile_in.photo is not None:
+        current_user.photo = profile_in.photo
 
     # Update or create preferences
-    if not current_user.preferences:
-        prefs = Preferences(
-            student_id=current_user.id,
-            sleep_schedule=profile_in.sleep_schedule,
-            cleanliness=profile_in.cleanliness,
-            smoking=profile_in.smoking,
-            pets=profile_in.pets,
-            guest_tolerance=profile_in.guest_tolerance,
-            noise_tolerance=profile_in.noise_tolerance
-        )
-        db.add(prefs)
-    else:
-        current_user.preferences.sleep_schedule = profile_in.sleep_schedule
-        current_user.preferences.cleanliness = profile_in.cleanliness
-        current_user.preferences.smoking = profile_in.smoking
-        current_user.preferences.pets = profile_in.pets
-        current_user.preferences.guest_tolerance = profile_in.guest_tolerance
-        current_user.preferences.noise_tolerance = profile_in.noise_tolerance
+    pref_fields = [
+        profile_in.sleep_schedule,
+        profile_in.cleanliness,
+        profile_in.smoking,
+        profile_in.pets,
+        profile_in.guest_tolerance,
+        profile_in.noise_tolerance
+    ]
+    if any(f is not None for f in pref_fields):
+        if not current_user.preferences:
+            prefs = Preferences(
+                student_id=current_user.id,
+                sleep_schedule=profile_in.sleep_schedule,
+                cleanliness=profile_in.cleanliness,
+                smoking=profile_in.smoking,
+                pets=profile_in.pets,
+                guest_tolerance=profile_in.guest_tolerance,
+                noise_tolerance=profile_in.noise_tolerance
+            )
+            db.add(prefs)
+        else:
+            if profile_in.sleep_schedule is not None:
+                current_user.preferences.sleep_schedule = profile_in.sleep_schedule
+            if profile_in.cleanliness is not None:
+                current_user.preferences.cleanliness = profile_in.cleanliness
+            if profile_in.smoking is not None:
+                current_user.preferences.smoking = profile_in.smoking
+            if profile_in.pets is not None:
+                current_user.preferences.pets = profile_in.pets
+            if profile_in.guest_tolerance is not None:
+                current_user.preferences.guest_tolerance = profile_in.guest_tolerance
+            if profile_in.noise_tolerance is not None:
+                current_user.preferences.noise_tolerance = profile_in.noise_tolerance
 
-    # Only set flag to True if it isn't already — validation above guarantees everything is complete at this point
-    if not current_user.is_profile_complete:
-        current_user.is_profile_complete = True
+    # Recalculate is_profile_complete based on all required profile and preference fields
+    has_basic = (
+        bool(current_user.name and current_user.name.strip()) and
+        (current_user.age is not None and current_user.age >= 16 and current_user.age <= 100) and
+        bool(current_user.gender and current_user.gender in ['male', 'female', 'other']) and
+        (current_user.budget is not None and current_user.budget > 0) and
+        bool(current_user.location and current_user.location.strip())
+    )
+    has_prefs = (
+        current_user.preferences is not None and
+        bool(current_user.preferences.sleep_schedule) and
+        bool(current_user.preferences.cleanliness) and
+        bool(current_user.preferences.smoking) and
+        bool(current_user.preferences.pets) and
+        bool(current_user.preferences.guest_tolerance) and
+        bool(current_user.preferences.noise_tolerance)
+    )
+    current_user.is_profile_complete = has_basic and has_prefs
 
     db.commit()
     return {"message": "Profile updated successfully", "is_profile_complete": current_user.is_profile_complete}
+
+@router.post("/upload-avatar")
+async def upload_avatar(file: UploadFile = File(...), current_user: Student = Depends(require_student)):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file must be an image."
+        )
+
+    r2_endpoint = f"https://{settings.R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    unique_filename = f"{uuid.uuid4()}.{file_ext}"
+
+    try:
+        s3 = boto3.client(
+            service_name="s3",
+            endpoint_url=r2_endpoint,
+            aws_access_key_id=settings.R2_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
+            region_name="auto"
+        )
+
+        file_content = await file.read()
+
+        s3.put_object(
+            Bucket=settings.R2_BUCKET_NAME,
+            Key=unique_filename,
+            Body=file_content,
+            ContentType=file.content_type
+        )
+
+        base_domain = settings.R2_PUBLIC_CUSTOM_DOMAIN.rstrip("/")
+        public_url = f"{base_domain}/{unique_filename}"
+
+        return {"url": public_url}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload avatar to Cloudflare R2: {str(e)}"
+        )
 
 @router.post("/view-phone/{hostel_id}")
 def view_owner_phone(hostel_id: uuid.UUID, db: Session = Depends(get_db), current_user: Student = Depends(require_student)):
