@@ -10,6 +10,7 @@ import { RoommateGrid } from './roommate/RoommateGrid';
 import { RoommateModals } from './roommate/RoommateModals';
 import { RoommateRequestsPanel } from './roommate/RoommateRequestsPanel';
 import { Users, Search, Inbox, SlidersHorizontal, X } from 'lucide-react';
+import { useRevealContainer } from '../hooks/useReveal';
 
 
 interface RoommateFinderProps {
@@ -87,6 +88,17 @@ export const RoommateFinder = ({
     })
     .map((u) => ({ ...u, score: calculateCompatibility(currentUser.preferences, u.preferences, currentUser.budget, u.budget) }))
     .sort((a, b) => b.score - a.score);
+
+  const gridRef = useRevealContainer<HTMLDivElement>([
+    candidates.length,
+    filterSleep,
+    filterCleanliness,
+    filterGender,
+    filterHostel,
+    maxBudget,
+    searchQuery,
+    activeTab
+  ]);
 
   const pendingReceivedCount = matchRequests.filter(
     (r) =>
@@ -322,6 +334,7 @@ export const RoommateFinder = ({
                 currentUserId={currentUser.id}
                 onSelectCandidate={setSelectedUser}
                 hideScores={isProfileIncomplete}
+                containerRef={gridRef}
               />
             </div>
           </div>

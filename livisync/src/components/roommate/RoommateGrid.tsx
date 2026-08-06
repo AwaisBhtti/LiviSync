@@ -11,6 +11,7 @@ interface RoommateGridProps {
   currentUserId: string;
   onSelectCandidate: (user: User) => void;
   hideScores?: boolean;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const RING_CIRCUMFERENCE = 263.9;
@@ -49,6 +50,7 @@ export const RoommateGrid = ({
   currentUserId,
   onSelectCandidate,
   hideScores = false,
+  containerRef,
 }: RoommateGridProps) => {
   const getRequestStatus = (userId: string) => {
     const req = matchRequests.find(
@@ -71,8 +73,8 @@ export const RoommateGrid = ({
   }
 
   return (
-    <div className="grid-2 rm-grid-mobile-single">
-      {candidates.map((candidate) => {
+    <div ref={containerRef} className="grid-2 rm-grid-mobile-single">
+      {candidates.map((candidate, i) => {
         const reqStatus = getRequestStatus(candidate.id);
         const occupationDisplay = candidate.occupation === 'job' ? 'Job Holder' : 'Student';
         const tags = lifestyleTags(candidate.preferences);
@@ -84,7 +86,9 @@ export const RoommateGrid = ({
             role="button"
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter') onSelectCandidate(candidate); }}
-            className="rm-card-hover"
+            className="reveal rm-card-hover"
+            data-reveal
+            data-delay={((i % 2) * 0.06).toFixed(2)}
             style={cardStyle}
           >
             {/* Top row — avatar, identity, ring score */}
@@ -102,7 +106,11 @@ export const RoommateGrid = ({
                   <span style={{ opacity: 0.5 }}>·</span>
                   <span style={{ textTransform: 'capitalize' }}>{candidate.gender ?? 'N/A'}</span>
                   <span style={{ opacity: 0.5 }}>·</span>
-                  <span style={{ fontWeight: 600 }}>{occupationDisplay}</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {occupationDisplay}
+                    {candidate.occupation === 'student' && candidate.institution ? ` · ${candidate.institution}` : ''}
+                    {candidate.occupation === 'job' && candidate.company ? ` · ${candidate.company}` : ''}
+                  </span>
                 </p>
               </div>
 
