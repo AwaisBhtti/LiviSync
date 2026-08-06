@@ -46,26 +46,7 @@ const SAFETY = [
     body: 'Connect without sharing personal phone numbers. Our in-app messaging keeps your data private until you’re ready to meet.',
   },
 ];
-
-const MARQUEE_ITEMS = [
-  'Habits before housing',
-  'Physically inspected rooms',
-  'Compatibility scoring',
-  'Encrypted roommate chat',
-  'Built by Gen-Z, for the Gen-Z',
-];
-
-// ─── Intro splash ────────────────────────────────────────────────────────────────
-function IntroSplash() {
-  return (
-    <div style={introStyle}>
-      <img src={logo} alt="LiviSync" style={introMarkStyle} />
-      <div style={introWordStyle}>LIVISYNC</div>
-      <div style={introTaglineStyle}>Syncing your living</div>
-    </div>
-  );
-}
-
+// ─── Match score ring ────────────────────────────────────────────────────────────
 // ─── Match score ring ────────────────────────────────────────────────────────────
 function MatchRing({ score }: { score: number }) {
   const { ref, inView } = useInView(0.3);
@@ -106,12 +87,22 @@ function InspectedStat() {
   );
 }
 
+// ─── Intro splash ────────────────────────────────────────────────────────────────
+function IntroSplash() {
+  return (
+    <div style={introStyle}>
+      <img src={logo} alt="LiviSync" style={introMarkStyle} />
+      <div style={introWordStyle}>LIVISYNC</div>
+      <div style={introTaglineStyle}>Syncing your living</div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────────
 export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
   const navigate = useNavigate();
   const [intro, setIntro] = useState(true);
   const [search, setSearch] = useState('');
-  const barRef = useRef<HTMLDivElement>(null);
   const heroImgRef = useRef<HTMLImageElement>(null);
   const pageRef = useRevealContainer<HTMLDivElement>([]);
 
@@ -119,18 +110,14 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
   const roommatesHref = isAuthenticated ? '/roommates' : '/login';
 
   useEffect(() => {
-    const timer = setTimeout(() => setIntro(false), 1750);
+    const timer = setTimeout(() => setIntro(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll progress bar + hero parallax
+  // Hero parallax
   useEffect(() => {
     const onScroll = () => {
       const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - doc.clientHeight;
-      if (barRef.current) {
-        barRef.current.style.width = `${scrollable > 0 ? (doc.scrollTop / scrollable) * 100 : 0}%`;
-      }
       if (heroImgRef.current) {
         heroImgRef.current.style.transform = `translateY(${doc.scrollTop * 0.18}px)`;
       }
@@ -145,6 +132,8 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
 
   return (
     <div ref={pageRef} style={containerStyle}>
+      {/* ── Intro splash ── */}
+      {intro && <IntroSplash />}
       <style>{`
         .ls-nav-link:hover { background: var(--color-accent-100) !important; }
         .ls-nav-cta:hover { background: var(--color-accent) !important; }
@@ -170,15 +159,7 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
         @media (max-width: 420px) {
           .ls-rail-card { flex: 0 0 260px !important; }
         }
-      `}</style>
-
-      {/* ── Scroll progress ── */}
-      <div ref={barRef} style={progressBarStyle} />
-
-      {/* ── Intro splash ── */}
-      {intro && <IntroSplash />}
-
-      {/* ── Fixed top bar ── */}
+      `}</style>      {/* ── Fixed top bar ── */}
       <div style={topBarStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 22px' }}>
           <img src={logo} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
@@ -198,8 +179,8 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
       <section style={heroSectionStyle}>
         <img
           ref={heroImgRef}
-          src={hostelOrchard}
-          alt="Student hostel common room"
+          src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1920&q=80"
+          alt="Cozy student room"
           style={heroImageStyle}
         />
         <img src={logo} alt="" style={heroMarkStyle} />
@@ -230,19 +211,6 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
           <div style={scrollHintStyle}>Scroll ↓</div>
         </div>
       </section>
-
-      {/* ── Marquee ── */}
-      <div style={marqueeWrapStyle}>
-        <div style={marqueeTrackStyle}>
-          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-            <span key={`${item}-${i}`} style={{ display: 'inline-flex', gap: '56px' }}>
-              <span>{item}</span>
-              <span style={{ color: 'var(--color-accent-400)' }}>✳</span>
-            </span>
-          ))}
-        </div>
-      </div>
-
       {/* ══════════════ VERIFIED LIVING SPACES ══════════════ */}
       <section id="hostels" style={verifiedSectionStyle}>
         <div className="ls-section" style={sectionInnerStyle}>
@@ -360,12 +328,6 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
       {/* ══════════════ FOOTER ══════════════ */}
       <footer style={footerStyle}>
         <div className="ls-footer-inner" style={{ position: 'relative', maxWidth: '1240px', margin: '0 auto', padding: '0 48px' }}>
-          <div className="reveal" data-reveal style={footerWordStyle}>LIVI</div>
-          <div style={footerImageWrapStyle}>
-            <img src={hostelStudio} alt="LiviSync verified hostel" className="washed" style={{ width: '100%', aspectRatio: '16/7', objectFit: 'cover' }} />
-          </div>
-          <div className="reveal" data-reveal data-delay="0.08" style={{ ...footerWordStyle, position: 'relative', zIndex: 2 }}>SYNC</div>
-
           <div className="ls-footer-grid" style={footerGridStyle}>
             <div>
               <div style={footerColLabelStyle}>Address</div>
@@ -418,16 +380,6 @@ const containerStyle: React.CSSProperties = {
   overflowX: 'hidden',
 };
 
-const progressBarStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  height: '3px',
-  width: '0%',
-  background: 'var(--color-accent)',
-  zIndex: 400,
-};
-
 // ── Intro splash ──
 const introStyle: React.CSSProperties = {
   position: 'fixed',
@@ -463,9 +415,7 @@ const introTaglineStyle: React.CSSProperties = {
   textTransform: 'uppercase',
   color: 'var(--color-accent-400)',
   animation: 'ls-fade 0.6s ease 0.7s both',
-};
-
-// ── Top bar ──
+};// ── Top bar ──
 const topBarStyle: React.CSSProperties = {
   position: 'fixed',
   top: 0,
@@ -517,8 +467,7 @@ const topBarCtaStyle: React.CSSProperties = {
 // ── Hero ──
 const heroSectionStyle: React.CSSProperties = {
   position: 'relative',
-  height: 'min(94vh, 900px)',
-  minHeight: '620px',
+  height: '100vh',
   overflow: 'hidden',
   display: 'flex',
   alignItems: 'center',
@@ -528,11 +477,11 @@ const heroSectionStyle: React.CSSProperties = {
 
 const heroImageStyle: React.CSSProperties = {
   position: 'absolute',
-  inset: '-8% 0',
+  inset: '-10% 0',
   width: '100%',
-  height: '116%',
+  height: '120%',
   objectFit: 'cover',
-  filter: 'saturate(0.55) contrast(0.92) brightness(0.52)',
+  filter: 'saturate(0.65) contrast(0.95) brightness(0.55)',
 };
 
 const heroMarkStyle: React.CSSProperties = {
@@ -608,24 +557,6 @@ const scrollHintStyle: React.CSSProperties = {
   fontSize: '0.8125rem',
   color: 'rgba(245, 234, 216, 0.72)',
   animation: 'ls-fade 1s ease 0.95s both',
-};
-
-// ── Marquee ──
-const marqueeWrapStyle: React.CSSProperties = {
-  background: 'var(--color-text)',
-  color: 'var(--color-bg)',
-  padding: '14px 0',
-  overflow: 'hidden',
-  whiteSpace: 'nowrap',
-};
-
-const marqueeTrackStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  gap: '56px',
-  animation: 'ls-marquee 26s linear infinite',
-  fontSize: '0.75rem',
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase',
 };
 
 // ── Verified section ──
@@ -851,34 +782,15 @@ const darkPillLinkStyle: React.CSSProperties = {
 // ── Footer ──
 const footerStyle: React.CSSProperties = {
   background: 'var(--color-bg)',
-  padding: '90px 0 40px',
+  padding: '60px 0 40px',
   overflow: 'hidden',
-};
-
-const footerWordStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-display)',
-  fontSize: 'clamp(70px, 19vw, 280px)',
-  lineHeight: 0.82,
-  letterSpacing: '0.14em',
-  textIndent: '0.14em',
-  textAlign: 'center',
-  color: 'var(--color-text)',
-};
-
-const footerImageWrapStyle: React.CSSProperties = {
-  position: 'relative',
-  margin: '-6% auto -4%',
-  width: 'min(760px, 100%)',
-  borderRadius: 'var(--radius-md)',
-  overflow: 'hidden',
-  boxShadow: 'var(--shadow-lg)',
 };
 
 const footerGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
   gap: '40px',
-  marginTop: '80px',
+  marginTop: '20px',
   paddingTop: '40px',
   borderTop: '1px solid var(--color-divider)',
 };
