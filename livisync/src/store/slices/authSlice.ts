@@ -125,6 +125,7 @@ export const updateProfile = createAsyncThunk(
           guest_tolerance: updatedUser.preferences.guestTolerance,
           noise_tolerance: updatedUser.preferences.noiseTolerance,
           hostel_id: updatedUser.hostelId || null,
+          photo: updatedUser.photo || null,
         })
       });
       const data = await response.json();

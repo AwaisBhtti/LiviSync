@@ -358,7 +358,7 @@ export const AdminHostelVerification = ({
                           }}
                         >
                           <span>
-                            {room.sharingType} Sharing ({room.floor})
+                            {(room.sharingType === 'single' ? '1 Sharing' : room.sharingType === 'double' ? '2 Sharing' : room.sharingType === 'triple' ? '3 Sharing' : room.sharingType === 'quad' ? '4 Sharing' : room.sharingType === 'penta' ? '5 Sharing' : room.sharingType)} ({room.floor})
                           </span>
                           <span style={{ color: 'var(--primary)' }}>
                             PKR {room.price.toLocaleString()} / mo

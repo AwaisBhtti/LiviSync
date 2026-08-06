@@ -71,6 +71,7 @@ class StudentUpdate(BaseModel):
     guest_tolerance: Optional[str] = None
     noise_tolerance: Optional[str] = None
     hostel_id: Optional[UUID] = None
+    photo: Optional[str] = None
 
 # Owner Schemas
 class OwnerRegister(BaseModel):

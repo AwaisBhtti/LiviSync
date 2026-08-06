@@ -12,7 +12,6 @@ let lightboxInstanceCount = 0;
 export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: ImageLightboxProps) => {
   const displayImages = images || (imageUrl ? [imageUrl] : []);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [isHovered, setIsHovered] = useState(false);
 
   const minSwipeDistance = 50;
   const touchStartX = useRef(0);
@@ -50,8 +49,6 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
     };
   }, []);
 
-  if (displayImages.length === 0) return null;
-
   const handleNext = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setCurrentIndex((prev) => (prev + 1) % displayImages.length);
@@ -61,6 +58,31 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
     if (e) e.stopPropagation();
     setCurrentIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
   };
+
+  // Wheel scroll navigation
+  useEffect(() => {
+    let lastScrollTime = 0;
+    const handleWheel = (e: WheelEvent) => {
+      const now = Date.now();
+      if (now - lastScrollTime < 300) return;
+
+      if (Math.abs(e.deltaY) > 15 || Math.abs(e.deltaX) > 15) {
+        if (e.deltaY > 0 || e.deltaX > 0) {
+          handleNext();
+        } else {
+          handlePrev();
+        }
+        lastScrollTime = now;
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [displayImages.length]);
+
+  if (displayImages.length === 0) return null;
 
   // Touch swipe
   const onTouchStart = (e: React.TouchEvent) => {
@@ -113,8 +135,6 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
       {/* Main image area */}
       <div
         onClick={(e) => e.stopPropagation()}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
@@ -156,7 +176,7 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
                 background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
                 color: 'white', borderRadius: '50%', width: '48px', height: '48px',
                 fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                opacity: isHovered ? 1 : 0.4, transition: 'opacity 0.2s',
+                opacity: 1, transition: 'opacity 0.2s',
                 backdropFilter: 'blur(4px)',
               }}
             >◀</button>
@@ -168,7 +188,7 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
                 background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
                 color: 'white', borderRadius: '50%', width: '48px', height: '48px',
                 fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                opacity: isHovered ? 1 : 0.4, transition: 'opacity 0.2s',
+                opacity: 1, transition: 'opacity 0.2s',
                 backdropFilter: 'blur(4px)',
               }}
             >▶</button>
