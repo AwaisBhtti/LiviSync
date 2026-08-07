@@ -235,6 +235,16 @@ export const OwnerPortal = ({
 
   return (
     <div style={containerStyle}>
+      <style>{`
+        .op-form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.25rem;
+        }
+        @media (max-width: 768px) {
+          .op-form-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
       <div style={headerSectionStyle}>
         <div>
           <h2>Hostel Management Portal</h2>
@@ -264,7 +274,7 @@ export const OwnerPortal = ({
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} style={formGridStyle}>
+          <form onSubmit={handleSubmit} className="op-form-grid">
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label className="form-label">Hostel Name</label>
               <input
@@ -584,12 +594,6 @@ const headerSectionStyle: React.CSSProperties = {
   alignItems: 'center',
   paddingBottom: '1rem',
   borderBottom: '1px solid var(--border)',
-};
-
-const formGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: '1.25rem',
 };
 
 const amenityTagsGridStyle: React.CSSProperties = {
