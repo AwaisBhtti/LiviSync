@@ -97,9 +97,19 @@ export const StudentProfile = ({
     <div style={{ paddingTop: '1.5rem' }}>
       <style>{`
         .sp-signout:hover { background: var(--color-accent-100) !important; }
+        .sp-tabs::-webkit-scrollbar { display: none; }
+        .sp-tabs {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
         @media (max-width: 640px) {
           .sp-hero { padding: 32px 24px !important; }
-          .sp-stats { margin-left: 0 !important; width: 100%; }
+          .sp-stats { margin-left: 0 !important; width: 100%; gap: 20px !important; }
+          .sp-tabs { flex-wrap: nowrap !important; overflow-x: auto; padding-bottom: 8px; }
+          .sp-card { padding: 1.25rem !important; }
+        }
+        @media (max-width: 480px) {
+          .sp-hero { padding: 24px 16px !important; border-radius: var(--radius-lg) !important; }
         }
       `}</style>
 
@@ -140,7 +150,7 @@ export const StudentProfile = ({
       </div>
 
       {/* ── Section pills ── */}
-      <div style={tabRowStyle}>
+      <div className="sp-tabs" style={tabRowStyle}>
         {SECTIONS.map(({ key, icon, label }) => (
           <button
             key={key}
@@ -158,7 +168,7 @@ export const StudentProfile = ({
       </div>
 
       {/* ── Section content ── */}
-      <div style={contentCardStyle}>
+      <div className="sp-card" style={contentCardStyle}>
         {activeSection === 'profile' && (
           <ProfileTab currentUser={currentUser} hostels={hostels} onSave={handleSaveFields} />
         )}

@@ -207,6 +207,25 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
         .animate-spin {
           animation: spin 1s linear infinite;
         }
+        .pt-form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          column-gap: 1rem;
+          row-gap: 0.5rem;
+        }
+        .pt-pfp-upload {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+          padding: 1.25rem;
+          background-color: var(--card-hover);
+          border-radius: 16px;
+        }
+        @media (max-width: 640px) {
+          .pt-form-grid { grid-template-columns: 1fr; }
+          .pt-pfp-upload { flex-direction: column; text-align: center; gap: 1rem; }
+        }
       `}</style>
       <h2 style={{ marginBottom: '0.5rem' }}>Basic &amp; Personal Info</h2>
       <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '2rem' }}>
@@ -214,7 +233,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
       </p>
 
       {/* Profile Picture Upload Section */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem', padding: '1.25rem', backgroundColor: 'var(--card-hover)', borderRadius: '16px' }}>
+      <div className="pt-pfp-upload">
         <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0 }}>
           <img
             src={photo || DEFAULT_AVATAR}
@@ -247,7 +266,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
 
       <form onSubmit={handleSubmit}>
         <h3 style={sectionTitleStyle}>Basic Information</h3>
-        <div style={formGridStyle}>
+        <div className="pt-form-grid">
           <div className="form-group">
             <label className="form-label">Full Name <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
@@ -404,7 +423,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
         </div>
 
         <h3 style={sectionTitleStyle}>Work &amp; Education</h3>
-        <div style={formGridStyle}>
+        <div className="pt-form-grid">
           <div className="form-group">
             <label className="form-label">Occupation</label>
             <CustomSelect
@@ -555,7 +574,7 @@ export const ProfileTab = ({ currentUser, hostels, onSave }: ProfileTabProps) =>
         </div>
 
         <h3 style={sectionTitleStyle}>Living &amp; Rent Preferences</h3>
-        <div style={formGridStyle}>
+        <div className="pt-form-grid">
           <div className="form-group">
             <label className="form-label">Max Budget Limit (PKR / mo) <span style={{ color: '#a33b2a' }}>*</span></label>
             <input
@@ -607,13 +626,6 @@ const sectionTitleStyle: React.CSSProperties = {
   borderBottom: '1px solid var(--border)',
   paddingBottom: '0.5rem',
   color: 'var(--foreground)',
-};
-
-const formGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, 1fr)',
-  columnGap: '1rem',
-  rowGap: '0.5rem',
 };
 
 const footerStyle: React.CSSProperties = {

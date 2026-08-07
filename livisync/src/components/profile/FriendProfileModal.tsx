@@ -93,6 +93,7 @@ export const FriendProfileModal = ({
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 99999,
+        padding: '1rem',
       }}
     >
       <div
