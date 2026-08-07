@@ -64,6 +64,11 @@ export const AdminUsersTable = ({
 
   return (
     <>
+      <style>{`
+        @media (max-width: 640px) {
+          .hide-on-mobile { display: none !important; }
+        }
+      `}</style>
       {/* Student Directory */}
       <div className="card" style={{ padding: '1.5rem' }}>
         <h3 style={sectionTitleStyle}>
@@ -84,8 +89,8 @@ export const AdminUsersTable = ({
             <thead>
               <tr style={tableHeaderRowStyle}>
                 <th style={thStyle}>Student Profile</th>
-                <th style={thStyle}>Location</th>
-                <th style={thStyle}>Email Status</th>
+                <th className="hide-on-mobile" style={thStyle}>Location</th>
+                <th className="hide-on-mobile" style={thStyle}>Email Status</th>
                 <th style={thStyle}>Account Status</th>
                 <th style={thStyle}>Actions</th>
               </tr>
@@ -106,8 +111,8 @@ export const AdminUsersTable = ({
                         </div>
                       </div>
                     </td>
-                    <td style={tdStyle}>{user.location}</td>
-                    <td style={tdStyle}>
+                    <td className="hide-on-mobile" style={tdStyle}>{user.location}</td>
+                    <td className="hide-on-mobile" style={tdStyle}>
                       <span
                         style={{
                           fontWeight: 600,
@@ -205,8 +210,8 @@ export const AdminUsersTable = ({
             <thead>
               <tr style={tableHeaderRowStyle}>
                 <th style={thStyle}>Owner Name</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Phone</th>
+                <th className="hide-on-mobile" style={thStyle}>Email</th>
+                <th className="hide-on-mobile" style={thStyle}>Phone</th>
                 <th style={thStyle}>Verification Status</th>
                 <th style={thStyle}>Actions</th>
               </tr>
@@ -217,8 +222,8 @@ export const AdminUsersTable = ({
                 return (
                   <tr key={user.id} style={tableRowStyle}>
                     <td style={{ ...tdStyle, fontWeight: 500 }}>{user.name}</td>
-                    <td style={tdStyle}>{user.email}</td>
-                    <td style={tdStyle}>{user.phone || 'N/A'}</td>
+                    <td className="hide-on-mobile" style={tdStyle}>{user.email}</td>
+                    <td className="hide-on-mobile" style={tdStyle}>{user.phone || 'N/A'}</td>
                     <td style={tdStyle}>
                       <span
                         style={{
