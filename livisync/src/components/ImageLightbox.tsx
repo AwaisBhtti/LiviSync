@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-
 interface ImageLightboxProps {
   images?: string[];
   imageUrl?: string;
@@ -21,39 +19,9 @@ export const ImageLightbox = ({ images, imageUrl, initialIndex = 0, onClose }: I
     setCurrentIndex(initialIndex);
   }, [initialIndex, displayImages.length]);
 
-  const location = useLocation();
-  const navigate = useNavigate();
-  const hadLightboxParamRef = useRef(false);
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    if (!searchParams.has('lightbox')) {
-      searchParams.set('lightbox', 'true');
-      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
-    }
-  }, []);
-
-  // Close the lightbox if the query parameter is removed (e.g. user clicks browser back button)
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const hasParam = searchParams.has('lightbox');
-
-    if (!hasParam && hadLightboxParamRef.current) {
-      onClose();
-    }
-
-    hadLightboxParamRef.current = hasParam;
-  }, [location.search, onClose]);
-
   const handleClose = (e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
-    }
-    const searchParams = new URLSearchParams(location.search);
-    if (searchParams.has('lightbox')) {
-      searchParams.delete('lightbox');
-      const newSearch = searchParams.toString();
-      navigate(`${location.pathname}${newSearch ? '?' + newSearch : ''}`, { replace: true });
     }
     onClose();
   };
