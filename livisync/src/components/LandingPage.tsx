@@ -154,7 +154,7 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
           .ls-nav-link { display: none !important; }
           .ls-nav-cta { padding: 0 16px !important; font-size: 0.625rem !important; letter-spacing: 0.12em !important; }
           .ls-footer-inner { padding-left: 24px !important; padding-right: 24px !important; }
-          .ls-footer-grid { margin-top: 48px !important; gap: 28px !important; }
+          .ls-footer-grid { grid-template-columns: 1fr !important; margin-top: 48px !important; gap: 28px !important; }
         }
         @media (max-width: 420px) {
           .ls-rail-card { flex: 0 0 260px !important; }
@@ -189,7 +189,7 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
           <div style={{ display: 'inline-block', padding: '8px 24px', borderRadius: '999px', background: 'var(--color-surface)', border: '1.5px solid var(--color-accent)', color: 'var(--color-accent)', fontFamily: 'var(--font-heading)', fontSize: '1.35rem', letterSpacing: '0.1em', animation: 'ls-rise 1s var(--ease-organic) 0.1s both', marginBottom: '16px', fontWeight: 700, textTransform: 'uppercase' }}>
             LiviSync
           </div>
-          <h1 style={{ ...heroTitleStyle, fontSize: '3rem' }}>
+          <h1 style={heroTitleStyle}>
             <span style={{ display: 'inline-block', animation: 'ls-rise 1s var(--ease-organic) 0.2s both' }}>Find</span>
             <span style={{ display: 'inline-block', animation: 'ls-rise 1s var(--ease-organic) 0.3s both' }}>your</span>
             <span style={{ display: 'inline-block', color: 'var(--color-accent-300)', animation: 'ls-rise 1s var(--ease-organic) 0.4s both' }}>perfect</span>
