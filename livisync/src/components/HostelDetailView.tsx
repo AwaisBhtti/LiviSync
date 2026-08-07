@@ -106,7 +106,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
   return (
     <div style={detailsPageStyle}>
       {/* Top Navigation */}
-      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="details-top-nav" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button
           onClick={() => navigate('/hostels')}
           style={{
@@ -395,7 +395,7 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
 
         {/* Right Column: Sticky Pricing & Contact Sidebar */}
         <div>
-          <div className="details-sticky-sidebar" style={stickySidebarStyle}>
+          <div className="details-sticky-sidebar details-sidebar" style={stickySidebarStyle}>
             <div style={{ marginBottom: '1.5rem' }}>
               <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--foreground)' }}>
                 {priceStr}
@@ -490,6 +490,10 @@ export const HostelDetailView = ({ hostels, currentUser, token }: HostelDetailVi
              background: rgba(30, 30, 30, 0.7);
              border-color: rgba(255, 255, 255, 0.1);
           }
+        }
+        @media (max-width: 640px) {
+          .details-sidebar { padding: 1.25rem !important; }
+          .details-top-nav { margin-bottom: 1rem !important; }
         }
       `}</style>
     </div>

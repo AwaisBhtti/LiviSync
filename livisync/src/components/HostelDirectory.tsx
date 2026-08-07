@@ -105,6 +105,14 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
         .hd-card img { transition: transform 1.1s var(--ease-organic); }
         .hd-card:hover img { transform: scale(1.05); }
         .hd-search:focus-within { border-color: var(--color-accent); }
+        .hd-layout { display: flex; gap: 2rem; margin-top: 24px; align-items: flex-start; flex-direction: row; }
+        .hd-sidebar { width: 300px; flex-shrink: 0; }
+        .hd-main { flex: 1; min-width: 0; }
+        @media (max-width: 768px) {
+          .hd-layout { flex-direction: column; gap: 1.5rem; }
+          .hd-sidebar { width: 100%; }
+          .hd-main { width: 100%; min-width: 0; }
+        }
         @media (max-width: 640px) {
           .hd-filter-bar { flex-direction: column; align-items: stretch !important; }
           .hd-count { margin-left: 0 !important; }
@@ -133,11 +141,11 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
       </div>
 
       {/* ── Main Layout (Sidebar + Grid) ── */}
-      <div style={{ display: 'flex', gap: '2rem', marginTop: '24px', alignItems: 'flex-start', flexDirection: 'row', flexWrap: 'wrap' }}>
+      <div className="hd-layout">
 
         {/* ── Sidebar Filters ── */}
         {showFilters && (
-          <div className="card" style={sidebarPanelStyle}>
+          <div className="card hd-sidebar" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'ls-fade 0.4s ease both', overflow: 'visible' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '0.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <SlidersHorizontal size={14} style={{ color: 'var(--muted)' }} />
@@ -257,7 +265,7 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
         )}
 
         {/* ── Listings ── */}
-        <div style={{ flex: 1, minWidth: '300px' }}>
+        <div className="hd-main">
           {!showFilters && (
             <button
               onClick={() => setShowFilters(true)}
@@ -384,18 +392,6 @@ const countStyle: React.CSSProperties = {
   textTransform: 'uppercase',
   color: 'var(--color-neutral-600)',
   marginLeft: 'auto',
-};
-
-const sidebarPanelStyle: React.CSSProperties = {
-  width: '300px',
-  flexShrink: 0,
-  padding: '1.25rem',
-  background: 'var(--color-surface)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1rem',
-  animation: 'ls-fade 0.4s ease both',
-  overflow: 'visible',
 };
 
 const sidebarLabelStyle: React.CSSProperties = {
