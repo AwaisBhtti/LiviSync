@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Hostel, User } from '../types';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { BUILTIN_AMENITIES } from './Amenities';
 import { useRevealContainer } from '../hooks/useReveal';
 import { CustomSelect } from './ui/CustomSelect';
@@ -56,6 +56,7 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const filteredHostels = hostels.filter((host) => {
     const matchesSearch =
@@ -98,50 +99,159 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
     setSearchQuery('');
   };
 
+  const renderFilters = () => (
+    <>
+      {/* Price */}
+      <div>
+        <label style={sidebarLabelStyle}>Max Price</label>
+        <p style={{ fontSize: '0.85rem', color: '#201e1d', fontWeight: 600, marginBottom: '0.4rem' }}>
+          PKR {maxPrice.toLocaleString()}
+        </p>
+        <input
+          type="range"
+          min="5000"
+          max="35000"
+          step="1000"
+          value={maxPrice}
+          onChange={(e) => setMaxPrice(Number(e.target.value))}
+          style={{ width: '100%', accentColor: '#c67139', cursor: 'pointer' }}
+        />
+      </div>
+
+      {/* Category */}
+      <div>
+        <label style={sidebarLabelStyle}>Hostel Category</label>
+        <div style={segmentedControlWrapStyle}>
+          {TYPE_OPTIONS.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              style={segmentedControlBtnStyle(selectedType === tab.value)}
+              onClick={() => setSelectedType(tab.value)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sharing */}
+      <div>
+        <label style={sidebarLabelStyle}>Room Sharing</label>
+        <CustomSelect
+          value={selectedSharing}
+          onChange={setSelectedSharing}
+          options={SHARING_OPTIONS}
+          style={sidebarSelectStyle}
+        />
+      </div>
+
+      {/* Amenities */}
+      <div>
+        <label style={sidebarLabelStyle}>Must Have Amenities</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {BUILTIN_AMENITIES.map((amenity) => {
+            const isSelected = selectedAmenities.includes(amenity);
+            return (
+              <button
+                key={amenity}
+                type="button"
+                onClick={() =>
+                  setSelectedAmenities((prev) =>
+                    isSelected ? prev.filter((a) => a !== amenity) : [...prev, amenity]
+                  )
+                }
+                style={sidebarAmenityChipStyle(isSelected)}
+              >
+                {amenity}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={clearFilters}
+        style={sidebarClearBtnStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(198, 113, 57, 0.08)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent';
+        }}
+      >
+        Clear Filters
+      </button>
+    </>
+  );
+
   return (
-    <div>
+    <div style={pageWrapStyle}>
       <style>{`
         .hd-card { cursor: pointer; }
         .hd-card img { transition: transform 1.1s var(--ease-organic); }
         .hd-card:hover img { transform: scale(1.05); }
-        .hd-search:focus-within { border-color: var(--color-accent); }
+        .hd-search-wrap:focus-within { border-color: var(--color-accent) !important; }
         .hd-layout { display: flex; gap: 2rem; margin-top: 24px; align-items: flex-start; flex-direction: row; }
         .hd-sidebar { width: 300px; flex-shrink: 0; }
         .hd-main { flex: 1; min-width: 0; }
+        .hd-mobile-filter-btn { display: none !important; }
+        .hd-filter-toggle-desktop { display: inline-flex; }
+
+        @keyframes hd-slide-up {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        @keyframes hd-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .hd-filter-overlay-active {
+          animation: hd-fade-in 0.25s cubic-bezier(0.19, 1, 0.22, 1) both;
+        }
+        .hd-filter-drawer-active {
+          animation: hd-slide-up 0.35s cubic-bezier(0.19, 1, 0.22, 1) both;
+        }
+
         @media (max-width: 768px) {
           .hd-layout { flex-direction: column; gap: 1.5rem; }
-          .hd-sidebar { width: 100%; }
+          .hd-sidebar { display: none !important; }
+          .hd-filter-toggle-desktop { display: none !important; }
+          .hd-mobile-filter-btn { display: flex !important; }
           .hd-main { width: 100%; min-width: 0; }
-        }
-        @media (max-width: 640px) {
-          .hd-filter-bar { flex-direction: column; align-items: stretch !important; }
-          .hd-count { margin-left: 0 !important; }
         }
       `}</style>
 
       {/* ── Header ── */}
-      <div style={eyebrowStyle}>Hostel directory</div>
+      <div style={headerStyle}>
+        <div className="hd-header-wrap" style={headerInnerWrapStyle}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '12px' }}>
+            <div style={{ ...eyebrowStyle, marginBottom: 0 }}>Hostel directory</div>
+            <div className="hd-count" style={countStyle}>
+              {filteredHostels.length} {filteredHostels.length === 1 ? 'listing' : 'listings'}
+            </div>
+          </div>
 
-      {/* ── Filter bar ── */}
-      <div className="hd-filter-bar" style={filterBarStyle}>
-        <div className="hd-search" style={searchWrapStyle}>
-          <Search size={16} strokeWidth={2.75} style={{ color: 'var(--muted)', flexShrink: 0 }} />
-          <input
-            type="text"
-            placeholder="Search name or area…"
-            style={searchInputStyle}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="hd-count" style={countStyle}>
-          {filteredHostels.length} {filteredHostels.length === 1 ? 'listing' : 'listings'}
+          <div className="hd-header-inner" style={headerInnerStyle}>
+            {/* Search */}
+            <div className="hd-search-wrap" style={searchWrapStyle}>
+              <Search size={15} strokeWidth={2.75} style={{ flexShrink: 0, color: 'var(--muted)' }} />
+              <input
+                className="hd-input"
+                type="text"
+                placeholder="Search name or area…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={searchInputStyle}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ── Main Layout (Sidebar + Grid) ── */}
-      <div className="hd-layout">
+      <div className="hd-layout" style={bodyStyle}>
 
         {/* ── Sidebar Filters ── */}
         {showFilters && (
@@ -178,94 +288,76 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
                 Hide
               </button>
             </div>
-
-            {/* Price */}
-            <div>
-              <label style={sidebarLabelStyle}>Max Price</label>
-              <p style={{ fontSize: '0.85rem', color: '#201e1d', fontWeight: 600, marginBottom: '0.4rem' }}>
-                PKR {maxPrice.toLocaleString()}
-              </p>
-              <input
-                type="range"
-                min="5000"
-                max="35000"
-                step="1000"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#c67139', cursor: 'pointer' }}
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label style={sidebarLabelStyle}>Hostel Category</label>
-              <div style={segmentedControlWrapStyle}>
-                {TYPE_OPTIONS.map((tab) => (
-                  <button
-                    key={tab.value}
-                    type="button"
-                    style={segmentedControlBtnStyle(selectedType === tab.value)}
-                    onClick={() => setSelectedType(tab.value)}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Sharing */}
-            <div>
-              <label style={sidebarLabelStyle}>Room Sharing</label>
-              <CustomSelect
-                value={selectedSharing}
-                onChange={setSelectedSharing}
-                options={SHARING_OPTIONS}
-                style={sidebarSelectStyle}
-              />
-            </div>
-
-            {/* Amenities */}
-            <div>
-              <label style={sidebarLabelStyle}>Must Have Amenities</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {BUILTIN_AMENITIES.map((amenity) => {
-                  const isSelected = selectedAmenities.includes(amenity);
-                  return (
-                    <button
-                      key={amenity}
-                      type="button"
-                      onClick={() =>
-                        setSelectedAmenities((prev) =>
-                          isSelected ? prev.filter((a) => a !== amenity) : [...prev, amenity]
-                        )
-                      }
-                      style={sidebarAmenityChipStyle(isSelected)}
-                    >
-                      {amenity}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={clearFilters}
-              style={sidebarClearBtnStyle}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(198, 113, 57, 0.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              Clear Filters
-            </button>
+            {renderFilters()}
           </div>
         )}
 
         {/* ── Listings ── */}
         <div className="hd-main">
+          {/* Mobile: filter toggle bar always visible */}
+          <button
+            className="hd-mobile-filter-btn"
+            onClick={() => setShowMobileFilters(true)}
+            style={{
+              display: 'none', // shown via CSS
+              alignItems: 'center',
+              gap: '0.5rem',
+              width: '100%',
+              padding: '0.625rem 1rem',
+              marginBottom: '0.875rem',
+              background: '#ebddc5',
+              border: '1px solid #dcd3c4',
+              borderRadius: '10px',
+              color: '#201e1d',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              justifyContent: 'center',
+            }}
+          >
+            <SlidersHorizontal size={14} />
+            Filters
+          </button>
+
+          {/* Mobile filter overlay */}
+          {showMobileFilters && (
+            <div
+              className="hd-filter-overlay-active"
+              style={{
+                position: 'fixed', inset: 0, zIndex: 200,
+                background: 'rgba(0,0,0,0.4)',
+                display: 'flex', alignItems: 'flex-end',
+              }}
+              onClick={(e) => { if (e.target === e.currentTarget) setShowMobileFilters(false); }}
+            >
+              <div
+                className="hd-filter-drawer-active"
+                style={{
+                  background: '#ebddc5',
+                  borderRadius: '20px 20px 0 0',
+                  padding: '1.25rem 1.25rem 2rem',
+                  width: '100%',
+                  maxHeight: '80vh',
+                  overflowY: 'auto',
+                  borderTop: '1px solid #dcd3c4',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#201e1d' }}>Filters</span>
+                  <button
+                    onClick={() => setShowMobileFilters(false)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#82796a' }}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {renderFilters()}
+                </div>
+              </div>
+            </div>
+          )}
+
           {!showFilters && (
             <button
               onClick={() => setShowFilters(true)}
@@ -341,49 +433,69 @@ export const HostelDirectory = ({ hostels, currentUser }: HostelDirectoryProps) 
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
+const pageWrapStyle: React.CSSProperties = {
+  minHeight: 'calc(100vh - 76px)',
+  background: 'var(--color-bg)',
+  backgroundAttachment: 'fixed',
+  /* Full-bleed escape from centered max-width container */
+  width: '100vw',
+  marginLeft: 'calc(-50vw + 50%)',
+  marginTop: '-2.5rem',
+  padding: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  overflowX: 'hidden',
+};
+
+const headerStyle: React.CSSProperties = {
+  background: 'var(--color-bg)',
+  padding: '0',
+};
+
+const headerInnerWrapStyle: React.CSSProperties = {
+  maxWidth: '1240px',
+  margin: '0 auto',
+  padding: '2.5rem 2rem 0',
+};
+
 const eyebrowStyle: React.CSSProperties = {
   fontSize: '0.75rem',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: 'var(--color-accent-700)',
-  marginBottom: '22px',
+  marginBottom: '12px',
   animation: 'ls-fade 0.7s ease both',
 };
 
-const filterBarStyle: React.CSSProperties = {
+const headerInnerStyle: React.CSSProperties = {
   display: 'flex',
-  gap: '12px',
-  flexWrap: 'wrap',
   alignItems: 'center',
-  padding: '18px',
-  background: 'var(--color-surface)',
-  borderRadius: 'calc(var(--radius-lg) * 1.1)',
-  boxShadow: 'var(--shadow-sm)',
+  justifyContent: 'space-between',
+  flexWrap: 'wrap',
+  gap: '1rem',
+  marginBottom: '0.5rem',
   animation: 'ls-fade 0.9s ease 0.25s both',
 };
 
 const searchWrapStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '10px',
-  flex: 1,
-  minWidth: '220px',
-  background: 'var(--color-bg)',
+  gap: '0.5rem',
+  background: 'var(--color-surface)',
   border: '1px solid var(--color-divider)',
   borderRadius: 'var(--radius-pill)',
-  padding: '0 16px',
-  height: '42px',
-  transition: 'var(--transition)',
+  padding: '0.5rem 1.125rem',
 };
 
 const searchInputStyle: React.CSSProperties = {
-  width: '100%',
-  border: 'none',
   background: 'none',
+  border: 'none',
   outline: 'none',
+  color: 'var(--color-text)',
   fontFamily: 'var(--font-body)',
   fontSize: '0.875rem',
-  color: 'var(--foreground)',
+  flex: 1,
+  minWidth: 0,
 };
 
 const countStyle: React.CSSProperties = {
@@ -392,6 +504,14 @@ const countStyle: React.CSSProperties = {
   textTransform: 'uppercase',
   color: 'var(--color-neutral-600)',
   marginLeft: 'auto',
+};
+
+const bodyStyle: React.CSSProperties = {
+  flex: 1,
+  maxWidth: '1240px',
+  width: '100%',
+  margin: '0 auto',
+  padding: '1.75rem 2rem 3rem',
 };
 
 const sidebarLabelStyle: React.CSSProperties = {

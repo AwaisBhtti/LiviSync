@@ -639,12 +639,12 @@ table th {
     grid-template-columns: 1fr;
   }
 
-  /* ── Roommate Finder: centre everything on mobile ── */
-  .rm-header-wrap {
+  /* ── Roommate Finder & Hostel Directory: layout adjustments on mobile ── */
+  .rm-header-wrap, .hd-header-wrap {
     padding: 1.25rem 1rem 0;
     text-align: left;
   }
-  .rm-header-inner {
+  .rm-header-inner, .hd-header-inner {
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -666,7 +666,7 @@ table th {
     display: inline-flex !important;
   }
   /* Search bar full width on mobile */
-  .rm-search-wrap {
+  .rm-search-wrap, .hd-search-wrap {
     flex: none;
     width: 100% !important;
     min-width: unset;
