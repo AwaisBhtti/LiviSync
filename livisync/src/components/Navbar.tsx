@@ -101,7 +101,7 @@ export const Navbar = ({
             .ls-island, .ls-island-mark, .ls-island-label, .ls-island-items { transition: none; }
           }
         `}</style>
-        <div style={navContainerStyle}>
+        <div className="app-header-container" style={navContainerStyle}>
           <Link style={logoSectionStyle} to="/hostels">
             <div style={logoBoxStyle}>
               <img src={logo} alt="LiviSync Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
