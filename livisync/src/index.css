@@ -642,7 +642,7 @@ table th {
   /* ── Roommate Finder: centre everything on mobile ── */
   .rm-header-wrap {
     padding: 1.25rem 1rem 0;
-    text-align: center;
+    text-align: left;
   }
   .rm-header-inner {
     flex-direction: column;
@@ -651,33 +651,27 @@ table th {
     text-align: center;
     gap: 0.875rem;
   }
-  /* Centre the icon+title row */
-  .rm-header-inner > div:first-child {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  /* Tab bar full width and side-by-side on mobile */
+  .rm-tab-bar {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+    justify-content: center !important;
   }
-  /* Subtitle loses its left indent on mobile */
-  .rm-header-inner p {
-    margin-left: 0 !important;
-    text-align: center;
+  /* Tab buttons expand equally side-by-side */
+  .rm-tab-bar .rm-tab-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    display: inline-flex !important;
   }
-  /* Search bar compact on mobile — reset flex so flex-basis doesn't become the height */
+  /* Search bar full width on mobile */
   .rm-search-wrap {
     flex: none;
-    width: auto;
+    width: 100% !important;
     min-width: unset;
-    max-width: 220px;
-    padding: 0.3rem 0.75rem;
-  }
-  /* Tab bar centred */
-  .rm-tab-bar {
-    justify-content: center;
-  }
-  /* Tab buttons expand equally */
-  .rm-tab-bar .rm-tab-btn {
-    flex: 1;
-    justify-content: center;
+    max-width: none !important;
+    padding: 0.5rem 1.125rem;
   }
   /* Body: tighter horizontal padding */
   .rm-body {
@@ -772,9 +766,26 @@ table th {
 }
 
 @media (max-width: 768px) {
+  .app-header {
+    position: static !important;
+  }
+
+  .app-container:has(.auth-chat-container.chat-active) .app-header {
+    display: none !important;
+  }
+
+  .app-container:has(.auth-chat-container.chat-active) .mobile-nav-bar {
+    display: none !important;
+  }
+
   /* Chat goes full-bleed: the display headline gives way to the panes */
   .auth-chat-container {
     padding: 0 !important;
+  }
+
+  .auth-chat-container.chat-active {
+    height: 100vh !important;
+    height: 100dvh !important;
   }
   .chat-page-header {
     display: none !important;

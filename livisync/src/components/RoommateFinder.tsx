@@ -149,6 +149,20 @@ export const RoommateFinder = ({
           transform: translateY(-6px);
         }
         .rm-filter-toggle:hover { background: var(--color-accent-100) !important; }
+        @keyframes rm-slide-up {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        @keyframes rm-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .rm-filter-overlay-active {
+          animation: rm-fade-in 0.25s cubic-bezier(0.19, 1, 0.22, 1) both;
+        }
+        .rm-filter-drawer-active {
+          animation: rm-slide-up 0.35s cubic-bezier(0.19, 1, 0.22, 1) both;
+        }
         @media (max-width: 900px) {
           .rm-headline-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
         }
@@ -157,10 +171,7 @@ export const RoommateFinder = ({
       {/* ── Header ── */}
       <div style={headerStyle}>
         <div className="rm-header-wrap" style={headerInnerWrapStyle}>
-          <div style={eyebrowStyle}>Roommate finder</div>
-
-          <div className="rm-headline-grid" style={headlineGridStyle}>
-          </div>
+          <div style={eyebrowStyle}>Roommate directory</div>
 
           <div className="rm-header-inner" style={headerInnerStyle}>
             {/* Tab bar */}
@@ -285,6 +296,7 @@ export const RoommateFinder = ({
               {/* Mobile filter overlay */}
               {showMobileFilters && (
                 <div
+                  className="rm-filter-overlay-active"
                   style={{
                     position: 'fixed', inset: 0, zIndex: 200,
                     background: 'rgba(0,0,0,0.4)',
@@ -292,14 +304,17 @@ export const RoommateFinder = ({
                   }}
                   onClick={(e) => { if (e.target === e.currentTarget) setShowMobileFilters(false); }}
                 >
-                  <div style={{
-                    background: '#ebddc5',
-                    borderRadius: '20px 20px 0 0',
-                    padding: '1.25rem 1.25rem 2rem',
-                    width: '100%',
-                    maxHeight: '80vh',
-                    overflowY: 'auto',
-                  }}>
+                  <div
+                    className="rm-filter-drawer-active"
+                    style={{
+                      background: '#ebddc5',
+                      borderRadius: '20px 20px 0 0',
+                      padding: '1.25rem 1.25rem 2rem',
+                      width: '100%',
+                      maxHeight: '80vh',
+                      overflowY: 'auto',
+                    }}
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#201e1d' }}>Filters</span>
                       <button
@@ -408,16 +423,8 @@ const eyebrowStyle: React.CSSProperties = {
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: 'var(--color-accent-700)',
-  marginBottom: '22px',
+  marginBottom: '12px',
   animation: 'ls-fade 0.7s ease both',
-};
-
-const headlineGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1.2fr 0.8fr',
-  gap: '56px',
-  alignItems: 'end',
-  marginBottom: '36px',
 };
 
 const headerInnerStyle: React.CSSProperties = {

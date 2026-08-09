@@ -45,7 +45,7 @@ export const Navbar = ({
   return (
     <>
       {/* Desktop Top Navbar */}
-      <header style={headerStyle}>
+      <header className="app-header" style={headerStyle}>
         <style>{`
           /* Collapsed by default; hover or keyboard focus opens it. Tabbing into
              a link trips :focus-within, so the menu is reachable without a mouse. */
