@@ -1,5 +1,5 @@
 /** RoommateGrid — candidate cards in the Organic style: soft sand surfaces, ring scores, pill tags. */
-import type { User, MatchRequest, Preferences } from '../../types';
+import type { User, MatchRequest } from '../../types';
 import { Check, MapPin } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../styles/commonStyles';
 
@@ -15,34 +15,6 @@ interface RoommateGridProps {
 }
 
 const RING_CIRCUMFERENCE = 263.9;
-
-const SLEEP_LABELS: Record<Preferences['sleepSchedule'], string> = {
-  'early-bird': 'Early Bird',
-  'night-owl': 'Night Owl',
-  flexible: 'Flexible',
-};
-
-const CLEAN_LABELS: Record<Preferences['cleanliness'], string> = {
-  meticulous: 'Very Tidy',
-  moderate: 'Moderately Tidy',
-  relaxed: 'Relaxed',
-};
-
-const SMOKING_LABELS: Record<Preferences['smoking'], string> = {
-  no: 'No Smoking',
-  yes: 'Smoker',
-  'outside-only': 'Outdoors Only',
-};
-
-/** The three lifestyle traits the card leads with — the ones that decide a room. */
-const lifestyleTags = (prefs?: Preferences) => {
-  if (!prefs) return [];
-  return [
-    SLEEP_LABELS[prefs.sleepSchedule],
-    CLEAN_LABELS[prefs.cleanliness],
-    SMOKING_LABELS[prefs.smoking],
-  ].filter(Boolean);
-};
 
 export const RoommateGrid = ({
   candidates,
@@ -77,7 +49,6 @@ export const RoommateGrid = ({
       {candidates.map((candidate, i) => {
         const reqStatus = getRequestStatus(candidate.id);
         const occupationDisplay = candidate.occupation === 'job' ? 'Job Holder' : 'Student';
-        const tags = lifestyleTags(candidate.preferences);
 
         return (
           <div
@@ -131,15 +102,6 @@ export const RoommateGrid = ({
                 </div>
               )}
             </div>
-
-            {/* Lifestyle tags */}
-            {tags.length > 0 && (
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {tags.map((t) => (
-                  <span key={t} className="badge badge-neutral">{t}</span>
-                ))}
-              </div>
-            )}
 
             {/* Bio */}
             <p style={bioStyle}>{candidate.bio || 'No biography provided.'}</p>
