@@ -449,7 +449,7 @@ export const ChatModule = ({
           {activeChatUserId ? (
             <>
               {/* Chat Header */}
-              <div style={chatHeaderStyle}>
+              <div style={chatHeaderStyle} className="chat-header">
                 <button
                   className="chat-back-btn"
                   style={backButtonStyle}

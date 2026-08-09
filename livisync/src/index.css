@@ -795,6 +795,9 @@ table th {
   .chat-page-header {
     display: none !important;
   }
+  .chat-header {
+    padding-top: calc(env(safe-area-inset-top, 24px) + 0.5rem) !important;
+  }
   .auth-chat-container > div {
     border-radius: 0 !important;
     box-shadow: none !important;
