@@ -835,3 +835,24 @@ table th {
   color: var(--danger) !important;
   background-color: rgba(163, 59, 42, 0.08) !important;
 }
+
+/* Compatibility Summary Card */
+.compatibility-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  border-radius: var(--radius);
+}
+
+@media (max-width: 520px) {
+  .compatibility-summary {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem 1rem;
+    gap: 1.25rem;
+  }
+}

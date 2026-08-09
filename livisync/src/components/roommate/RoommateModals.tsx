@@ -135,17 +135,7 @@ export const RoommateModals = ({
 
             <div style={{ padding: '1.5rem' }}>
               {/* Summary card */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  backgroundColor: 'var(--background)',
-                  border: '1px solid var(--border)',
-                  padding: '1rem',
-                  borderRadius: 'var(--radius)',
-                }}
-              >
+              <div className="compatibility-summary">
                 <img
                   src={selectedUser.photo || DEFAULT_AVATAR}
                   alt={selectedUser.name}
