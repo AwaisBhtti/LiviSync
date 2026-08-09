@@ -4,6 +4,7 @@ import { ConfirmationModal } from '../ConfirmationModal';
 import { showToast } from '../../store/slices/toastSlice';
 import { useAppDispatch } from '../../store/store';
 import { CustomSelect } from '../ui/CustomSelect';
+import { X } from 'lucide-react';
 
 interface FriendProfileModalProps {
   selectedUser: User;
@@ -43,7 +44,7 @@ export const FriendProfileModal = ({
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const handleReportSubmit = async () => {
@@ -81,13 +82,14 @@ export const FriendProfileModal = ({
 
   return (
     <div
+      className="friend-modal-backdrop"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(32, 30, 29, 0.4)',
+        backgroundColor: 'rgba(32, 30, 29, 0.5)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -96,18 +98,35 @@ export const FriendProfileModal = ({
         padding: '1rem',
       }}
     >
+      <style>{`
+        .friend-modal-backdrop {
+          animation: fpm-fade-in 0.25s ease both;
+        }
+        .friend-modal-content {
+          animation: fpm-scale-in 0.35s cubic-bezier(0.19, 1, 0.22, 1) both;
+        }
+        @keyframes fpm-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fpm-scale-in {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
       <div
+        className="friend-modal-content"
         style={{
-          backgroundColor: 'var(--card-bg, #ffffff)',
-          borderRadius: '12px',
-          border: '1px solid var(--border)',
-          padding: '1.5rem',
+          backgroundColor: 'var(--color-surface)',
+          borderRadius: '20px',
+          border: '1px solid var(--color-divider)',
+          padding: '1.75rem',
           width: '100%',
           maxWidth: '480px',
           maxHeight: '90vh',
           overflowY: 'auto',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          color: 'var(--foreground)',
+          boxShadow: 'var(--shadow-xl)',
+          color: 'var(--color-text)',
         }}
       >
         <div
@@ -115,12 +134,12 @@ export const FriendProfileModal = ({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            borderBottom: '1px solid var(--border)',
+            borderBottom: '1px solid var(--color-divider)',
             paddingBottom: '0.75rem',
-            marginBottom: '1rem',
+            marginBottom: '1.25rem',
           }}
         >
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
+          <h3 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-heading)', fontWeight: 600, margin: 0, letterSpacing: '0.02em' }}>
             {showReportForm ? `Report ${selectedUser.name}` : 'Roommate Profile'}
           </h3>
           <button
@@ -134,17 +153,24 @@ export const FriendProfileModal = ({
               border: 'none',
               cursor: 'pointer',
               color: 'var(--muted)',
-              fontSize: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '4px',
+              borderRadius: '50%',
+              transition: 'background 0.2s',
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(32, 30, 29, 0.05)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
         {showReportForm ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-neutral-600)', marginBottom: '0.35rem' }}>
                 Reason
               </label>
               <CustomSelect
@@ -159,7 +185,7 @@ export const FriendProfileModal = ({
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-neutral-600)', marginBottom: '0.35rem' }}>
                 Description (min. 8 words)
               </label>
               <textarea
@@ -169,11 +195,15 @@ export const FriendProfileModal = ({
                 rows={4}
                 style={{
                   width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '6px',
-                  border: '1px solid var(--border)',
-                  backgroundColor: 'var(--card-bg)',
+                  padding: '0.625rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-divider)',
+                  backgroundColor: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                  fontSize: '0.875rem',
+                  fontFamily: 'var(--font-body)',
                   resize: 'vertical',
+                  outline: 'none',
                 }}
               />
             </div>
@@ -201,48 +231,48 @@ export const FriendProfileModal = ({
                 }
                 alt=""
                 style={{
-                  width: '70px',
-                  height: '70px',
+                  width: '72px',
+                  height: '72px',
                   borderRadius: '50%',
                   objectFit: 'cover',
-                  border: '2px solid var(--primary)',
+                  border: '2px solid var(--color-accent)',
+                  boxShadow: 'var(--shadow-sm)',
                 }}
               />
               <div>
-                <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>{selectedUser.name}</h4>
-                <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+                <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-heading)', fontWeight: 600, margin: 0 }}>{selectedUser.name}</h4>
+                <span style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: 500 }}>
                   {selectedUser.age} y/o • {selectedUser.gender}
                 </span>
               </div>
             </div>
 
             <div>
-              <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>
+              <h5 style={sectionTitleStyle}>
                 Contact Info
               </h5>
-              <p style={{ margin: 0, fontSize: '0.875rem' }}>📧 Email: {selectedUser.email}</p>
-              {selectedUser.phone && <p style={{ margin: 0, fontSize: '0.875rem' }}>📞 Phone: {selectedUser.phone}</p>}
+              <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text)' }}>Email: {selectedUser.email}</p>
+              {selectedUser.phone && <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text)' }}>Phone: {selectedUser.phone}</p>}
             </div>
 
             {selectedUser.bio && (
               <div>
-                <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>
+                <h5 style={sectionTitleStyle}>
                   Biography
                 </h5>
-                <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.4', color: 'var(--muted)' }}>
-                  {selectedUser.bio}
+                <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.45', color: 'var(--color-text)', fontStyle: 'italic' }}>
+                  "{selectedUser.bio}"
                 </p>
               </div>
             )}
 
             <div>
-              <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.25rem 0', color: 'var(--muted)' }}>
+              <h5 style={sectionTitleStyle}>
                 Details
               </h5>
-              <p style={{ margin: 0, fontSize: '0.875rem' }}>📍 Preferred Location: {selectedUser.location}</p>
-
+              <p style={{ margin: 0, fontSize: '0.875rem' }}>Preferred Location: {selectedUser.location}</p>
               <p style={{ margin: 0, fontSize: '0.875rem', textTransform: 'capitalize' }}>
-                💼 Occupation: {selectedUser.occupation || 'student'}
+                Occupation: {selectedUser.occupation || 'student'}
                 {selectedUser.institution && ` at ${selectedUser.institution}`}
                 {selectedUser.company && ` at ${selectedUser.company}`}
               </p>
@@ -250,28 +280,34 @@ export const FriendProfileModal = ({
 
             {selectedUser.preferences && (
               <div>
-                <h5 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0 0 0.5rem 0', color: 'var(--muted)' }}>
+                <h5 style={sectionTitleStyle}>
                   Lifestyle Habits
                 </h5>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                    🛌 Sleep: {selectedUser.preferences.sleepSchedule || 'flexible'}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <span style={pillTagStyle}>
+                    Sleep: {selectedUser.preferences.sleepSchedule || 'flexible'}
                   </span>
-                  <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                    🧹 Cleanliness: {selectedUser.preferences.cleanliness || 'moderate'}
+                  <span style={pillTagStyle}>
+                    Clean: {selectedUser.preferences.cleanliness || 'moderate'}
                   </span>
-                  <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                    🚬 Smoking: {selectedUser.preferences.smoking || 'no'}
+                  <span style={pillTagStyle}>
+                    Smoke: {selectedUser.preferences.smoking || 'no'}
                   </span>
-                  <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                    🐾 Pets: {selectedUser.preferences.pets || 'no'}
+                  <span style={pillTagStyle}>
+                    Pets: {selectedUser.preferences.pets || 'no'}
                   </span>
-                  <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                    👥 Guests: {selectedUser.preferences.guestTolerance || 'weekends'}
+                  <span style={pillTagStyle}>
+                    Guests: {selectedUser.preferences.guestTolerance || 'weekends'}
                   </span>
                   {selectedUser.preferences.noiseTolerance && (
-                    <span className="badge badge-neutral" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                      🔊 Noise: {selectedUser.preferences.noiseTolerance}
+                    <span style={pillTagStyle}>
+                      Noise: {selectedUser.preferences.noiseTolerance}
                     </span>
                   )}
                 </div>
@@ -283,15 +319,15 @@ export const FriendProfileModal = ({
                 display: 'flex',
                 flexWrap: 'wrap',
                 gap: '0.5rem',
-                marginTop: '1rem',
-                borderTop: '1px solid var(--border)',
-                paddingTop: '1rem',
+                marginTop: '0.5rem',
+                borderTop: '1px solid var(--color-divider)',
+                paddingTop: '1.25rem',
               }}
             >
               <button
                 type="button"
                 className="btn btn-danger"
-                style={{ flex: '1 1 100%' }}
+                style={{ flex: '1 1 100%', marginBottom: '0.25rem' }}
                 onClick={() => {
                   if (connection) {
                     setConfirmModal({
@@ -369,4 +405,32 @@ export const FriendProfileModal = ({
       )}
     </div>
   );
+};
+
+// ─── Themed Styles — Sand / Cream Organic Theme ────────────────────────────────
+
+const pillTagStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.625rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  padding: '4px 10px',
+  borderRadius: 'var(--radius-pill)',
+  border: '1px solid var(--color-divider)',
+  background: 'rgba(32, 30, 29, 0.04)',
+  color: 'var(--color-text)',
+  display: 'inline-flex',
+  alignItems: 'center',
+};
+
+
+const sectionTitleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.725rem',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: 'var(--color-accent-700)',
+  margin: '0 0 0.15rem 0',
 };
