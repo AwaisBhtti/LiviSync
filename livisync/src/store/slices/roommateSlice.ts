@@ -48,7 +48,8 @@ export const fetchRoommates = createAsyncThunk(
           cleanliness: u.preferences?.cleanliness || 'moderate',
           smoking: u.preferences?.smoking || 'no',
           pets: u.preferences?.pets || 'no',
-          guestTolerance: u.preferences?.guest_tolerance || 'weekends'
+          guestTolerance: u.preferences?.guest_tolerance || 'weekends',
+          noiseTolerance: u.preferences?.noise_tolerance || 'moderate'
         },
         blockedUsers: []
       }));
