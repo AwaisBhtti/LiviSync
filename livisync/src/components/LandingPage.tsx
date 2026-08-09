@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Phone, MapPin } from 'lucide-react';
 import { useRevealContainer, useCountUp, useInView } from '../hooks/useReveal';
 import studentFemale from '../assets/student-female.jpg';
 import studentMale from '../assets/student-male.jpg';
@@ -329,39 +330,63 @@ export const LandingPage = ({ isAuthenticated }: LandingPageProps) => {
       <footer style={footerStyle}>
         <div className="ls-footer-inner" style={{ position: 'relative', maxWidth: '1240px', margin: '0 auto', padding: '0 48px' }}>
           <div className="ls-footer-grid" style={footerGridStyle}>
+            {/* Column 1: LiviSync Description */}
             <div>
-              <div style={footerColLabelStyle}>Address</div>
-              <div style={footerColBodyStyle}>Faisal Town,<br />Lahore, Pakistan</div>
-            </div>
-            <div>
-              <div style={footerColLabelStyle}>Contact us</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                <img src={logo} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text)' }}>LiviSync</span>
+              </div>
               <div style={footerColBodyStyle}>
-                <a href="mailto:support@livisync.me" className="ls-foot-link" style={{ color: 'var(--color-accent-700)' }}>support@livisync.me</a>
-                <br />+92 333 0565255
-                <br />+92 314 4536266
+                LiviSync is the first ever lifestyle-first housing platform designed specifically for university students. We combine physically verified hostel listings with compatibility matching, helping you find both the perfect room and the ideal roommate.
               </div>
             </div>
+
+            {/* Column 2: The Team */}
             <div>
-              <div style={footerColLabelStyle}>Platform</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem' }}>
-                <Link to={appHref} className="ls-foot-link">Hostels</Link>
-                <Link to={roommatesHref} className="ls-foot-link">Roommates</Link>
-                <Link to={isAuthenticated ? '/chats' : '/login'} className="ls-foot-link">Inbox</Link>
-                <Link to={isAuthenticated ? '/profile' : '/login'} className="ls-foot-link">Profile</Link>
+              <div style={footerColLabelStyle}>The Team</div>
+              <div style={{ ...footerColBodyStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <span>
+                  LiviSync is built by fellow hostellites who've been through the same housing headaches, on a mission to make university housing safe, easy, transparent, and roommate matchmaking stress-free.
+                </span>
+                <span style={{ fontWeight: 700, color: 'var(--color-text)' }}>
+                  Built by Gen-Z, for the Gen-Z
+                </span>
               </div>
             </div>
+
+            {/* Column 3: Contact Us */}
             <div>
-              <div style={footerColLabelStyle}>Legal</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem', color: 'var(--color-neutral-700)' }}>
-                <Link to="/privacy" className="ls-foot-link">Privacy Policy</Link>
-                <Link to="/terms" className="ls-foot-link">Terms of Service</Link>
+              <div style={footerColLabelStyle}>Contact Us</div>
+              <div style={{ ...footerColBodyStyle, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Mail size={16} style={{ color: '#003FB1', flexShrink: 0 }} />
+                  <a href="mailto:support@livisync.me" className="ls-foot-link" style={{ color: 'var(--color-text)', textDecoration: 'underline' }}>
+                    support@livisync.me
+                  </a>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Phone size={16} style={{ color: '#c67139', flexShrink: 0 }} />
+                  <span style={{ color: 'var(--color-neutral-800)' }}>+92 314 4536266</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Phone size={16} style={{ color: '#c67139', flexShrink: 0 }} />
+                  <span style={{ color: 'var(--color-neutral-800)' }}>+92 333 0565255</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <MapPin size={16} style={{ color: '#a33b2a', flexShrink: 0 }} />
+                  <span style={{ color: 'var(--color-neutral-800)' }}>Faisal Town, Lahore, Pakistan</span>
+                </div>
               </div>
             </div>
           </div>
 
           <div style={footerBottomStyle}>
-            <span>© {new Date().getFullYear()} LiviSync. All rights reserved.</span>
-            <span>Roommate finder &amp; hostel directory</span>
+            <div style={{ display: 'flex', gap: '24px' }}>
+              <Link to="/privacy" className="ls-foot-link" style={{ color: 'var(--color-neutral-700)' }}>Privacy Policy</Link>
+              <Link to="/terms" className="ls-foot-link" style={{ color: 'var(--color-neutral-700)' }}>Terms of Service</Link>
+              <a href="/#safety" className="ls-foot-link" style={{ color: 'var(--color-neutral-700)' }}>Safety Guide</a>
+            </div>
+            <span>© 2026 LiviSync. All rights reserved.</span>
           </div>
         </div>
       </footer>
@@ -781,41 +806,41 @@ const darkPillLinkStyle: React.CSSProperties = {
 
 // ── Footer ──
 const footerStyle: React.CSSProperties = {
-  background: 'var(--color-bg)',
+  background: 'var(--color-neutral-200)',
   padding: '60px 0 40px',
   overflow: 'hidden',
 };
 
 const footerGridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
   gap: '40px',
   marginTop: '20px',
-  paddingTop: '40px',
-  borderTop: '1px solid var(--color-divider)',
 };
 
 const footerColLabelStyle: React.CSSProperties = {
-  fontSize: '0.6875rem',
-  letterSpacing: '0.18em',
-  textTransform: 'uppercase',
-  color: 'var(--color-neutral-600)',
-  marginBottom: '14px',
+  fontFamily: 'var(--font-heading)',
+  fontSize: '1rem',
+  fontWeight: 700,
+  color: 'var(--color-text)',
+  marginBottom: '16px',
 };
 
 const footerColBodyStyle: React.CSSProperties = {
   fontSize: '0.9rem',
-  lineHeight: 1.7,
+  lineHeight: 1.6,
+  color: 'var(--color-neutral-800)',
 };
 
 const footerBottomStyle: React.CSSProperties = {
-  marginTop: '44px',
+  marginTop: '40px',
+  paddingTop: '24px',
+  borderTop: '1px solid var(--color-divider)',
   display: 'flex',
   justifyContent: 'space-between',
+  alignItems: 'center',
   gap: '16px',
   flexWrap: 'wrap',
-  fontSize: '0.72rem',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: 'var(--color-neutral-600)',
+  fontSize: '0.85rem',
+  color: 'var(--color-neutral-700)',
 };
